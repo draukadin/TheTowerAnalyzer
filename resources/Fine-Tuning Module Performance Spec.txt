@@ -1,0 +1,154 @@
+To model a **Fine-Tuning Module Performance** engine in Java, the code needs to evaluate how changing specific sub-stats or module configurations impacts your average performance.
+
+When you roll for high-tier ancestral sub-stats, you are trying to maximize efficiency. To evaluate this without guessing, this code tracks different module setups, runs an impact analysis on survival wave variance, and isolates which configuration yields the highest statistical return before you commit to permanent, expensive re-rolls.
+
+Here is an object-oriented tracking architecture in Java:
+
+```java
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ModuleFineTuningEngine {
+
+    // 1. Immutable record representing a specific sub-stat configuration
+    public record ModuleConfig(
+        String name,               // e.g., "Ancestral Attack Speed + Attack"
+        String moduleType,         // e.g., "Cannon", "Armor", "Core", "Utility"
+        double attackSpeedBonus,   // Percentage or flat coefficient
+        double damageBonus,
+        double utilityBonus
+    ) {}
+
+    // 2. Data point tracking the output metrics of a specific run
+    public record ModuleRunLog(
+        int runId,
+        int wavesCleared,
+        long totalCoinsInTrillions,
+        long eliteKillsByMines,
+        String deathReason
+    ) {}
+
+    // 3. Output summary showing performance metrics for a specific configuration
+    public record ConfigPerformanceSummary(
+        ModuleConfig config,
+        double averageWaves,
+        double maxWaves,
+        double stabilityIndex, // Lower variance means more stable farming loops
+        long averageEliteMineKills
+    ) {}
+
+    // 4. Core Fine-Tuning Analysis Engine
+    public static class ModulePerformanceAnalyzer {
+        private final Map<ModuleConfig, List<ModuleRunLog>> trackingDatabase = new HashMap<>();
+
+        // Register telemetry logs under a specific sub-stat profile
+        public void logRun(ModuleConfig config, ModuleRunLog log) {
+            trackingDatabase.computeIfAbsent(config, k -> new ArrayList<>()).add(log);
+        }
+
+        // Evaluates a configuration's performance profiles
+        public ConfigPerformanceSummary generateSummary(ModuleConfig config) {
+            List<ModuleRunLog> logs = trackingDatabase.get(config);
+            if (logs == null || logs.isEmpty()) {
+                return new ConfigPerformanceSummary(config, 0.0, 0.0, 0.0, 0);
+            }
+
+            double totalWaves = 0;
+            double maxWaves = 0;
+            long totalEliteMineKills = 0;
+
+            for (ModuleRunLog log : logs) {
+                totalWaves += log.wavesCleared();
+                totalEliteMineKills += log.eliteKillsByMines();
+                if (log.wavesCleared() > maxWaves) {
+                    maxWaves = log.wavesCleared();
+                }
+            }
+
+            double avgWaves = totalWaves / logs.size();
+            long avgEliteMineKills = totalEliteMineKills / logs.size();
+
+            // Variance Calculation (Stability Index)
+            // A highly stable sub-stat keeps variance close to 0, ensuring predictable overnight farms
+            double varianceSum = 0;
+            for (ModuleRunLog log : logs) {
+                varianceSum += Math.pow(log.wavesCleared() - avgWaves, 2);
+            }
+            double standardDeviation = Math.sqrt(varianceSum / logs.size());
+
+            return new ConfigPerformanceSummary(config, avgWaves, maxWaves, standardDeviation, avgEliteMineKills);
+        }
+
+        // Automated comparison selector to find the optimal module build
+        public ModuleConfig identifyOptimalConfig() {
+            ModuleConfig bestConfig = null;
+            double highestScore = -1.0;
+
+            for (ModuleConfig config : trackingDatabase.keySet()) {
+                ConfigPerformanceSummary summary = generateSummary(config);
+                
+                // Scoring Formula: Prioritize higher average waves balanced against run stability
+                // High waves with low variance creates the ideal automated farming profile
+                double performanceScore = summary.averageWaves() - (summary.stabilityIndex() * 0.5);
+                
+                if (performanceScore > highestScore) {
+                    highestScore = performanceScore;
+                    bestConfig = config;
+                }
+            }
+            return bestConfig;
+        }
+    }
+
+    // 5. Execution Loop verifying sub-stat tracking data
+    public static void main(String[] args) {
+        ModulePerformanceAnalyzer analyzer = new ModulePerformanceAnalyzer();
+
+        // CONFIG PROFILE 1: Focuses purely on projectile speed/damage (e.g., Amplifying Strike sub-stats)
+        ModuleConfig glassCannonBuild = new ModuleConfig(
+            "Ancestral Attack Speed + Crit", "Cannon", 15.0, 20.0, 0.0
+        );
+
+        // CONFIG PROFILE 2: Swapping one slot to help Land Mines clear out dense Elite clusters
+        ModuleConfig landMineStunBuild = new ModuleConfig(
+            "Ancestral Attack Speed + Land Mine Stun", "Cannon", 15.0, 0.0, 25.0
+        );
+
+        // Simulate Run Logs for the Glass Cannon setup (High ceiling, but high RNG variance)
+        analyzer.logRun(glassCannonBuild, new ModuleRunLog(1, 4150, 22.15, 1420, "Ranged Chip"));
+        analyzer.logRun(glassCannonBuild, new ModuleRunLog(2, 3820, 19.40, 1100, "Elite Overwhelm"));
+        analyzer.logRun(glassCannonBuild, new ModuleRunLog(3, 4210, 22.80, 1510, "Ranged Chip"));
+
+        // Simulate Run Logs for Land Mine Stun setup (Lower peak damage, but massive crowd stability)
+        analyzer.logRun(landMineStunBuild, new ModuleRunLog(4, 4110, 21.80, 4890, "Vampire Drain"));
+        analyzer.logRun(landMineStunBuild, new ModuleRunLog(5, 4130, 21.95, 5120, "Vampire Drain"));
+        analyzer.logRun(landMineStunBuild, new ModuleRunLog(6, 4095, 21.50, 4730, "Boss Smash"));
+
+        // Analyze Telemetry Data Profiles
+        ConfigPerformanceSummary summaryGC = analyzer.generateSummary(glassCannonBuild);
+        ConfigPerformanceSummary summaryLMS = analyzer.generateSummary(landMineStunBuild);
+
+        System.out.println("=== SUB-STAT TELETRIES AND VARIANCE PROFILE ===");
+        System.out.printf("[%s]\n Avg Waves: %.1f | Max Waves: %.1f | Variance Stability (Lower is Better): ±%.2f waves\n\n",
+            summaryGC.config().name(), summaryGC.averageWaves(), summaryGC.maxWaves(), summaryGC.stabilityIndex());
+
+        System.out.printf("[%s]\n Avg Waves: %.1f | Max Waves: %.1f | Variance Stability (Lower is Better): ±%.2f waves\n\n",
+            summaryLMS.config().name(), summaryLMS.averageWaves(), summaryLMS.maxWaves(), summaryLMS.stabilityIndex());
+
+        // Output Optimization Selection
+        ModuleConfig winner = analyzer.identifyOptimalConfig();
+        System.out.println("=== STRATEGIC CONCLUSION ===");
+        System.out.println("The optimal sub-stat configuration mathematically verified for your tower is:");
+        System.out.printf("👉 %s (%s Module)\n", winner.name(), winner.moduleType());
+    }
+}
+
+```
+
+### Why this approach works for fine-tuning setups:
+
+1. **The Stability Index Calculation:** The code calculates the standard deviation of your wave clears. This is critical for module tuning because an aggressive sub-stat build might let you hit a lucky maximum record once, but a different utility sub-stat might reduce wave variance entirely—ensuring that your standard overnight auto-runs don't die early to RNG waves.
+2. **Isolates Secondary Damage Sources:** By tracking specific variables like `eliteKillsByMines`, the tracking loop maps exactly how changes to your sub-stats shift the actual workload of the battlefield. It acts as mathematical validation that the sub-stat is actively functioning rather than sitting dead on your sheet.
+3. **Automated Score Routing:** The `identifyOptimalConfig` method runs an optimization equation that penalizes high variance. This allows you to dump telemetry data from different module layouts over a few days and let the system calculate exactly which configuration provides the safest, highest-yielding baseline.

@@ -1,0 +1,156 @@
+To model the identification of Ultimate Weapon (UW) and Bot de-synchronization, we have to look for a specific mathematical footprint.
+
+Unlike a crowd control breach which can be evaluated from a single run's pie chart, tracking **frame drift or de-synchronization** requires looking at a run's performance relative to a known **historical baseline**. When Golden Bot (GB) drifts out of alignment with Golden Tower (GT) and Black Hole (BH), its coin performance drops significantly even if your overall run length and enemy counts remain stable.
+
+Here is how you can implement this diagnostic tracking logic using Java Records, an Enum for status tracking, and a specialized tracking engine:
+
+```java
+import java.util.List;
+import java.util.Optional;
+
+public class SyncDiagnosticEngine {
+
+    // 1. Immutable data structure representing the economic breakdown of a single farming run
+    public record RunEconomyReport(
+        int runId,
+        long totalCoinsEarned,
+        long totalEnemiesKilled,
+        long goldenTowerCoins,
+        long blackHoleCoins,
+        long goldenBotCoins
+    ) {
+        // Helper calculation: What percentage of total income did Golden Bot pull in?
+        public double getGoldenBotEfficiency() {
+            if (totalCoinsEarned == 0) return 0.0;
+            return ((double) goldenBotCoins / totalCoinsEarned) * 100.0;
+        }
+    }
+
+    // 2. Enum detailing the sync status of the tower's economy engine
+    public enum SyncStatus {
+        OPTIMAL_SYNCHRONIZATION(
+            "All economic multipliers are firing perfectly in tandem. No drift detected."
+        ),
+        WARNING_MINOR_DRIFT(
+            "Golden Bot efficiency has dropped slightly below baseline. Frame drift may be starting."
+        ),
+        CRITICAL_DESYNCHRONIZATION(
+            "CRITICAL: Golden Bot efficiency has collapsed relative to main UW income. Reset or force-sync required."
+        ),
+        INSUFFICIENT_DATA(
+            "Establish more baseline runs before evaluating drift synchronization."
+        );
+
+        private final String message;
+
+        SyncStatus(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
+    // 3. Wrapper record for the diagnostic results
+    public record SyncDiagnosis(
+        SyncStatus status,
+        double currentEfficiency,
+        double baselineEfficiency,
+        double percentageDrop
+    ) {}
+
+    // 4. Core Diagnostic Engine
+    public static class SynchronizationTracker {
+        
+        // Evaluates a new run against a list of verified historical baseline runs
+        public SyncDiagnosis evaluateSync(RunEconomyReport currentRun, List<RunEconomyReport> baselineRuns) {
+            if (baselineRuns == null || baselineRuns.isEmpty()) {
+                return new SyncDiagnosis(SyncStatus.INSUFFICIENT_DATA, currentRun.getGoldenBotEfficiency(), 0.0, 0.0);
+            }
+
+            // Calculate historical baseline average for Golden Bot efficiency
+            double baselineAvgEfficiency = baselineRuns.stream()
+                .mapToDouble(RunEconomyReport::getGoldenBotEfficiency)
+                .average()
+                .orElse(0.0);
+
+            if (baselineAvgEfficiency == 0.0) {
+                return new SyncDiagnosis(SyncStatus.INSUFFICIENT_DATA, currentRun.getGoldenBotEfficiency(), 0.0, 0.0);
+            }
+
+            double currentEff = currentRun.getGoldenBotEfficiency();
+            
+            // Calculate the relative percentage drop in performance
+            // e.g., if baseline was 55% share and current is 44% share, that's a 20% performance collapse.
+            double performanceDrop = ((baselineAvgEfficiency - currentEff) / baselineAvgEfficiency) * 100.0;
+
+            // Diagnostic Decision Tree based on tactical thresholds
+            if (performanceDrop >= 20.0) {
+                return new SyncDiagnosis(SyncStatus.CRITICAL_DESYNCHRONIZATION, currentEff, baselineAvgEfficiency, performanceDrop);
+            } else if (performanceDrop >= 8.0) {
+                return new SyncDiagnosis(SyncStatus.WARNING_MINOR_DRIFT, currentEff, baselineAvgEfficiency, performanceDrop);
+            } else {
+                return new SyncDiagnosis(SyncStatus.OPTIMAL_SYNCHRONIZATION, currentEff, baselineAvgEfficiency, performanceDrop);
+            }
+        }
+    }
+
+    // 5. Execution Example simulating actual report data trends
+    public static void main(String[] args) {
+        // Simulating 3 baseline runs where GT, BH, and Golden Bot are beautifully synced
+        // Golden Bot consistently represents a massive ~55% to ~57% share of total coin income
+        List<RunEconomyReport> history = List.of(
+            new RunEconomyReport(1, 18_360_000_000_000L, 803212, 12_940_000_000_000L, 11_930_000_000_000L, 9_880_000_000_000L),
+            new RunEconomyReport(2, 19_100_000_000_000L, 810000, 13_500_000_000_000L, 12_400_000_000_000L, 10_400_000_000_000L),
+            new RunEconomyReport(3, 18_800_000_000_000L, 795000, 13_100_000_000_000L, 12_100_000_000_000L, 10_200_000_000_000L)
+        );
+
+        SynchronizationTracker tracker = new SynchronizationTracker();
+
+        // SCENARIO A: A highly optimal run (like your recent Report 1 data)
+        // Golden Bot kills and coin share surge right alongside GT and BH
+        RunEconomyReport optimalRun = new RunEconomyReport(
+            4, 
+            22_150_000_000_000L, // Total: 22.15T
+            780923, 
+            15_570_000_000_000L, // GT: 15.57T
+            14_430_000_000_000L, // BH: 14.43T
+            12_740_000_000_000L  // GB: 12.74T (~57.5% share)
+        );
+
+        // SCENARIO B: A desynced run caused by accumulation of game loop lag or frame drift
+        // Total income is lower, GT and BH did fine, but Golden Bot's slice plummeted to 6.2T (~34% share)
+        RunEconomyReport desyncedRun = new RunEconomyReport(
+            5, 
+            18_000_000_000_000L, 
+            790000, 
+            14_100_000_000_000L, 
+            13_000_000_000_000L, 
+            6_200_000_000_000L   // Golden Bot missed the high-density spawns entirely
+        );
+
+        // Run Diagnoses
+        SyncDiagnosis diagnosisA = tracker.evaluateSync(optimalRun, history);
+        SyncDiagnosis diagnosisB = tracker.evaluateSync(desyncedRun, history);
+
+        System.out.println("=== DIAGNOSIS RUN 4 (OPTIMAL) ===");
+        System.out.printf("Current GB Share: %.2f%% | Baseline GB Share: %.2f%%\n", diagnosisA.currentEfficiency(), diagnosisA.baselineEfficiency());
+        System.out.println("Status: " + diagnosisA.status());
+        System.out.println("Action: " + diagnosisA.status().getMessage() + "\n");
+
+        System.out.println("=== DIAGNOSIS RUN 5 (DESYNCED) ===");
+        System.out.printf("Current GB Share: %.2f%% | Baseline GB Share: %.2f%%\n", diagnosisB.currentEfficiency(), diagnosisB.baselineEfficiency());
+        System.out.printf("Relative Performance Loss: %.2f%%\n", diagnosisB.percentageDrop());
+        System.out.println("Status: " + diagnosisB.status());
+        System.out.println("Action: " + diagnosisB.status().getMessage());
+    }
+}
+
+```
+
+### Why this approach works for capturing frame drift:
+
+1. **Tracks Share, Not Totals:** De-synchronization is tricky because an early death or a lucky wave skip streak can change your *total* coins. By calculating `goldenBotCoins / totalCoinsEarned`, the code monitors the **ratio of contribution**. If the bot is out of sync, its slice of the pie chart shrinks significantly, even if your Ultimate Weapons are killing normal amounts of enemies.
+2. **Relative Performance Loss Calculation:** Instead of using fixed hardcoded percentage limits (which would break if you upgraded a module or bot bonus), the engine calculates the *percentage drop relative to your own custom baseline average*.
+3. **Actionable Triggers:** A minor performance drop flags a `WARNING_MINOR_DRIFT` (indicating natural frame variance over long runs), while a massive performance loss triggers a `CRITICAL_DESYNCHRONIZATION`, proving mathematically that the bot's cycle is missing your Black Hole/Golden Tower activations entirely.

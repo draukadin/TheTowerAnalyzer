@@ -1,0 +1,169 @@
+To build a Java system for **Macro Trendlines and Macro Investment ROI**, the code needs to calculate two things: the **linear regression line** (slope and intercept) of your income over multiple runs, and the exact **break-even point (ROI)** of an expensive investment, like your recent 22.02T Enhancement purchase.
+
+By tracking your historical data, this code can mathematically prove whether your income trendline is tilting upward and calculate the exact number of runs required before an investment shifts from a deficit into pure profit.
+
+Here is the implementation using object-oriented Java principles:
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class RoiTrendEngine {
+
+    // 1. Immutable record for a single run data point
+    public record RunData(
+        int runNumber,
+        double totalCoinsEarnedInTrillions // Tracking in T for clean calculations
+    ) {}
+
+    // 2. Data structure to hold the calculated trendline metrics
+    public record Trendline(
+        double slope,     // Growth rate: Average coin increase per run
+        double intercept, // Theoretical starting income base
+        double rSquared   // Reliability of the trend line (0.0 to 1.0)
+    ) {
+        // Project future income based on the trendline equation: y = mx + b
+        public double projectIncomeForRun(int futureRunNumber) {
+            return (slope * futureRunNumber) + intercept;
+        }
+    }
+
+    // 3. Output summary showing exact ROI tracking metrics
+    public record RoiAnalysisReport(
+        double costOfInvestment,
+        double averageNetGainPerRun,
+        double runsToBreakEven,
+        double projectedNetProfitAfter50Runs,
+        String trendDirection
+    ) {}
+
+    // 4. Macro Analyzer Engine
+    public static class MacroAnalyst {
+
+        /**
+         * Calculates a linear regression trendline using Ordinary Least Squares (OLS).
+         * This translates abstract data points into an explicit trajectory.
+         */
+        public Trendline calculateTrendline(List<RunData> runs) {
+            if (runs == null || runs.size() < 2) {
+                return new Trendline(0.0, 0.0, 0.0);
+            }
+
+            int n = runs.size();
+            double sumX = 0;
+            double sumY = 0;
+            double sumXY = 0;
+            double sumXX = 0;
+
+            for (RunData run : runs) {
+                double x = run.runNumber();
+                double y = run.totalCoinsEarnedInTrillions();
+                sumX += x;
+                sumY += y;
+                sumXY += x * y;
+                sumXX += x * x;
+            }
+
+            // OLS Regression Formulas
+            double slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            double intercept = (sumY - slope * sumX) / n;
+
+            // Calculate R-Squared (Coefficient of Determination) for trend strength
+            double meanY = sumY / n;
+            double numVariance = 0;
+            double denVariance = 0;
+            
+            for (RunData run : runs) {
+                double predictedY = (slope * run.runNumber()) + intercept;
+                numVariance += Math.pow(run.totalCoinsEarnedInTrillions() - predictedY, 2);
+                denVariance += Math.pow(run.totalCoinsEarnedInTrillions() - meanY, 2);
+            }
+            
+            double rSquared = (denVariance == 0) ? 1.0 : 1.0 - (numVariance / denVariance);
+
+            return new Trendline(slope, intercept, rSquared);
+        }
+
+        /**
+         * Compares post-investment growth against a historical baseline to isolate true ROI.
+         */
+        public RoiAnalysisReport analyzeInvestmentRoi(
+            double investmentCostInT, 
+            double baselineAverageIncomeInT, 
+            Trendline postInvestmentTrend
+        ) {
+            // Determine the immediate performance lift using the trend intercept
+            // (Where the new trend kicks off compared to the old flat baseline)
+            double immediateLift = postInvestmentTrend.intercept() - baselineAverageIncomeInT;
+            
+            // Average income over the next sequence of runs includes both the flat lift 
+            // and the compounding slope growth
+            double averageNetGainPerRun = immediateLift + (postInvestmentTrend.slope() * 5); 
+
+            // Safeguard against dividing by zero if there's no growth or lift
+            double runsToBreakEven = (averageNetGainPerRun <= 0) ? Double.POSITIVE_INFINITY : investmentCostInT / averageNetGainPerRun;
+            
+            // Financial forecasting over a 50-run block
+            double totalYieldOver50Runs = 0;
+            for (int i = 1; i <= 50; i++) {
+                totalYieldOver50Runs += (postInvestmentTrend.projectIncomeForRun(i) - baselineAverageIncomeInT);
+            }
+            double netProfit = totalYieldOver50Runs - investmentCostInT;
+
+            String direction = (postInvestmentTrend.slope() > 0) ? "UPWARD (Compounding Efficiency)" : "FLAT (Static Return)";
+
+            return new RoiAnalysisReport(
+                investmentCostInT,
+                averageNetGainPerRun,
+                runsToBreakEven,
+                netProfit,
+                direction
+            );
+        }
+    }
+
+    // 5. Execution Loop verifying your macro economics
+    public static void main(String[] args) {
+        MacroAnalyst analyst = new MacroAnalyst();
+
+        // BASELINE: Assume your flat average before the Enhancement upgrade was 18.36T per run
+        double baselineAverage = 18.36; 
+        
+        // INVESTMENT: Your exact Level 21 Coin Bonus Enhancement purchase cost
+        double enhancementCost = 22.02; 
+
+        // POST-INVESTMENT LOGS: Simulating your next 5 runs showcasing incremental gains
+        // Run 1 hits 22.15T (matching Report 1), and income continues to edge upward 
+        List<RunData> postUpgradeRuns = List.of(
+            new RunData(1, 22.15),
+            new RunData(2, 22.31),
+            new RunData(3, 22.48),
+            new RunData(4, 22.54),
+            new RunData(5, 22.72)
+        );
+
+        // Process economic math
+        Trendline growthTrend = analyst.calculateTrendline(postUpgradeRuns);
+        RoiAnalysisReport roiReport = analyst.analyzeInvestmentRoi(enhancementCost, baselineAverage, growthTrend);
+
+        // Output Report Metrics
+        System.out.println("=== MACRO INFLATION & TREND ANALYSIS ===");
+        System.out.printf("Income Growth Rate (Slope) : +%.3fT coins per run\n", growthTrend.slope());
+        System.out.printf("Trend Model Confidence (R²) : %.2f%%\n", growthTrend.rSquared() * 100.0);
+        System.out.println("Trajectory Direction       : " + roiReport.trendDirection());
+        
+        System.out.println("\n=== INVESTMENT RETURN ON INVESTMENT (ROI) ===");
+        System.out.printf("Total Capital Expended     : %.2fT coins\n", roiReport.costOfInvestment());
+        System.out.printf("Average Net Lift Per Run   : +%.2fT coins above baseline\n", roiReport.averageNetGainPerRun());
+        System.out.printf("Calculated Break-Even Point: %.1f runs\n", roiReport.runsToBreakEven());
+        System.out.printf("Projected Net 50-Run Profit: +%.2fT pure surplus coins\n", roiReport.projectedNetProfitAfter50Runs());
+    }
+}
+
+```
+
+### Why this approach solves the macro forecasting problem:
+
+1. **Ordinary Least Squares Regression:** The engine doesn't just guess your progress based on your last run; it takes every log point, maps them on an $X/Y$ graph (Runs vs. Coins), and runs a linear regression calculation. This strips out random wave-skip or perk RNG variance to reveal your true underlying income growth rate (`slope`).
+2. **Model Confidence Tracker ($R^2$):** The code computes the Coefficient of Determination ($R^2$). If your data points line up beautifully, $R^2$ approaches $100\%$, proving your data is highly predictable. If your run lengths vary wildly due to early deaths, $R^2$ plunges, warning you that the trendline isn't dependable yet.
+3. **True Baseline Isolation:** When evaluating investment returns, you cannot just look at total income. You must isolate *net change*. The `analyzeInvestmentRoi` method holds your old historical average as a static control anchor, subtracting it from your new projections to isolate the exact, clean profit margins directly caused by your enhancement spend.
