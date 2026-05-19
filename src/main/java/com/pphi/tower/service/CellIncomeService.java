@@ -11,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -67,13 +65,25 @@ public class CellIncomeService {
             slots.add(new SlotAffordabilityDto(slot, options, maxAffordable));
         }
 
-        // Optimal combination: greedy — maximise speed per slot independently
-        // since slots don't share a budget, each slot's max affordable speed is independent.
-        // The "net" calculation shows total cost across all 5 slots vs cells/hour income.
-        List<String> optimal = slots.stream().map(SlotAffordabilityDto::maxAffordableSpeed).toList();
-        double totalCostPerHour = slots.stream()
-                .mapToDouble(s -> costForSpeed(s.maxAffordableSpeed()))
-                .sum();
+        // Optimal combination: greedy — allocate from a shared budget across all slots.
+        // Each slot claims from the remaining budget so total cost never exceeds avgCph.
+        List<String> optimal = new ArrayList<>();
+        double remainingBudget = avgCph;
+        double totalCostPerHour = 0;
+        for (int i = 0; i < LAB_SLOTS; i++) {
+            String bestSpeed = "None";
+            double bestCost = 0;
+            for (int j = SPEED_LABELS.length - 1; j >= 0; j--) {
+                if (SPEED_COSTS[j] <= remainingBudget) {
+                    bestSpeed = SPEED_LABELS[j];
+                    bestCost = SPEED_COSTS[j];
+                    break;
+                }
+            }
+            optimal.add(bestSpeed);
+            remainingBudget -= bestCost;
+            totalCostPerHour += bestCost;
+        }
         double netCph = avgCph - totalCostPerHour;
 
         OptimalCombinationDto combo = new OptimalCombinationDto(
@@ -109,13 +119,6 @@ public class CellIncomeService {
                     netCph >= 0));
         }
         return options;
-    }
-
-    private double costForSpeed(String speed) {
-        for (int i = 0; i < SPEED_LABELS.length; i++) {
-            if (SPEED_LABELS[i].equals(speed)) return SPEED_COSTS[i];
-        }
-        return 0.0; // "None"
     }
 
     private int clampDays(int requested) {
