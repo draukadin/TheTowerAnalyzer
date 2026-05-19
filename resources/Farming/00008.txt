@@ -1,0 +1,159 @@
+Battle Report
+Tower Era	Coin Bonus+ from level 20 to level 21
+Battle Date	May 18, 2026 16:39
+Game Time	1d 21h 30m 34s
+Real Time	9h 26m 14s
+Tier	10
+Wave	7023
+Killed By	Fast
+Coins Earned	24.72T
+Coins Per Hour	2.62T
+Cells Earned	49.55K
+Cells Per Hour	5.25K
+Records
+Highest Coins / Minute	222.27B
+Largest Wave Skip	4
+Most Coins From Wave Skip	171.90B
+Most Cells From Wave Skip	224
+Largest Smart Missile Stack	10
+Largest Golden Combo	0
+Most Coins From Golden Combo	0
+Largest Inner Landmine Charge	0
+Damage
+Damage Dealt	153.08O
+Projectiles	891.35S
+Rend Armor	11.98S
+Death Ray	0
+Thorns	6.08O
+Orbs	126.14O
+Land Mines	10.05S
+Chain Lightning	17.72O
+Smart Missiles	504.20s
+Inner Land Mines	0
+Poison Swamp	276.77S
+Death Wave	4.01s
+Black Hole	1.96O
+Flame Bot	69.29s
+Attack Chip	0
+Electrons	0
+Damage Taken
+Tower	1.08q
+Wall	29.70q
+Bonus Health Gained
+From Death Wave	19.85T
+Health Regenerated
+Lifesteal	41.59T
+Tower Health Regen	748.92B
+Wall Health Regen	28.74q
+Damage Blocked
+Defense %	943.98q
+Defense Absolute	8.77T
+Chrono Field	13.62q
+Chain Thunder	18.67q
+Flame Bot	28.64q
+Primordial Collapse	5.65q
+Negative Mass Projector	0
+Utility
+Recovery Packages	2009
+Free Attack Upgrade	430
+Free Defense Upgrade	523
+Free Utility Upgrade	822
+Enemy Attack Levels Skipped	2473
+Enemy Health Levels Skipped	2447
+Counts
+Projectiles Count	4.17M
+Land Mines Spawned	280654
+Thunder Bot Stuns	0
+Waves Skipped	1673
+Death Defy	0
+Hits Absorbed By Energy Shield	0
+Nuke	0
+Second Wind	0
+Demon Mode	0
+Enemies Hit By
+Projectiles	411.26K
+Thorns	19.88K
+Orbs	203.64K
+Death Ray	0
+Chain Lightning	617.40K
+Smart Missiles	18.71K
+Inner Land Mines	0
+Poison Swamp	78.14K
+Death Wave	103.45K
+Black Hole	0
+Chrono Field	86.26K
+Land Mines	389.25K
+Thunder Bot	0
+Flame Bot	44.21K
+Attack Chip	0
+Orbital Augment	0
+Killed With Effect Active
+Golden Tower	194764
+Death Wave	103.45K
+Spotlight	172761
+Amplify Bot	0
+Golden Bot	144727
+Death Penalty	0
+Total Enemies
+Total Enemies	921903
+Basic	376455
+Fast	175285
+Tank	169045
+Ranged	147877
+Boss	546
+Protector	1027
+Vampires	1718
+Rays	1666
+Scatters	1649
+Saboteur	0
+Commander	0
+Overcharge	0
+Summoned Enemies	48.52K
+Coins
+Coins Earned	24.72T
+Coins / Kill	17.54T
+Other Coin Bonuses	24.60T
+Critical Coin	1.21T
+Golden Tower	17.32T
+Golden Combo	0
+Death Wave	5.12T
+Spotlight	4.55T
+Black Hole	15.90T
+Orbs	0
+Golden Bot	14.03T
+Wave Skip	6.40T
+Coins / Wave	7.01B
+Coins Fetched	102.67B
+Bounty Coins	7.11B
+Cash
+Cash Earned	$66.72B
+Golden Tower	$40.22B
+Interest earned	$13.91M
+Currencies
+Cells Earned	49.55K
+Gems	225
+Ad Gems	205
+Gem Blocks Tapped	10
+Fetch Gems	0
+Medals	0
+Reroll Shards Earned	9.06K
+Reroll Shards Fetched	544
+Cannon Shards	30
+Armor Shards	36
+Generator Shards	39
+Core Shards	27
+Common Modules	17
+Rare Modules	14
+Enemies Destroyed By
+Projectiles	18253
+Thorns	1748
+Land Mines	142084
+Orbs	203642
+Chain Lightning	445996
+Smart Missiles	9892
+Inner Land Mines	0
+Poison Swamp	7102
+Death Ray	0
+Black Hole	537
+Flame Bot	14267
+Other	11
