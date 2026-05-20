@@ -9,7 +9,9 @@ import com.pphi.tower.web.dto.LabSpeedDto.*;
 import com.pphi.tower.web.dto.ReportSummaryDto;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +22,7 @@ public class CellIncomeService {
     private static final String[] SPEED_LABELS = {"x1.5","x2","x3","x4","x5","x6","x7","x8"};
     private static final double[] SPEED_COSTS  = {15, 100, 840, 3_360, 11_900, 60_000, 250_000, 1_000_000};
     private static final int LAB_SLOTS = 5;
+    private static final ZoneId LA_ZONE = ZoneId.of("America/Los_Angeles");
 
     private final RunRepository repository;
     private final AppConfig config;
@@ -51,24 +54,57 @@ public class CellIncomeService {
         int days = clampDays(requestedDays);
         List<ReportSummaryDto> runs = getRunsInWindow(days);
 
-        double avgCph = runs.stream().mapToDouble(ReportSummaryDto::cellsPerHour).average().orElse(0.0);
+        // Farming CPH: straight average of per-run cellsPerHour (what you earn while actively playing)
+        double farmingCph = runs.stream().mapToDouble(ReportSummaryDto::cellsPerHour).average().orElse(0.0);
 
-        // Build per-slot affordability (slots are independent but share the same cells/hour budget)
+        // Dead time: gaps between battles and the gap since the last battle ended
+        Instant now = Instant.now();
+        long totalActiveSeconds = runs.stream().mapToLong(ReportSummaryDto::realTimeSeconds).sum();
+        long totalDeadSeconds = 0;
+        double hoursSinceLastRun = 0;
+
+        if (!runs.isEmpty()) {
+            for (int i = 1; i < runs.size(); i++) {
+                long prevEnd  = epochOf(runs.get(i - 1));
+                long currStart = epochOf(runs.get(i)) - runs.get(i).realTimeSeconds();
+                long gap = currStart - prevEnd;
+                if (gap > 0) totalDeadSeconds += gap;
+            }
+            long postGap = now.getEpochSecond() - epochOf(runs.get(runs.size() - 1));
+            if (postGap > 0) {
+                totalDeadSeconds += postGap;
+                hoursSinceLastRun = postGap / 3600.0;
+            }
+        }
+
+        long totalCalendarSeconds = totalActiveSeconds + totalDeadSeconds;
+        double totalCellsEarned = runs.stream().mapToDouble(ReportSummaryDto::cellsEarned).sum();
+        double effectiveCph = totalCalendarSeconds > 0
+                ? totalCellsEarned / (totalCalendarSeconds / 3600.0)
+                : 0.0;
+
+        DeadTimeStatsDto deadStats = new DeadTimeStatsDto(
+                totalActiveSeconds / 3600.0,
+                totalDeadSeconds / 3600.0,
+                totalCalendarSeconds / 3600.0,
+                totalCalendarSeconds > 0 ? (totalDeadSeconds * 100.0 / totalCalendarSeconds) : 0.0,
+                hoursSinceLastRun);
+
+        // Build per-slot affordability using effectiveCph as the budget
         List<SlotAffordabilityDto> slots = new ArrayList<>();
         for (int slot = 1; slot <= LAB_SLOTS; slot++) {
-            List<SpeedOptionDto> options = buildSpeedOptions(avgCph);
+            List<SpeedOptionDto> options = buildSpeedOptions(effectiveCph);
             String maxAffordable = options.stream()
                     .filter(SpeedOptionDto::affordable)
                     .map(SpeedOptionDto::speed)
-                    .reduce((a, b) -> b)  // last affordable = highest
+                    .reduce((a, b) -> b)
                     .orElse("None");
             slots.add(new SlotAffordabilityDto(slot, options, maxAffordable));
         }
 
-        // Optimal combination: greedy — allocate from a shared budget across all slots.
-        // Each slot claims from the remaining budget so total cost never exceeds avgCph.
+        // Greedy optimal: allocate from a shared effectiveCph budget across all slots
         List<String> optimal = new ArrayList<>();
-        double remainingBudget = avgCph;
+        double remainingBudget = effectiveCph;
         double totalCostPerHour = 0;
         for (int i = 0; i < LAB_SLOTS; i++) {
             String bestSpeed = "None";
@@ -84,16 +120,22 @@ public class CellIncomeService {
             remainingBudget -= bestCost;
             totalCostPerHour += bestCost;
         }
-        double netCph = avgCph - totalCostPerHour;
+        double netCph = effectiveCph - totalCostPerHour;
 
         OptimalCombinationDto combo = new OptimalCombinationDto(
-                optimal,
-                totalCostPerHour,
-                totalCostPerHour * 24,
-                netCph,
-                netCph >= 0);
+                optimal, totalCostPerHour, totalCostPerHour * 24, netCph, netCph >= 0);
 
-        return new LabSpeedDto(days, runs.size(), avgCph, slots, combo);
+        return new LabSpeedDto(days, runs.size(), farmingCph, effectiveCph, deadStats, slots, combo);
+    }
+
+    /**
+     * Returns the epoch-second when a run ended.
+     * Uses the stored value if available; falls back to start-of-day for old records
+     * that pre-date the battle_epoch_seconds column.
+     */
+    private long epochOf(ReportSummaryDto run) {
+        if (run.battleEpochSeconds() > 0) return run.battleEpochSeconds();
+        return LocalDate.parse(run.battleDate()).atStartOfDay(LA_ZONE).toEpochSecond();
     }
 
     // -------------------------------------------------------------------------

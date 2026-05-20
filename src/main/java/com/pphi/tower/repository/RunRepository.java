@@ -32,7 +32,8 @@ public class RunRepository {
                     rs.getDouble("cells_per_hour"),
                     rs.getDouble("coins_per_hour"),
                     rs.getLong("real_time_seconds"),
-                    rs.getLong("game_time_seconds"));
+                    rs.getLong("game_time_seconds"),
+                    rs.getLong("battle_epoch_seconds"));
 
     public boolean existsById(String id) {
         Integer count = jdbc.queryForObject(
@@ -50,16 +51,19 @@ public class RunRepository {
     public void insert(String id, String filename, String folder, String battleDate,
                        int tier, int wave, double cellsEarned, long realTimeSeconds,
                        long gameTimeSeconds, double cellsPerHour, double coinsPerHour,
-                       String killedBy, String towerEra, String payloadJson) {
+                       String killedBy, String towerEra, String payloadJson,
+                       long battleEpochSeconds) {
         jdbc.update("""
                 INSERT INTO runs (id, filename, folder, battle_date, tier, wave,
                     cells_earned, real_time_seconds, game_time_seconds,
-                    cells_per_hour, coins_per_hour, killed_by, tower_era, payload)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    cells_per_hour, coins_per_hour, killed_by, tower_era, payload,
+                    battle_epoch_seconds)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 id, filename, folder, battleDate, tier, wave,
                 cellsEarned, realTimeSeconds, gameTimeSeconds,
-                cellsPerHour, coinsPerHour, killedBy, towerEra, payloadJson);
+                cellsPerHour, coinsPerHour, killedBy, towerEra, payloadJson,
+                battleEpochSeconds);
     }
 
     public List<ReportSummaryDto> findAllSummaries() {

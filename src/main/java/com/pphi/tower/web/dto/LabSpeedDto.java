@@ -6,8 +6,17 @@ public record LabSpeedDto(
         int windowDays,
         int runsAnalyzed,
         double averageCellsPerHour,
+        double effectiveCellsPerHour,
+        DeadTimeStatsDto deadTimeStats,
         List<SlotAffordabilityDto> slots,
         OptimalCombinationDto optimalCombination) {
+
+    public record DeadTimeStatsDto(
+            double totalActiveHours,
+            double totalDeadHours,
+            double totalCalendarHours,
+            double deadTimePercent,
+            double hoursSinceLastRun) {}
 
     public record SpeedOptionDto(
             String speed,

@@ -645,12 +645,24 @@ async function loadLabSpeed(days){
     const res=await fetch(`${API}/analysis/lab-speed?days=${days}`);
     const d=await res.json();
     const opt=d.optimalCombination;
+    const dt=d.deadTimeStats;
+    const fmtHrs=h=>{if(h<1)return Math.round(h*60)+'m';if(h<24)return h.toFixed(1)+'h';return (h/24).toFixed(1)+'d';};
     document.getElementById('labPanel').innerHTML=`
-      <div class="stat-grid" style="margin-bottom:1.5rem">
+      <div class="stat-grid" style="margin-bottom:1rem">
         <div class="stat-card"><div class="label">Runs Analyzed</div><div class="value accent">${d.runsAnalyzed}</div></div>
-        <div class="stat-card"><div class="label">Avg Cells/Hour</div><div class="value green">${fmtRaw(d.averageCellsPerHour)}</div></div>
-        <div class="stat-card"><div class="label">Optimal Total Cost/Hr</div><div class="value ${opt.affordable?'green':'red'}">${fmtRaw(opt.totalCostPerHour)}</div></div>
+        <div class="stat-card"><div class="label">Farming CPH</div><div class="value green">${fmtRaw(d.averageCellsPerHour)}</div></div>
+        <div class="stat-card"><div class="label">Effective CPH</div><div class="value ${d.effectiveCellsPerHour>=d.averageCellsPerHour*0.9?'green':'gold'}">${fmtRaw(d.effectiveCellsPerHour)}</div></div>
         <div class="stat-card"><div class="label">Net Cells/Hour</div><div class="value ${opt.netCellsPerHour>=0?'green':'red'}">${fmtRaw(opt.netCellsPerHour)}</div></div>
+      </div>
+      <div class="optimal-card" style="margin-bottom:1rem">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Dead Time · ${fmtHrs(dt.hoursSinceLastRun)} since last run</div>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:13px;margin-bottom:8px">
+          <span>Active: <b style="color:var(--text);font-family:var(--mono)">${fmtHrs(dt.totalActiveHours)}</b></span>
+          <span>Dead: <b style="color:${dt.deadTimePercent>50?'var(--red)':'var(--muted)'};font-family:var(--mono)">${fmtHrs(dt.totalDeadHours)}</b></span>
+          <span>Calendar: <b style="color:var(--text);font-family:var(--mono)">${fmtHrs(dt.totalCalendarHours)}</b></span>
+          <span>Dead %: <b style="color:${dt.deadTimePercent>50?'var(--red)':'var(--muted)'};font-family:var(--mono)">${dt.deadTimePercent.toFixed(1)}%</b></span>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">Effective CPH = cells earned ÷ calendar time (farming + idle). Affordability uses Effective CPH.</div>
       </div>
       <div class="optimal-card">
         <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Optimal Combination</div>

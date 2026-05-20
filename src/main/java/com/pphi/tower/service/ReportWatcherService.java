@@ -106,7 +106,8 @@ public class ReportWatcherService {
                     cellsPerHour, coinsPerHour,
                     report.killedBy(),
                     report.towerEra(),
-                    payload);
+                    payload,
+                    report.battleReportDate().getEpochSecond());
 
             log.info("Indexed report: {} -> {}/{}", id, folder, filename);
 

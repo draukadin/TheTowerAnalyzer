@@ -17,4 +17,5 @@ public record ReportSummaryDto(
         double cellsPerHour,
         double coinsPerHour,
         long realTimeSeconds,
-        long gameTimeSeconds) {}
+        long gameTimeSeconds,
+        long battleEpochSeconds) {}

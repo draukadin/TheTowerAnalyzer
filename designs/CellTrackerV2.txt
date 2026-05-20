@@ -1,0 +1,13 @@
+The Lab Speed Affordability is working fine for a static evaluation, but I think there are ## improvements we can do to make it better:
+1. Have a user input to enter the current number of cells on hand and account for those in the net-negative computation.
+    1a. Include an input for a lowest level safety buffer of cells on hand to not go below.
+    1b. Tell the user how long they can consume their current cells on hand at the recommended lab speeds before they have to go back to a lower speed that fits within their cell earning rate.
+2. There are times when you have to do other things to complete other objectives separate from farming that completely kills your average cells per hour earn rate.  To account for this I think
+we need to take into account following:
+    2a. The current time the Lab Speed Affordability is done.
+    2b. The date of the battle report which is the time the battle ended
+    2c. The real time duration of the battle
+  This will allow us to determine when the earning rate has fallen to zero.  Probably the only wrinkle in the data is that
+  if the user leaves the game, the game real time clock stops running but calendar time keeps ticking so even though the game real time clock says 8h 22m 41s
+  the user may have left the screen for a total of 32m 21s but we won't know that from the battle report.  I think we can ignore this for now unless you can
+  think of some way to account it.

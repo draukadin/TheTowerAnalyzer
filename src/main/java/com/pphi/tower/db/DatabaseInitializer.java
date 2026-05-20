@@ -44,6 +44,14 @@ public class DatabaseInitializer {
                 )
                 """);
 
+        // Migration: add battle_epoch_seconds for dead-time gap computation.
+        // ALTER TABLE ADD COLUMN is idempotent in SQLite 3.37+; catch the error for older versions.
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN battle_epoch_seconds INTEGER");
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
+
         jdbc.execute("""
                 CREATE INDEX IF NOT EXISTS idx_runs_battle_date
                 ON runs (battle_date)
