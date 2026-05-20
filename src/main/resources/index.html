@@ -631,6 +631,22 @@ async function renderLabSpeedView(){
       <input type="range" min="3" max="90" value="30" id="labDaysSlider" oninput="updateLabDays(this.value)">
       <span id="labDaysLabel">30 days</span>
     </div>
+    <div class="window-controls" style="margin-top:-1rem;flex-wrap:wrap;gap:16px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <label>Cells on Hand:</label>
+        <input type="number" id="labCellsOnHand" min="0" value="0"
+          style="width:130px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+                 color:var(--text);padding:4px 8px;font-size:13px;font-family:var(--mono)"
+          onchange="loadLabSpeed(document.getElementById('labDaysSlider').value)">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label>Safety Buffer:</label>
+        <input type="number" id="labSafetyBuffer" min="0" value="0"
+          style="width:130px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+                 color:var(--text);padding:4px 8px;font-size:13px;font-family:var(--mono)"
+          onchange="loadLabSpeed(document.getElementById('labDaysSlider').value)">
+      </div>
+    </div>
     <div id="labPanel"><div class="loading-placeholder">Loading…</div></div>`;
   loadLabSpeed(30);
 }
@@ -642,11 +658,15 @@ function updateLabDays(val){
 
 async function loadLabSpeed(days){
   try{
-    const res=await fetch(`${API}/analysis/lab-speed?days=${days}`);
+    const cellsOnHand=Number(document.getElementById('labCellsOnHand')?.value)||0;
+    const safetyBuffer=Number(document.getElementById('labSafetyBuffer')?.value)||0;
+    const res=await fetch(`${API}/analysis/lab-speed?days=${days}&cellsOnHand=${cellsOnHand}&safetyBuffer=${safetyBuffer}`);
     const d=await res.json();
     const opt=d.optimalCombination;
+    const farm=d.farmingCombination;
     const dt=d.deadTimeStats;
-    const fmtHrs=h=>{if(h<1)return Math.round(h*60)+'m';if(h<24)return h.toFixed(1)+'h';return (h/24).toFixed(1)+'d';};
+    const cr=d.cellReserve;
+    const fmtHrs=h=>{if(h==null||h<0)return '—';if(h<1)return Math.round(h*60)+'m';if(h<24)return h.toFixed(1)+'h';return (h/24).toFixed(1)+'d';};
     document.getElementById('labPanel').innerHTML=`
       <div class="stat-grid" style="margin-bottom:1rem">
         <div class="stat-card"><div class="label">Runs Analyzed</div><div class="value accent">${d.runsAnalyzed}</div></div>
@@ -677,6 +697,36 @@ async function loadLabSpeed(days){
           <span style="color:var(--text);font-family:var(--mono)">${fmtRaw(opt.totalCostPerDay)}/day</span> ·
           Net: <span style="color:${opt.netCellsPerHour>=0?'var(--green)':'var(--red)'};font-family:var(--mono)">${fmtRaw(opt.netCellsPerHour)}/hr</span>
         </div>
+      </div>
+      <div class="optimal-card" style="border-color:rgba(245,200,66,0.3)">
+        <div style="font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+          Farming Speeds <span style="color:var(--muted);font-weight:400">(${fmtRaw(d.averageCellsPerHour)} CPH while active)</span>
+        </div>
+        <div class="optimal-slots">${farm.slots.map((s,i)=>`
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Slot ${i+1}</div>
+            <div class="optimal-slot-badge ${s==='None'?'none':''}">${s}</div>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-top:8px">
+          Total cost: <span style="color:var(--text);font-family:var(--mono)">${fmtRaw(farm.totalCostPerHour)}/hr</span> ·
+          <span style="color:var(--text);font-family:var(--mono)">${fmtRaw(farm.totalCostPerDay)}/day</span>
+        </div>
+        ${cr.burnRatePerHour>0?`
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+            Draws down reserves at <span style="color:var(--gold);font-family:var(--mono)">${fmtRaw(cr.burnRatePerHour)}/hr</span>
+            (farming cost − effective earn rate)
+          </div>
+          ${cr.cellsOnHand>0?`
+          <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:13px">
+            <span>Spendable: <b style="color:var(--text);font-family:var(--mono)">${fmtRaw(cr.spendableCells)}</b></span>
+            <span>Sustains for: <b style="color:${cr.burndownHours!=null&&cr.burndownHours<24?'var(--red)':'var(--gold)'};font-family:var(--mono)">${fmtHrs(cr.burndownHours)}</b></span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">After burndown, drop to Sustainable Speeds above.</div>
+          `:`<div style="font-size:12px;color:var(--muted)">Enter cells on hand above to see burndown time.</div>`}
+        </div>`:`
+        <div style="margin-top:8px;font-size:12px;color:var(--green)">Farming speeds are sustainable indefinitely.</div>`}
       </div>
       <div class="section-title">Per-Slot Breakdown</div>
       <div class="lab-grid">${d.slots.map(slot=>`

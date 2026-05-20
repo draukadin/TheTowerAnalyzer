@@ -28,8 +28,10 @@ public class AnalysisController {
 
     @GetMapping("/lab-speed")
     public LabSpeedDto getLabSpeed(
-            @RequestParam(required = false) Integer days) {
+            @RequestParam(required = false) Integer days,
+            @RequestParam(required = false, defaultValue = "0") double cellsOnHand,
+            @RequestParam(required = false, defaultValue = "0") double safetyBuffer) {
         int d = days != null ? days : config.getCells().getWindowDaysDefault();
-        return cellIncomeService.getLabSpeedAffordability(d);
+        return cellIncomeService.getLabSpeedAffordability(d, cellsOnHand, safetyBuffer);
     }
 }

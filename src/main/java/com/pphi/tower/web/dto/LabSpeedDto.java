@@ -8,8 +8,17 @@ public record LabSpeedDto(
         double averageCellsPerHour,
         double effectiveCellsPerHour,
         DeadTimeStatsDto deadTimeStats,
+        CellReserveDto cellReserve,
         List<SlotAffordabilityDto> slots,
-        OptimalCombinationDto optimalCombination) {
+        OptimalCombinationDto optimalCombination,
+        OptimalCombinationDto farmingCombination) {
+
+    public record CellReserveDto(
+            double cellsOnHand,
+            double safetyBuffer,
+            double spendableCells,
+            double burnRatePerHour,
+            Double burndownHours) {}
 
     public record DeadTimeStatsDto(
             double totalActiveHours,

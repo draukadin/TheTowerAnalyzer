@@ -50,7 +50,7 @@ public class CellIncomeService {
         return new CellIncomeDto(days, runs.size(), avgCph, totalCells, avgPerRun, points);
     }
 
-    public LabSpeedDto getLabSpeedAffordability(int requestedDays) {
+    public LabSpeedDto getLabSpeedAffordability(int requestedDays, double cellsOnHand, double safetyBuffer) {
         int days = clampDays(requestedDays);
         List<ReportSummaryDto> runs = getRunsInWindow(days);
 
@@ -122,10 +122,41 @@ public class CellIncomeService {
         }
         double netCph = effectiveCph - totalCostPerHour;
 
-        OptimalCombinationDto combo = new OptimalCombinationDto(
+        OptimalCombinationDto sustainableCombo = new OptimalCombinationDto(
                 optimal, totalCostPerHour, totalCostPerHour * 24, netCph, netCph >= 0);
 
-        return new LabSpeedDto(days, runs.size(), farmingCph, effectiveCph, deadStats, slots, combo);
+        // Farming combination: greedy allocation using farmingCph as the budget
+        List<String> farmingOptimal = new ArrayList<>();
+        double farmingRemainingBudget = farmingCph;
+        double farmingTotalCostPerHour = 0;
+        for (int i = 0; i < LAB_SLOTS; i++) {
+            String bestSpeed = "None";
+            double bestCost = 0;
+            for (int j = SPEED_LABELS.length - 1; j >= 0; j--) {
+                if (SPEED_COSTS[j] <= farmingRemainingBudget) {
+                    bestSpeed = SPEED_LABELS[j];
+                    bestCost = SPEED_COSTS[j];
+                    break;
+                }
+            }
+            farmingOptimal.add(bestSpeed);
+            farmingRemainingBudget -= bestCost;
+            farmingTotalCostPerHour += bestCost;
+        }
+        double farmingNetCph = farmingCph - farmingTotalCostPerHour;
+        OptimalCombinationDto farmingCombo = new OptimalCombinationDto(
+                farmingOptimal, farmingTotalCostPerHour, farmingTotalCostPerHour * 24,
+                farmingNetCph, farmingNetCph >= 0);
+
+        // Cell reserve: how long the spendable cells last at farming speeds
+        double spendable = Math.max(0, cellsOnHand - safetyBuffer);
+        double burnRate = Math.max(0, farmingTotalCostPerHour - effectiveCph);
+        Double burndownHours = burnRate > 0 ? spendable / burnRate : null;
+        CellReserveDto reserve = new CellReserveDto(
+                cellsOnHand, safetyBuffer, spendable, burnRate, burndownHours);
+
+        return new LabSpeedDto(days, runs.size(), farmingCph, effectiveCph, deadStats,
+                reserve, slots, sustainableCombo, farmingCombo);
     }
 
     /**
