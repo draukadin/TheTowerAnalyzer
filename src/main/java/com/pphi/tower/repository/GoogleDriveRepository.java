@@ -28,7 +28,7 @@ public class GoogleDriveRepository {
         do {
             FileList response = drive.files().list()
                     .setQ("'" + folderId + "' in parents and mimeType = 'text/plain' and trashed = false")
-                    .setFields("nextPageToken, files(id, name)")
+                    .setFields("nextPageToken, files(id, name, parents)")
                     .setPageToken(pageToken)
                     .execute();
             List<File> page = response.getFiles();
@@ -52,6 +52,17 @@ public class GoogleDriveRepository {
     public InputStream downloadFile(String fileId, OutputStream out) throws IOException {
         drive.files().get(fileId).executeMediaAndDownloadTo(out);
         return convertToInputStream(out);
+    }
+
+    public void moveFilesToFolder(List<File> files, String destinationFolderId) throws IOException {
+        for (File file : files) {
+            String currentParents = String.join(",", file.getParents());
+            drive.files().update(file.getId(), new File())
+                    .setAddParents(destinationFolderId)
+                    .setRemoveParents(currentParents)
+                    .setFields("id, parents")
+                    .execute();
+        }
     }
 
     private InputStream convertToInputStream(OutputStream os) throws IOException {
