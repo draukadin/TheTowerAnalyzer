@@ -1,82 +1,66 @@
 ### The Complete Weekly Operational Blueprint
 
 #### Tower Eras
- * Farming
-    * T10 Bonus is 1603.05x
-    * Golden Bot Range Gold Boxed
- * Tournament/Milestone/Dissonance
-   * Chain Thunder Lvl 1; Def% Lvl 25 to 26
+* These are tracked as versions in the Player & Stuff worksheet now.  Most current version is at the top. Provided here for reference
+2.2.0	Minor	Death Wave Effect Wave Quantity 2
+2.1.0	Minor	Attack Speed Lab 61 → 62
+2.0.3	Patch	Cell / Kill Bonus 20 → 21
+2.0.2	Patch	Cell / Kill Bonus 19 → 20
+2.0.1	Patch	Coin Bonus+ 21 → 22
+2.0.0	Major	Coin Bonus+ 20 → 21
+1.3.0	Minor	Chain Thunder Lvl 1; Def% 25 → 26
+1.2.0	Minor	Spotlight Qty One (2 Beams)
+1.1.0	Minor	Modules Upgraded 101 → 140
+1.0.0	Major	Initial
+0.1.0	Major	Pre Modules to 140s
 
 #### Enhancements
-Workshop Enhancement,,Farming,Tourney,Max,Coins Next Level
-Damage +,x 1.52,52,52,400,17.18 T
-Rend Armor Mult +,x 1.26,26,26,400,206.25 B
-Critical Factor +,x 1.52,52,52,400,17.18 T
-Damage / Meter +,x 1.26,26,26,400,206.25 B
-Super Crit Multi +,x 1.52,52,52,400,17.18 T
-Unlock ASPD + (205.31 T),x 1.00,0,0,75,5.00 B
-Health +,x 1.46,46,46,400,6.76 T
-Health Regen +,x 1.46,46,46,400,6.76 T
-Defense Absolute +,x 1.00,0,0,400,5.00 B
-Land Mine Damage +,x 1.00,0,0,400,5.00 B
-Wall Health +,x 1.46,46,46,400,6.76 T
-Unlock Orb Size + (377.94 T),x 1.00,0,0,200,5.00 B
-Cash Bonus +,x 1.30,30,30,400,355.04 B
-Coin Bonus +,x 1.21,21,21,200,30.29 T
-Cells / Kill Bonus +,x 1.19,19,19,200,15.26 T
-Free Upgrades +,x 1.08,8,8,100,5.05 T
-Recovery Package +,x 1.10,10,10,300,6.88 B
-Unlock ELS + (401.75 T),x 1.00,0,0,60,5.00 B
+Workshop Enhancement,Multiplier,Farming,Tourney,Preset 3,Preset 4,Preset 5,Max,Next Level
+Damage +,x 1.52,52,52,,,,400,17.18 T
+Rend Armor Mult +,x 1.26,26,26,,,,400,206.25 B
+Critical Factor +,x 1.52,52,52,,,,400,17.18 T
+Damage / Meter +,x 1.26,26,26,,,,400,206.25 B
+Super Crit Multi +,x 1.52,52,52,,,,400,17.18 T
+Unlock ASPD + (205.31 T),x 1.00,0,0,,,,75,5.00 B
+Health +,x 1.46,46,46,,,,400,6.76 T
+Health Regen +,x 1.46,46,46,,,,400,6.76 T
+Defense Absolute +,x 1.00,0,0,,,,400,5.00 B
+Land Mine Damage +,x 1.00,0,0,,,,400,5.00 B
+Wall Health +,x 1.46,46,46,,,,400,6.76 T
+Unlock Orb Size + (377.94 T),x 1.00,0,0,,,,200,5.00 B
+Cash Bonus +,x 1.30,30,30,,,,400,355.04 B
+Coin Bonus +,x 1.22,22,22,,,,200,40.24 T
+Cells / Kill Bonus +,x 1.20,20,20,,,,200,22.02 T
+Free Upgrades +,x 1.08,8,8,,,,100,5.05 T
+Recovery Package +,x 1.10,10,10,,,,300,6.88 B
+Unlock ELS + (356.2 T),x 1.00,0,0,,,,60,5.00 B
 
 #### Currencies
-17.05T Coins
-Gems 4299
-Stones 174
-Medals 1123
-Elite Cell 349.12K
+38.36T Coins
+Gems 5239
+Stones 9
+Medals 1199
+Elite Cell 413.61K
 Keys 0
-Tokens 115
-Bits 86
+Tokens 205
+Bits 186
 Tournament Ticket 0
 Module Tickets 0
-Cannon Shards 210
-Armor Shards 1645
-Generator Shards 1276
-Core Shards 1596
-Reroll Shards 2642758
+Cannon Shards 660
+Armor Shards 2046
+Generator Shards 1859
+Core Shards 2107
+Reroll Shards 2677476
 
 #### Labs (Time remaining is the amount of time without the speed multiplier)
-Slot 1: Shatter Shards Lv 1 - 17d 8h 30m - 3x speed
-Slot 2: Armor Effect Ban Lv 2 - 16d 17h 0m - 2x speed
-Slot 3: Reroll Shards Lv 48 - 18h 44m - 2x speed
-Slot 4: Attack Speed Lv 61 - d 9h 0m - 3x speed
-Slot 5: Lab Speed 97 - 4d 3h 36m - 4x speed
+Slot 1: Shatter Shards Lv 1 - 12d 13h 3m - 3x speed
+Slot 2: Armor Effect Ban Lv 2 - 13d 11h 9m - 2x speed
+Slot 3: Reroll Shards Lv 51 - 1d 4h 9m - 2x speed
+Slot 4: Attack Speed Lv 62 - 1d 21h 13m - 3x speed
+Slot 5: Lab Speed 98 - 23d 4h 30m - 4x speed
 
 #### Modules
-Inventory 242 / 300
-
-#### Stone Shortfall plan
-The Mission Countdown
-
-    Current Status: 25 / 35 missions completed (10 remaining).
-
-    The Schedule: You get 2 missions every 8 hours.
-
-To get those last 11 missions, you need 6 more drop cycles (which will give you 12 missions total, leaving you with 1 to spare).
-
-    Cycle 1 (2 missions): Drops in 20 minutes (Wednesday ~5:00 PM) -> 26 missions (Completed)
-    Cycle 2 (2 missions): Drops in 8 hours, 20 minutes (Thursday ~1:00 AM) -> 28 missions
-    Cycle 3 (2 missions): Drops in 16 hours, 20 minutes (Thursday ~9:00 AM) -> 30 missions
-    Cycle 4 (2 missions): Drops in 24 hours, 20 minutes (Thursday ~5:00 PM) -> 32 missions
-    Cycle 5 (2 missions): Drops in 32 hours, 20 minutes (Friday ~1:00 AM) -> 34 missions
-    Cycle 6 (2 missions): Drops in 40 hours, 20 minutes (Friday ~9:00 AM) -> 36 missions (Target Achieved!)
-
-🏁 Friday's Pre-Tournament Window
-
-You will wrap up that final mission cycle around Friday at 9:00 AM.
-Since the next tournament doesn't kick off until Friday at 5:00 PM, you have an absolute luxury cushion of 8 hours to claim your 45 stones, bump your stash up to 209, and unlock the effect wave before you ever join a bracket.
-
-One box with 10 stones claimed and included in the total count of 174 Stones.  25 Stones left to claim.
+Inventory 282 / 300
 
 ---
 
@@ -86,7 +70,7 @@ Instead of waiting until the last 17 hours, we are going to start your accumulat
 
 ### Phase 1: The Accelerated Utility Window (Right Now – Sunday, May 24)
 * **The Goal:** Capitalize on pure farming runs right now before the heavy event mission pressure disrupts your setups.
-* **The Action:** Execute the 2-run plan to push **Coin Bonus +** (30.29T) and **Cells / Kill Bonus +** (15.26T).
+* **The Action:** Execute the 2-run plan to push **Coin Bonus +** (30.29T) and **Cells / Kill Bonus +** (15.26T). - Completed
 * **The Hard Cutoff:** Stop all workshop enhancement spending on **Sunday, May 24**.
 
 ### Phase 2: The Multi-Day Event Cushion (Sunday, May 24 – Thursday, May 28)
@@ -110,18 +94,17 @@ Instead of waiting until the last 17 hours, we are going to start your accumulat
 
 This adjustment completely removes the stress of RNG event missions messing with your core progression goals.
 
-Since you are locking down the coin freeze on Sunday, do you want to map out which event missions you want to tackle first to get them out of the way as quickly as possible?
-
 ### 5. The Passive Desync Fix (Bits & Summon)
 
 * **The Rule:** Bits are completely on autopilot. You are entirely relying on the weekly maxed guild chest drip.
 * **The Action:** The second the milestone bits drop into your wallet over the next two weeks, you immediately dump them into the Summon cooldown upgrades ($95 \rightarrow 97 \rightarrow 99$) until you hit that flawless 90-second flat desync fix.
+* **Got the last 100 bits Friday and went from 86 to 186 bits.  Once the current farming run ends, will drop into the summon cooldown upgrade
 
 ### 6. The Module Inventory Management (The 300 Limit)
 
 * **The Rule:** Keep a strict eye on your inventory space to avoid capping out.
 * **The Action:** Merge or shatter lower-tier modules as needed to stay safely below the 300 cap.
-* **The Exception:** **Protect your Armor and Cannon modules.** Hoard them as fiercely as possible so they are instantly ready to be processed the second that Tier 15 Wave 300 push unlocks the Shatter Shards Level 1 lab.
+* **The Exception:** **Protect your Armor and Cannon modules.** Hoard them as fiercely as possible so they are instantly ready to be processed as soon as Shatter Shards Level 1 lab completes.
 
 ### 7. The 2100 Shard Trigger Limit
 
@@ -129,14 +112,14 @@ Since you are locking down the coin freeze on Sunday, do you want to map out whi
 * **The Action:** Keep tabs on your shard banks. The exact moment any individual shard type crosses the **2,100 threshold**, instantly burn them to grab another level in the corresponding module to boost your baseline stats.
 
 ### 8. Comprehensive Ultimate Weapon Stone Progression
-Phase 1: The Armor Shield Solution (Immediate Goal)
+Phase 1: The Armor Shield Solution (Immediate Goal) - Completed
 
     Target: Death Wave Armor Stripping (200 Stones)
     Execution Window: Thursday morning / Friday morning before the tournament bracket locks.
     Objective: Instantly dismantle the Champion tournament armor bottlenecks that hard-capped your crowd control.
 
 Phase 2: Crowd Control & Crowd Saturation (Next Horizon)
-    Target: The Last Chain Lightning Quantity Pip (400 Stones)
+    Target: The Last Chain Lightning Quantity quantity (400 Stones)
     Objective: This maximizes your Dimension Core scaling by giving you the maximum possible coverage of chain links across the screen. It ensures your shock stacks apply universally across high-density fields to prime targets before they touch your wall.
 
 Phase 3: The Economy & Sync Maxing (Strategic Grind)
@@ -147,31 +130,33 @@ Phase 4: Full-Screen Coverage (Late-Stage Completion)
     Target: Spotlight Angle from 31° to 40° (540 Stones total)
     Objective: Moving your spotlights to 40 degrees massive increases your screen real estate multiplier. This heavily mitigates RNG on where enemies spawn and ensures your raw damage modifiers cover almost one quarter of the entire battlefield at any given second.
 
-### 10. Laboratory Slot Optimization & Retiring Lab Speed (Day 19 & Day 24 Transition)
+Phase 5: Drive to permanent Chrono Field
+    Target: Bring the Cooldown and Duration into sync so that when the CF ends it begins immediately without a gap in coverage
+    Objective: Increasing CF uptime will allow for increased crowd control by reducing the speed of enemies making it easier for Attack Speed/Knockback to keep them off the wall and give CL, and orbs more time to kill them.
+
+### 10. Laboratory Slot Optimization & Retiring Lab Speed
 
 #### The Immediate 19-Day Holding Pattern
 
 * **The Action:** **Pause Defense % at Level 26.** Move **Attack Speed** into its current 3x slot rotation.
 * **The Reason:** This keeps Attack Speed steadily grinding while you wait out the final 19-day countdown for Lab Speed to finish.
 
-#### Slot A: The Premium 4x Speed Slot (Triggers in ~19 Days)
+#### Slot A: The Premium 4x Speed Slot (Triggers in ~12 Days)
 
-* **The Trigger:** **Lab Speed** maxes out to Level 99 in the 4x Speed Slot.
+* **The Trigger:** **Lab Speed** maxes out to Level 99 in the 4x Speed Slot. (lvl 97 completed.  lvl 98 in progress. lvl 99 is the last level)
 * **The Action:** Instantly move **Attack Speed** into the permanent 4x Speed Slot to hyper-accelerate its final **84-day push to the absolute max cap**.
 * **The Strategic Objective:** Prioritize *Absolute Crowd Control* over damage mitigation. Maxing your attack speed limits enemy proximity, optimizes knockback, and ensures high-density tournament swarms are completely locked down before they can even touch your wall.
 
-#### Slot B: The Legacy Cascade Slot (Triggers in ~19 Days)
+#### Slot B: The Legacy Cascade Slot (Triggers in ~12 Days)
 
 * **The Trigger:** Attack Speed vacates its 3x slot to claim the 4x premium throne.
 * **The Action:** **Bring Defense % back online** at Level 26 in this newly opened 3x slot.
 * **The Objective:** Resume the long-term grind toward the Level 50 absolute tournament max, steadily building your raw damage mitigation baseline in the background while Attack Speed hogs the fast track.
 
-#### Slot C: The Ban Lab Hand-off Slot (Triggers in ~24 Days)
+#### Slot C: The Ban Lab Hand-off Slot (Triggers in ~6 Days)
 
 * **The Trigger:** The double-ban cycle (**Armor & Cannon Effect Bans**) concludes, and your 42T cash reserve is handed off to the final lab.
 * **The Action:** Immediately slot the **Death Wave Armor Stripping Lab** (Starting at Level 0) into this open rotation for rapid, low-level, high-yield gains to support your weekend tournament performance.
-
-
 * **Secondary Focus (Structural Runway):** **Chrono Field Duration** / **Attack Speed**
 * *Objective:* Maintain your essential crowd control speed baseline while steadily building the mandatory duration foundation required for your next massive ultimate weapon stone phase.
 
