@@ -1,8 +1,10 @@
 package com.pphi.tower.parser;
 
+import com.pphi.tower.exceptions.FieldToLineCountMismatchException;
 import com.pphi.tower.model.ScaleSuffix;
 import com.pphi.tower.model.TowerNumber;
 import com.pphi.tower.model.battlehistory.*;
+import com.pphi.tower.model.googledrive.BattleReportDriveFile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -24,16 +26,30 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class BattleHistoryParser {
 
-
     private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm");
 
     public BattleHistory parse(final Path path) {
-        Map<SectionHeader, List<String>> sectionHeaderListMap = readAllLines(path);
+        try {
+            final List<String> allLines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            return parse(allLines);
+        } catch (FieldToLineCountMismatchException ex) {
+            throw new RuntimeException(String.format("%s - %s", ex.getMessage(), path));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read file.", e);
+        }
+    }
+
+    public BattleHistory parse(final BattleReportDriveFile file) {
+        return parse(file.contents().lines().toList());
+    }
+
+    public BattleHistory parse(final List<String> allLines) {
+        Map<SectionHeader, List<String>> sectionHeaderListMap = readAllLines(allLines);
         Map<SectionHeader, Section> sectionMap = new HashMap<>();
         sectionHeaderListMap.forEach(((sectionHeader, lines) -> {
             final Field[] fields = sectionHeader.getType().getDeclaredFields();
             if (fields.length != lines.size()) {
-                throw new RuntimeException(String.format("%s has %d fields and %d lines - %s", sectionHeader, fields.length, lines.size(), path));
+                throw new FieldToLineCountMismatchException(String.format("%s has %d fields and %d lines", sectionHeader, fields.length, lines.size()));
             }
             final Object[] initArgs = new Object[fields.length];
             for (int i = 0; i < fields.length; i++) {
@@ -110,28 +126,23 @@ public class BattleHistoryParser {
         return Integer.parseInt(value);
     }
 
-    private Map<SectionHeader, List<String>> readAllLines(final Path path) {
-        try {
-            final Map<SectionHeader, List<String>> sectionHeaderListHashMap = new HashMap<>();
-            final List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-            final AtomicInteger startIndex = new AtomicInteger();
-            SectionHeader sectionHeader = SectionHeader.fromName(lines.get(0));
-            int endIndex = 0;
-            for (int i = 1; i < lines.size(); i++) {
-                startIndex.set(endIndex + 1);
-                endIndex = findEndIndex(endIndex + 1, lines);
-                if (startIndex.get() < lines.size()) {
-                    List<String> sectionLines = lines.subList(startIndex.get(), endIndex);
-                    sectionHeaderListHashMap.put(sectionHeader, sectionLines);
-                    if (endIndex < lines.size()) {
-                        sectionHeader = SectionHeader.fromName(lines.get(endIndex));
-                    }
+    private Map<SectionHeader, List<String>> readAllLines(final List<String> lines) {
+        final Map<SectionHeader, List<String>> sectionHeaderListHashMap = new HashMap<>();
+        final AtomicInteger startIndex = new AtomicInteger();
+        SectionHeader sectionHeader = SectionHeader.fromName(lines.get(0));
+        int endIndex = 0;
+        for (int i = 1; i < lines.size(); i++) {
+            startIndex.set(endIndex + 1);
+            endIndex = findEndIndex(endIndex + 1, lines);
+            if (startIndex.get() < lines.size()) {
+                List<String> sectionLines = lines.subList(startIndex.get(), endIndex);
+                sectionHeaderListHashMap.put(sectionHeader, sectionLines);
+                if (endIndex < lines.size()) {
+                    sectionHeader = SectionHeader.fromName(lines.get(endIndex));
                 }
             }
-            return sectionHeaderListHashMap;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read file.", e);
         }
+        return sectionHeaderListHashMap;
     }
 
     private int findEndIndex(int startIndex, List<String> lines) {

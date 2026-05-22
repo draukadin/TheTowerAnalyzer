@@ -29,7 +29,7 @@ public class DatabaseInitializer {
                 CREATE TABLE IF NOT EXISTS runs (
                     id                  TEXT PRIMARY KEY,
                     filename            TEXT NOT NULL,
-                    folder              TEXT NOT NULL,
+                    run_type            TEXT NOT NULL,
                     battle_date         TEXT NOT NULL,
                     tier                INTEGER NOT NULL,
                     wave                INTEGER NOT NULL,
@@ -45,7 +45,6 @@ public class DatabaseInitializer {
                 """);
 
         // Migration: add battle_epoch_seconds for dead-time gap computation.
-        // ALTER TABLE ADD COLUMN is idempotent in SQLite 3.37+; catch the error for older versions.
         try {
             jdbc.execute("ALTER TABLE runs ADD COLUMN battle_epoch_seconds INTEGER");
         } catch (Exception ignored) {
@@ -58,8 +57,8 @@ public class DatabaseInitializer {
                 """);
 
         jdbc.execute("""
-                CREATE INDEX IF NOT EXISTS idx_runs_folder
-                ON runs (folder)
+                CREATE INDEX IF NOT EXISTS idx_runs_run_type
+                ON runs (run_type)
                 """);
     }
 }

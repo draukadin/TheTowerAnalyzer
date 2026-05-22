@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "tower")
 public class AppConfig {
 
-    private String reportsPath = "./resources";
+    private String battleReportsFolderId;
     private Cells cells = new Cells();
 
     public static class Cells {
@@ -23,8 +23,9 @@ public class AppConfig {
         public void setWindowDaysMax(int v) { this.windowDaysMax = v; }
     }
 
-    public String getReportsPath() { return reportsPath; }
-    public void setReportsPath(String v) { this.reportsPath = v; }
+    public String getBattleReportsFolderId() { return battleReportsFolderId; }
+    public void setBattleReportsFolderId(String v) { this.battleReportsFolderId = v; }
+
     public Cells getCells() { return cells; }
     public void setCells(Cells v) { this.cells = v; }
 }

@@ -151,6 +151,13 @@
   ::-webkit-scrollbar{width:6px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+  .sidebar-actions{padding:8px 1rem;border-bottom:1px solid var(--border);}
+  .btn-fetch{width:100%;padding:7px 12px;border-radius:7px;border:1px solid var(--border2);
+    background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer;
+    transition:all 0.15s;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn-fetch:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+  .btn-fetch:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-fetch.loading{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -176,6 +183,9 @@
       <select class="folder-filter" id="folderFilter" onchange="filterFolder(this.value)">
         <option value="">All folders</option>
       </select>
+    </div>
+    <div class="sidebar-actions">
+      <button class="btn-fetch" id="fetchBtn" onclick="fetchReports()">&#8595; Fetch New Reports</button>
     </div>
     <div class="report-list" id="reportList">
       <div class="loading-placeholder">Loading reports…</div>
@@ -208,24 +218,52 @@ async function init(){
   }
 }
 
+async function fetchReports(){
+  const btn=document.getElementById('fetchBtn');
+  btn.disabled=true;
+  btn.classList.add('loading');
+  btn.textContent='Fetching…';
+  try{
+    const res=await fetch(`${API}/reports/fetch`,{method:'POST'});
+    if(!res.ok)throw new Error(res.statusText);
+    const data=await res.json();
+    const n=data.processed;
+    btn.textContent=n>0?`↓ Fetched ${n} report${n===1?'':'s'}`:'No new reports';
+    if(n>0){
+      const res2=await fetch(`${API}/reports`);
+      allReports=await res2.json();
+      populateFolderFilter();
+      renderSidebar(visibleReports());
+      setStatus(true,`${allReports.length} reports loaded`);
+    }
+  }catch(e){
+    btn.textContent='Fetch failed';
+    setStatus(false,'Fetch error');
+  }finally{
+    btn.disabled=false;
+    btn.classList.remove('loading');
+    setTimeout(()=>{btn.textContent='↓ Fetch New Reports';},3000);
+  }
+}
+
 function setStatus(ok,msg){
   document.getElementById('statusDot').className='status-dot'+(ok?'':' err');
   document.getElementById('statusText').textContent=msg;
 }
 
 function populateFolderFilter(){
-  const folders=[...new Set(allReports.map(r=>r.folder))].sort();
+  const folders=[...new Set(allReports.map(r=>r.runType))].sort();
   const sel=document.getElementById('folderFilter');
   folders.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;sel.appendChild(o);});
 }
 
 function filterFolder(folder){
-  renderSidebar(folder?allReports.filter(r=>r.folder===folder):allReports);
+  renderSidebar(folder?allReports.filter(r=>r.runType===folder):allReports);
 }
 
 function visibleReports(){
   const f=document.getElementById('folderFilter').value;
-  return f?allReports.filter(r=>r.folder===f):allReports;
+  return f?allReports.filter(r=>r.runType===f):allReports;
 }
 
 function renderSidebar(reports){
@@ -236,7 +274,7 @@ function renderSidebar(reports){
     const item=document.createElement('div');
     item.className='report-item'+(r.id===activeId?' active':'');
     item.innerHTML=`
-      <div class="report-item-name">${r.id}</div>
+      <div class="report-item-name">T${r.tier}_Wave${r.wave.toLocaleString()}</div>
       <div class="report-item-meta">
         <span class="tier-badge">T${r.tier}</span>
         <span class="wave-badge">⚡ ${r.wave.toLocaleString()}</span>
@@ -292,9 +330,8 @@ function switchTab(tab){
 function renderReportView(summary,payload){
   document.getElementById('mainContent').innerHTML=`
     <div class="report-header">
-      <div class="report-title">${summary.id}</div>
+      <div class="report-title">${summary.runType} — T${summary.tier} Wave ${summary.wave.toLocaleString()}</div>
       <div class="report-subtitle">
-        <span>T${summary.tier} · Wave ${summary.wave.toLocaleString()}</span>
         <span>📅 ${summary.battleDate}</span>
         <span>${fmtDuration(summary.realTimeSeconds)} real · ${fmtDuration(summary.gameTimeSeconds)} game</span>
         ${summary.towerEra?`<span>🏗️ ${summary.towerEra}</span>`:''}
@@ -516,7 +553,7 @@ async function renderDiagnosisPanel(summary){
 
 function renderComparePanel(summary){
   const others=allReports.filter(r=>r.id!==summary.id);
-  const opts=others.map(r=>`<option value="${r.id}">${r.id} (T${r.tier} W${r.wave.toLocaleString()})</option>`).join('');
+  const opts=others.map(r=>`<option value="${r.id}">${r.runType} — T${r.tier} Wave ${r.wave.toLocaleString()}</option>`).join('');
   document.getElementById('tabPanel').innerHTML=`
     <div class="compare-controls">
       <span style="font-size:13px;color:var(--muted)">Compare against:</span>

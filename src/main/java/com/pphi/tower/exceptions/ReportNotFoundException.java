@@ -1,4 +1,4 @@
-package com.pphi.tower.service;
+package com.pphi.tower.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

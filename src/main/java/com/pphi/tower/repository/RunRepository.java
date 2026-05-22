@@ -22,7 +22,7 @@ public class RunRepository {
             new ReportSummaryDto(
                     rs.getString("id"),
                     rs.getString("filename"),
-                    rs.getString("folder"),
+                    rs.getString("run_type"),
                     rs.getString("battle_date"),
                     rs.getInt("tier"),
                     rs.getInt("wave"),
@@ -41,26 +41,19 @@ public class RunRepository {
         return count != null && count > 0;
     }
 
-    public boolean existsByFolderAndFilename(String folder, String filename) {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM runs WHERE folder = ? AND filename = ?",
-                Integer.class, folder, filename);
-        return count != null && count > 0;
-    }
-
-    public void insert(String id, String filename, String folder, String battleDate,
+    public void insert(String id, String filename, String runType, String battleDate,
                        int tier, int wave, double cellsEarned, long realTimeSeconds,
                        long gameTimeSeconds, double cellsPerHour, double coinsPerHour,
                        String killedBy, String towerEra, String payloadJson,
                        long battleEpochSeconds) {
         jdbc.update("""
-                INSERT INTO runs (id, filename, folder, battle_date, tier, wave,
+                INSERT INTO runs (id, filename, run_type, battle_date, tier, wave,
                     cells_earned, real_time_seconds, game_time_seconds,
                     cells_per_hour, coins_per_hour, killed_by, tower_era, payload,
                     battle_epoch_seconds)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                id, filename, folder, battleDate, tier, wave,
+                id, filename, runType, battleDate, tier, wave,
                 cellsEarned, realTimeSeconds, gameTimeSeconds,
                 cellsPerHour, coinsPerHour, killedBy, towerEra, payloadJson,
                 battleEpochSeconds);
@@ -86,9 +79,9 @@ public class RunRepository {
                 from.toString(), to.toString());
     }
 
-    public List<ReportSummaryDto> findByFolder(String folder) {
+    public List<ReportSummaryDto> findByRunType(String runType) {
         return jdbc.query(
-                "SELECT * FROM runs WHERE folder = ? ORDER BY battle_date DESC",
-                SUMMARY_MAPPER, folder);
+                "SELECT * FROM runs WHERE run_type = ? ORDER BY battle_date DESC",
+                SUMMARY_MAPPER, runType);
     }
 }

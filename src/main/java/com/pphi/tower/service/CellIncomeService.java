@@ -42,7 +42,7 @@ public class CellIncomeService {
 
         List<RunDataPointDto> points = runs.stream()
                 .map(r -> new RunDataPointDto(
-                        r.id(), r.battleDate(), r.folder(),
+                        r.id(), r.battleDate(), r.runType(),
                         r.tier(), r.wave(),
                         r.cellsEarned(), r.cellsPerHour(), r.realTimeSeconds()))
                 .toList();

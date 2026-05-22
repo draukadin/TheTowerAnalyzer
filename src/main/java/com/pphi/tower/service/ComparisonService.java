@@ -2,6 +2,7 @@ package com.pphi.tower.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pphi.tower.analyzers.RunComparison;
+import com.pphi.tower.exceptions.ReportNotFoundException;
 import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.repository.RunRepository;
 import org.springframework.stereotype.Service;

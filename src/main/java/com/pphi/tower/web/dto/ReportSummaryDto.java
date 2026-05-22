@@ -7,7 +7,7 @@ package com.pphi.tower.web.dto;
 public record ReportSummaryDto(
         String id,
         String filename,
-        String folder,
+        String runType,
         String battleDate,
         int tier,
         int wave,
