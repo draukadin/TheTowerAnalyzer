@@ -22,22 +22,22 @@ public record TowerNumber(BigDecimal amount, ScaleSuffix scaleSuffix) {
         // 2. Perform the subtraction
         BigDecimal difference = minuend.subtract(subtrahendRaw);
 
-        // Handle edge case if the result drops to 0 or negative
-        if (difference.doubleValue() <= 0) {
-            return new TowerNumber(BigDecimal.valueOf(Math.max(0, difference.doubleValue())), null);
+        if (difference.compareTo(BigDecimal.ZERO) == 0) {
+            return new TowerNumber(BigDecimal.ZERO, null);
         }
 
-        // 3. Find the largest suffix that is less than or equal to our raw result
-        // We sort descending by notation to find the biggest tier that fits
+        // 3. Find the largest suffix whose scale fits the absolute value
+        BigDecimal abs = difference.abs();
         ScaleSuffix matchingSuffix = Arrays.stream(ScaleSuffix.values())
-                .filter(suffix -> difference.compareTo(suffix.getScientificNotation()) >= 0)
+                .filter(suffix -> abs.compareTo(suffix.getScientificNotation()) >= 0)
                 .max(Comparator.comparing(ScaleSuffix::getScientificNotation))
-                .orElse(null); // Returns null if the number is less than 1,000 (no suffix)
+                .orElse(null); // Returns null if the absolute value is less than 1,000 (no suffix)
 
-        // 4. Scale the raw value down to fit the chosen suffix
+        // 4. Scale the signed difference down to fit the chosen suffix
         BigDecimal finalAmount = difference;
         if (matchingSuffix != null) {
-            finalAmount = difference.divide(matchingSuffix.getScientificNotation(), RoundingMode.HALF_UP);
+            finalAmount = difference.divide(matchingSuffix.getScientificNotation(), 10, RoundingMode.HALF_UP)
+                                    .stripTrailingZeros();
         }
 
         return new TowerNumber(finalAmount, matchingSuffix);
