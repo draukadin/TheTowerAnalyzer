@@ -5,6 +5,7 @@ target/
 !**/src/test/**/out/
 .claude/
 credentials.json
+Runner.java
 
 ### Eclipse ###
 .apt_generated
