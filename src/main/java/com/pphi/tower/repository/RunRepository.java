@@ -1,11 +1,13 @@
 package com.pphi.tower.repository;
 
+import com.pphi.tower.model.TowerEra;
 import com.pphi.tower.web.dto.ReportSummaryDto;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +28,7 @@ public class RunRepository {
                     rs.getString("battle_date"),
                     rs.getInt("tier"),
                     rs.getInt("wave"),
-                    rs.getString("tower_era"),
+                    TowerEra.parse(rs.getString("tower_era")),
                     rs.getString("killed_by"),
                     rs.getDouble("cells_earned"),
                     rs.getDouble("cells_per_hour"),
@@ -44,7 +46,7 @@ public class RunRepository {
     public void insert(String id, String filename, String runType, String battleDate,
                        int tier, int wave, double cellsEarned, long realTimeSeconds,
                        long gameTimeSeconds, double cellsPerHour, double coinsPerHour,
-                       String killedBy, String towerEra, String payloadJson,
+                       String killedBy, TowerEra towerEra, String payloadJson,
                        long battleEpochSeconds) {
         jdbc.update("""
                 INSERT INTO runs (id, filename, run_type, battle_date, tier, wave,
@@ -55,14 +57,15 @@ public class RunRepository {
                 """,
                 id, filename, runType, battleDate, tier, wave,
                 cellsEarned, realTimeSeconds, gameTimeSeconds,
-                cellsPerHour, coinsPerHour, killedBy, towerEra, payloadJson,
-                battleEpochSeconds);
+                cellsPerHour, coinsPerHour, killedBy,
+                towerEra != null ? towerEra.toString() : null,
+                payloadJson, battleEpochSeconds);
     }
 
     public List<ReportSummaryDto> findAllSummaries() {
-        return jdbc.query(
-                "SELECT * FROM runs ORDER BY battle_date DESC",
-                SUMMARY_MAPPER);
+        List<ReportSummaryDto> rows = jdbc.query("SELECT * FROM runs", SUMMARY_MAPPER);
+        rows.sort(BY_VERSION_DESC_DATE_DESC);
+        return rows;
     }
 
     public Optional<String> findPayloadById(String id) {
@@ -80,8 +83,24 @@ public class RunRepository {
     }
 
     public List<ReportSummaryDto> findByRunType(String runType) {
-        return jdbc.query(
-                "SELECT * FROM runs WHERE run_type = ? ORDER BY battle_date DESC",
-                SUMMARY_MAPPER, runType);
+        List<ReportSummaryDto> rows = jdbc.query(
+                "SELECT * FROM runs WHERE run_type = ?", SUMMARY_MAPPER, runType);
+        rows.sort(BY_VERSION_DESC_DATE_DESC);
+        return rows;
     }
+
+    // -------------------------------------------------------------------------
+    // Sorting
+    // -------------------------------------------------------------------------
+
+    private static final TowerEra ZERO = new TowerEra(0, 0, 0);
+
+    private static final Comparator<ReportSummaryDto> BY_VERSION_DESC_DATE_DESC = (a, b) -> {
+        int v = (b.towerEra() != null ? b.towerEra() : ZERO)
+                .compareTo(a.towerEra() != null ? a.towerEra() : ZERO);
+        if (v != 0) return v;
+        String da = a.battleDate() != null ? a.battleDate() : "";
+        String db = b.battleDate() != null ? b.battleDate() : "";
+        return db.compareTo(da);
+    };
 }

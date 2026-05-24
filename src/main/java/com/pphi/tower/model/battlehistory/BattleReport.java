@@ -2,10 +2,11 @@ package com.pphi.tower.model.battlehistory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pphi.tower.model.TowerEra;
 import com.pphi.tower.model.TowerNumber;
 
 public record BattleReport(
-        @JsonProperty("towerEra")        String towerEra,
+        @JsonProperty("towerEra")        TowerEra towerEra,
         @JsonProperty("battleReportDate") java.time.Instant battleReportDate,
         @JsonProperty("gameTime")        java.time.Duration gameTime,
         @JsonProperty("realTime")        java.time.Duration realTime,

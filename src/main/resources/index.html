@@ -148,6 +148,31 @@
   .delta-pos{color:var(--green);font-family:var(--mono);font-size:13px;}
   .delta-neg{color:var(--red);font-family:var(--mono);font-size:13px;}
   .delta-neu{color:var(--muted);font-family:var(--mono);font-size:13px;}
+  .gemini-chat{margin-top:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;}
+  .gemini-chat-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+  .gemini-context-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+  .gemini-context-options{margin-bottom:1rem;display:flex;flex-direction:column;gap:6px;}
+  .gemini-context-option{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;}
+  .gemini-context-option input[type=checkbox]{accent-color:var(--accent);cursor:pointer;}
+  .gemini-input-row{display:flex;gap:10px;align-items:flex-end;}
+  .gemini-textarea{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+    color:var(--text);font-size:13px;padding:10px 12px;font-family:var(--font);resize:vertical;
+    min-height:72px;line-height:1.5;}
+  .gemini-textarea:focus{outline:none;border-color:var(--accent);}
+  .chat-thread{display:flex;flex-direction:column;gap:10px;margin-top:1rem;}
+  .chat-turn{padding:11px 14px;border-radius:8px;font-size:13px;line-height:1.7;}
+  .chat-turn.user{background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);}
+  .chat-turn.model{background:var(--surface2);border:1px solid var(--border);white-space:pre-wrap;}
+  .chat-turn-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:520px;max-width:92vw;max-height:82vh;overflow-y:auto;}
+  .modal-title{font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;}
+  .form-group{margin-bottom:1.25rem;}
+  .form-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;display:block;}
+  .form-input,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;padding:9px 12px;font-family:var(--font);}
+  .form-textarea{resize:vertical;min-height:80px;line-height:1.5;}
+  .form-input:focus,.form-textarea:focus{outline:none;border-color:var(--accent);}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:1.5rem;}
   ::-webkit-scrollbar{width:6px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
@@ -170,6 +195,7 @@
     <button class="nav-btn active" onclick="showView('reports')">Reports</button>
     <button class="nav-btn" onclick="showView('cells')">Cell Income</button>
     <button class="nav-btn" onclick="showView('labspeed')">Lab Speed</button>
+    <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
     <span class="status-dot" id="statusDot"></span>
@@ -202,6 +228,7 @@
 <script>
 const API='http://localhost:8080/api';
 let allReports=[],activeId=null,activePayload=null,activeView='reports',currentTab='stats';
+let geminiCompareId1=null,geminiCompareId2=null,chatHistory=[];
 
 async function init(){
   try{
@@ -553,19 +580,44 @@ async function renderDiagnosisPanel(summary){
 
 function renderComparePanel(summary){
   const others=allReports.filter(r=>r.id!==summary.id);
-  const opts=others.map(r=>`<option value="${r.id}">${r.runType} — T${r.tier} Wave ${r.wave.toLocaleString()}</option>`).join('');
+  const opts=others.map(r=>`<option value="${r.id}">${r.runType} — T${r.tier} Wave ${r.wave.toLocaleString()}${r.towerEra?' — '+r.towerEra:''}</option>`).join('');
   document.getElementById('tabPanel').innerHTML=`
     <div class="compare-controls">
       <span style="font-size:13px;color:var(--muted)">Compare against:</span>
       <select class="compare-select" id="compareSelect">${opts}</select>
       <button class="btn btn-primary" onclick="runComparison('${summary.id}')">Compare</button>
     </div>
-    <div id="compareResult"></div>`;
+    <div id="compareResult"></div>
+    <div id="geminiChat" class="gemini-chat" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div class="gemini-chat-title" style="margin-bottom:0">✦ Ask Gemini</div>
+        <button class="btn" style="font-size:11px;padding:3px 10px;opacity:0.6" onclick="clearChatHistory()">Clear chat</button>
+      </div>
+      <div class="gemini-context-label">Context to include</div>
+      <div class="gemini-context-options">
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxComparison" checked>
+          Comparison report results
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxProfile" checked>
+          Player profile
+        </label>
+      </div>
+      <div id="geminiThread" class="chat-thread"></div>
+      <div class="gemini-input-row" style="margin-top:1rem">
+        <textarea class="gemini-textarea" id="geminiPrompt"
+          placeholder="Ask anything about these runs… (Ctrl+Enter to send)"
+          onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))sendGeminiChat()"></textarea>
+        <button class="btn btn-primary" id="geminiSendBtn" onclick="sendGeminiChat()">Send</button>
+      </div>
+    </div>`;
 }
 
 async function runComparison(id1){
   const id2=document.getElementById('compareSelect').value;
   if(!id2)return;
+  geminiCompareId1=id1;geminiCompareId2=id2;chatHistory=[];
   document.getElementById('compareResult').innerHTML='<div class="loading-placeholder">Comparing…</div>';
   try{
     const res=await fetch(`${API}/reports/${encodeURIComponent(id1)}/comparison/${encodeURIComponent(id2)}`);
@@ -607,9 +659,119 @@ async function runComparison(id1){
     });
     html+='</tbody></table></div><div style="height:2rem"></div>';
     document.getElementById('compareResult').innerHTML=html;
+    const chat=document.getElementById('geminiChat');
+    chat.style.display='block';
+    document.getElementById('geminiThread').innerHTML='';
+    await loadChatHistory(id1,id2);
   }catch(e){
     document.getElementById('compareResult').innerHTML=`<div style="color:var(--red);padding:1rem">${e.message}</div>`;
   }
+}
+
+async function sendGeminiChat(){
+  const prompt=document.getElementById('geminiPrompt').value.trim();
+  if(!prompt)return;
+  const contextTypes=[];
+  if(document.getElementById('geminiCtxComparison').checked)contextTypes.push('comparison_report');
+  if(document.getElementById('geminiCtxProfile').checked)contextTypes.push('user_profile');
+  const sendBtn=document.getElementById('geminiSendBtn');
+  sendBtn.disabled=true;
+  const thread=document.getElementById('geminiThread');
+  thread.insertAdjacentHTML('beforeend',
+    `<div class="chat-turn user"><div class="chat-turn-label">You</div>${escHtml(prompt)}</div>
+     <div id="geminiLoading" class="loading-placeholder" style="padding:8px 0;text-align:left">Thinking…</div>`);
+  document.getElementById('geminiPrompt').value='';
+  thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+  try{
+    const res=await fetch(`${API}/chat`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt,contextTypes,reportId1:geminiCompareId1,reportId2:geminiCompareId2,history:chatHistory})
+    });
+    if(!res.ok)throw new Error(await res.text());
+    const{reply}=await res.json();
+    chatHistory.push({role:'user',text:prompt});
+    chatHistory.push({role:'model',text:reply});
+    document.getElementById('geminiLoading').remove();
+    thread.insertAdjacentHTML('beforeend',
+      `<div class="chat-turn model"><div class="chat-turn-label">Gemini</div>${escHtml(reply)}</div>`);
+    thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){
+    document.getElementById('geminiLoading').remove();
+    thread.insertAdjacentHTML('beforeend',
+      `<div style="color:var(--red);padding:8px 0;font-size:13px">${escHtml(e.message)}</div>`);
+  }finally{
+    sendBtn.disabled=false;
+  }
+}
+
+async function loadChatHistory(id1,id2){
+  try{
+    const res=await fetch(`${API}/chat/history?reportId1=${encodeURIComponent(id1)}&reportId2=${encodeURIComponent(id2)}`);
+    if(!res.ok)return;
+    const history=await res.json();
+    chatHistory=history.map(t=>({role:t.role,text:t.text}));
+    const thread=document.getElementById('geminiThread');
+    for(const turn of history){
+      const label=turn.role==='user'?'You':'Gemini';
+      const cls=turn.role==='user'?'user':'model';
+      thread.insertAdjacentHTML('beforeend',
+        `<div class="chat-turn ${cls}"><div class="chat-turn-label">${label}</div>${escHtml(turn.text)}</div>`);
+    }
+    if(history.length>0)thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){/* silently ignore */}
+}
+
+async function clearChatHistory(){
+  if(!geminiCompareId1||!geminiCompareId2)return;
+  try{
+    await fetch(`${API}/chat/history?reportId1=${encodeURIComponent(geminiCompareId1)}&reportId2=${encodeURIComponent(geminiCompareId2)}`,{method:'DELETE'});
+    chatHistory=[];
+    document.getElementById('geminiThread').innerHTML='';
+  }catch(e){/* silently ignore */}
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function openProfileModal(){
+  document.getElementById('profileModal').style.display='flex';
+  try{
+    const res=await fetch(`${API}/profile`);
+    const p=await res.json();
+    document.getElementById('profilePlayerName').value=p.playerName||'';
+    document.getElementById('profilePrimaryGoal').value=p.primaryGoal||'';
+    document.getElementById('profileLabGoals').value=p.labGoals||'';
+    document.getElementById('profileUltimateWeaponGoals').value=p.ultimateWeaponGoals||'';
+    document.getElementById('profileModuleGoals').value=p.moduleGoals||'';
+    document.getElementById('profileWorkshopStrategy').value=p.workshopStrategy||'';
+    document.getElementById('profileTournamentFocus').value=p.tournamentFocus||'';
+    document.getElementById('profileRunStrategy').value=p.runStrategy||'';
+    document.getElementById('profileNotes').value=p.notes||'';
+  }catch(e){/* fields stay empty */}
+}
+
+async function saveProfile(){
+  const profile={
+    playerName:document.getElementById('profilePlayerName').value,
+    primaryGoal:document.getElementById('profilePrimaryGoal').value,
+    labGoals:document.getElementById('profileLabGoals').value,
+    ultimateWeaponGoals:document.getElementById('profileUltimateWeaponGoals').value,
+    moduleGoals:document.getElementById('profileModuleGoals').value,
+    workshopStrategy:document.getElementById('profileWorkshopStrategy').value,
+    tournamentFocus:document.getElementById('profileTournamentFocus').value,
+    runStrategy:document.getElementById('profileRunStrategy').value,
+    notes:document.getElementById('profileNotes').value
+  };
+  try{
+    await fetch(`${API}/profile`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(profile)});
+    closeProfileModal();
+  }catch(e){alert('Failed to save profile: '+e.message);}
+}
+
+function closeProfileModal(){
+  document.getElementById('profileModal').style.display='none';
 }
 
 async function renderCellsView(){
@@ -818,5 +980,51 @@ function camel(s){return s.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCa
 
 init();
 </script>
+
+<div id="profileModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeProfileModal()">
+  <div class="modal">
+    <div class="modal-title">Player Profile</div>
+    <div class="form-group">
+      <label class="form-label" for="profilePlayerName">Player Name</label>
+      <input class="form-input" id="profilePlayerName" type="text" placeholder="Your in-game name">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profilePrimaryGoal">Primary Goal</label>
+      <textarea class="form-textarea" id="profilePrimaryGoal" placeholder="Your overarching current objective, e.g. reach Level 161 modules and unlock sub-stat re-roll"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profileLabGoals">Lab Goals</label>
+      <textarea class="form-textarea" id="profileLabGoals" placeholder="Ordered lab priorities, e.g. Attack Speed to max → Defense % to 50 → Death Wave Armor Stripping → permanent Chrono Field sync"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profileUltimateWeaponGoals">Ultimate Weapon Goals</label>
+      <textarea class="form-textarea" id="profileUltimateWeaponGoals" placeholder="Stone upgrade roadmap in order, e.g. Chain Lightning Qty (400) → Black Hole Duration 26s → Spotlight Angle 40°"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profileModuleGoals">Module Goals</label>
+      <textarea class="form-textarea" id="profileModuleGoals" placeholder="Target module level, sub-stat goals, and any modules to protect/hoard"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profileWorkshopStrategy">Workshop Strategy</label>
+      <textarea class="form-textarea" id="profileWorkshopStrategy" placeholder="Enhancement rotation and economic rules, e.g. Utility first (Cash/Coin/Cells) → Attack (2:1) → Health; maintain 5T liquid safety net"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profileTournamentFocus">Tournament Focus</label>
+      <textarea class="form-textarea" id="profileTournamentFocus" placeholder="What you optimize for in tournaments, e.g. crowd control — lock enemies down before they reach the wall"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profileRunStrategy">Run Strategy</label>
+      <textarea class="form-textarea" id="profileRunStrategy" placeholder="Primary run types and farming approach, e.g. T10 for coins/cells, T12/T13 for stone pushes"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="profileNotes">Notes</label>
+      <textarea class="form-textarea" id="profileNotes" placeholder="Anything else Gemini should know about your playstyle or current situation"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeProfileModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

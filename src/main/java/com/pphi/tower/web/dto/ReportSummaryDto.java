@@ -1,5 +1,7 @@
 package com.pphi.tower.web.dto;
 
+import com.pphi.tower.model.TowerEra;
+
 /**
  * Lightweight summary of a single run for the report list endpoint.
  * Keeps the list fast — full payload fetched separately by ID.
@@ -11,7 +13,7 @@ public record ReportSummaryDto(
         String battleDate,
         int tier,
         int wave,
-        String towerEra,
+        TowerEra towerEra,
         String killedBy,
         double cellsEarned,
         double cellsPerHour,

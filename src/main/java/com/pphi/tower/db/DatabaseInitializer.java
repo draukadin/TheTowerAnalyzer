@@ -60,5 +60,21 @@ public class DatabaseInitializer {
                 CREATE INDEX IF NOT EXISTS idx_runs_run_type
                 ON runs (run_type)
                 """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS chat_history (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    report_id_1 TEXT NOT NULL,
+                    report_id_2 TEXT NOT NULL,
+                    role        TEXT NOT NULL,
+                    message     TEXT NOT NULL,
+                    created_at  INTEGER NOT NULL
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE INDEX IF NOT EXISTS idx_chat_history_pair
+                ON chat_history (report_id_1, report_id_2)
+                """);
     }
 }
