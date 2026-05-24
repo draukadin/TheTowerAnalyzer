@@ -1,19 +1,18 @@
 package com.pphi.tower.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.pphi.tower.jackson.TowerNumberDeserializer;
+import com.pphi.tower.jackson.TowerNumberSerializer;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Comparator;
 
-public record TowerNumber(
-        @JsonProperty("amount") BigDecimal amount,
-        @JsonProperty("scaleSuffix") ScaleSuffix scaleSuffix) {
-
-    @JsonCreator
-    public TowerNumber { }
+@JsonSerialize(using = TowerNumberSerializer.class)
+@JsonDeserialize(using = TowerNumberDeserializer.class)
+public record TowerNumber(BigDecimal amount, ScaleSuffix scaleSuffix) {
 
     public TowerNumber minus(final TowerNumber subtrahend) {
         // 1. Convert both to raw flat doubles
