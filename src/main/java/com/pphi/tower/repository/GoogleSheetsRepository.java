@@ -3,6 +3,7 @@ package com.pphi.tower.repository;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.pphi.tower.model.sheets.GoogleSheet;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
@@ -15,6 +16,17 @@ public class GoogleSheetsRepository {
 
     public GoogleSheetsRepository(Sheets sheets) {
         this.sheets = sheets;
+    }
+
+    /**
+     * Reads one or more (possibly non-contiguous) cell ranges from a worksheet.
+     * Formulas are returned as their computed values, not as formula strings.
+     *
+     * @param googleSheet     sheetName and ranges
+     * @return one ValueRange per requested range; call {@link ValueRange#getValues()} for the rows
+     */
+    public List<ValueRange> readRanges(GoogleSheet googleSheet) throws IOException {
+        return readRanges(googleSheet.sheetId(), googleSheet.sheetName(), googleSheet.ranges());
     }
 
     /**

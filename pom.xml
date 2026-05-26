@@ -65,10 +65,14 @@
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
+        <finalName>the-tower-analyzer</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.pphi.tower.TowerAnalyzerApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
