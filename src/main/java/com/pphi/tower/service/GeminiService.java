@@ -94,6 +94,8 @@ public class GeminiService {
                 case "guardians"         -> contexts.add(new GuardiansContext(towerTrackerFetcherService.fetchGuardians()));
                 case "bots"              -> contexts.add(new BotsContext(towerTrackerFetcherService.fetchBots()));
                 case "relics"            -> contexts.add(new RelicsContext(towerTrackerFetcherService.fetchRelics()));
+                case "tier_wave"         -> contexts.add(new TierWaveContext(towerTrackerFetcherService.fetchTierWave()));
+                case "version_history"   -> contexts.add(new VersionHistoryContext(towerTrackerFetcherService.fetchVersionHistory()));
             }
         }
         return contexts;

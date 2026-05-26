@@ -161,6 +161,22 @@ public class TowerTrackerFetcherService {
     }
 
     // -------------------------------------------------------------------------
+    // Tier / Wave
+    // -------------------------------------------------------------------------
+
+    public String fetchTierWave() throws IOException {
+        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.TIER_WAVE));
+    }
+
+    // -------------------------------------------------------------------------
+    // Version History
+    // -------------------------------------------------------------------------
+
+    public String fetchVersionHistory() throws IOException {
+        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.VERSION_HISTORY));
+    }
+
+    // -------------------------------------------------------------------------
     // Relics
     // -------------------------------------------------------------------------
 

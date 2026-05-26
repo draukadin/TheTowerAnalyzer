@@ -654,6 +654,14 @@ function renderComparePanel(summary){
           <input type="checkbox" id="geminiCtxRelics">
           Relics
         </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxTierWave">
+          Tier / Wave
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxVersionHistory">
+          Version History
+        </label>
       </div>
       <div id="geminiThread" class="chat-thread"></div>
       <div class="gemini-input-row" style="margin-top:1rem">
@@ -735,6 +743,8 @@ async function sendGeminiChat(){
   if(document.getElementById('geminiCtxGuardians').checked)contextTypes.push('guardians');
   if(document.getElementById('geminiCtxBots').checked)contextTypes.push('bots');
   if(document.getElementById('geminiCtxRelics').checked)contextTypes.push('relics');
+  if(document.getElementById('geminiCtxTierWave').checked)contextTypes.push('tier_wave');
+  if(document.getElementById('geminiCtxVersionHistory').checked)contextTypes.push('version_history');
   const sendBtn=document.getElementById('geminiSendBtn');
   sendBtn.disabled=true;
   const thread=document.getElementById('geminiThread');
