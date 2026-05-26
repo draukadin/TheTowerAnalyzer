@@ -11,6 +11,7 @@ public enum TowerTrackerRanges implements GoogleSheet {
     // Player and Stuff Trackers
     TIER_WAVE("Master Sheet", List.of("E1:N23"), "player-tracker"),
     VERSION("TowerVersionTracking", List.of("B:B", "C:C", "D:D"), "player-tracker"),
+    CURRENCIES("Master Sheet", List.of("B19:C33"), "player-tracker"),
 
     // Laboratory Trackers
     MAIN_LABS("Master Sheet", List.of("B1:E22"), "laboratory-tracker"),
