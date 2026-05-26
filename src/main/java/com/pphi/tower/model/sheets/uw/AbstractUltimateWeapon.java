@@ -30,21 +30,26 @@ public abstract class AbstractUltimateWeapon implements UltimateWeapon {
     protected Function<String, Number> uwPlusStatParser() { return Integer::parseInt; }
 
     protected AbstractUltimateWeapon(List<ValueRange> valueRanges) {
-        this.name                = UltimateWeaponUtils.getName(valueRanges);
-        this.locked              = UltimateWeaponUtils.isLocked(valueRanges);
-        this.statOne             = UltimateWeaponUtils.getStatOne(valueRanges, statOneParser());
-        this.statTwo             = UltimateWeaponUtils.getStatTwo(valueRanges, statTwoParser());
-        this.statThree           = UltimateWeaponUtils.getStatThree(valueRanges, statThreeParser());
-        this.uwPlusLocked        = UltimateWeaponUtils.isUwPlusLocked(valueRanges);
-        this.uwPlusStat          = UltimateWeaponUtils.uwPlusStat(valueRanges, uwPlusStatParser());
-        this.stonesInvestedOne   = UltimateWeaponUtils.stonedInvestedOne(valueRanges);
-        this.stonesRequiredOne   = UltimateWeaponUtils.stonedRequiredOne(valueRanges);
-        this.stonesInvestedTwo   = UltimateWeaponUtils.stonedInvestedTwo(valueRanges);
-        this.stonesRequiredTwo   = UltimateWeaponUtils.stonedRequiredTwo(valueRanges);
-        this.stonesInvestedThree = UltimateWeaponUtils.stonedInvestedThree(valueRanges);
-        this.stonesRequiredThree = UltimateWeaponUtils.stonedRequiredThree(valueRanges);
-        this.stonesInvestedUwPlus = UltimateWeaponUtils.stonedInvestedUwPlus(valueRanges);
-        this.stonesRequiredUwPlus = UltimateWeaponUtils.stonedRequiredUwPlus(valueRanges);
+        try {
+            this.name                = UltimateWeaponUtils.getName(valueRanges);
+            this.locked              = UltimateWeaponUtils.isLocked(valueRanges);
+            this.statOne             = UltimateWeaponUtils.getStatOne(valueRanges, statOneParser());
+            this.statTwo             = UltimateWeaponUtils.getStatTwo(valueRanges, statTwoParser());
+            this.statThree           = UltimateWeaponUtils.getStatThree(valueRanges, statThreeParser());
+            this.uwPlusLocked        = UltimateWeaponUtils.isUwPlusLocked(valueRanges);
+            this.uwPlusStat          = UltimateWeaponUtils.uwPlusStat(valueRanges, uwPlusStatParser());
+            this.stonesInvestedOne   = UltimateWeaponUtils.stonedInvestedOne(valueRanges);
+            this.stonesRequiredOne   = UltimateWeaponUtils.stonedRequiredOne(valueRanges);
+            this.stonesInvestedTwo   = UltimateWeaponUtils.stonedInvestedTwo(valueRanges);
+            this.stonesRequiredTwo   = UltimateWeaponUtils.stonedRequiredTwo(valueRanges);
+            this.stonesInvestedThree = UltimateWeaponUtils.stonedInvestedThree(valueRanges);
+            this.stonesRequiredThree = UltimateWeaponUtils.stonedRequiredThree(valueRanges);
+            this.stonesInvestedUwPlus = UltimateWeaponUtils.stonedInvestedUwPlus(valueRanges);
+            this.stonesRequiredUwPlus = UltimateWeaponUtils.stonedRequiredUwPlus(valueRanges);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Failed to parse " + getClass().getSimpleName() + " from sheet data: " + e.getMessage(), e);
+        }
     }
 
     @Override public String name()               { return name; }

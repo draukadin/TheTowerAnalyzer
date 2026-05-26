@@ -9,7 +9,7 @@ public interface Module extends GoogleSheet {
     @Override default String sheetName() { return "Inventory"; };
     @Override List<String> ranges();
     default String name() { return this.getClass().getSimpleName(); };
-    default String sheetId() {return "1JROY3TS01YpH74I6zzmbds573_FKUu3mkfiEAFwgg14"; };
+    default String sheetId() { return "modules"; }
 
     class AstralDeliverance implements Module {
         @Override public String type() { return "Cannon"; }

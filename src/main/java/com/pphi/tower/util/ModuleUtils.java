@@ -11,32 +11,34 @@ import java.util.Optional;
 
 public final class ModuleUtils {
 
-    private static final Map<String, Module> MODULES = new HashMap<>();
+    private static final Map<String, Module> MODULES;
     static {
-        MODULES.put("Astral Deliverance", new Module.AstralDeliverance());
-        MODULES.put("Havoc Bringer", new Module.HavocBringer());
-        MODULES.put("Being Annihilator", new Module.BeingAnnihilator());
-        MODULES.put("Death Penalty", new Module.DeathPenalty());
-        MODULES.put("Shrink Ray", new Module.ShrinkRay());
-        MODULES.put("Amplifying Strike", new Module.AmplifyingStrike());
-        MODULES.put("AntiCubePortal", new Module.AntiCubePortal());
-        MODULES.put("Negative Mass Projector", new Module.NegativeMassProjector());
-        MODULES.put("Space Displacer", new Module.SpaceDisplacer());
-        MODULES.put("Wormhole Redirector", new Module.WormholeRedirector());
-        MODULES.put("Sharp Fortitude", new Module.SharpFortitude());
-        MODULES.put("Orbital Augment", new Module.OrbitalAugment());
-        MODULES.put("Black Hole Digestor", new Module.BlackHoleDigestor());
-        MODULES.put("Galaxy Compressor", new Module.GalaxyCompressor());
-        MODULES.put("Singularity Harness", new Module.SingularityHarness());
-        MODULES.put("Pulsar Harvester", new Module.PulsarHarvester());
-        MODULES.put("Project Funding", new Module.ProjectFunding());
-        MODULES.put("Restorative Bonus", new Module.RestorativeBonus());
-        MODULES.put("Multiverse Nexus", new Module.MultiverseNexus());
-        MODULES.put("Dimension Core", new Module.DimensionCore());
-        MODULES.put("Harmony Conductor", new Module.HarmonyConductor());
-        MODULES.put("Om Chip", new Module.OmChip());
-        MODULES.put("Magnetic Hook", new Module.MagneticHook());
-        MODULES.put("Primordial Collapse", new Module.PrimordialCollapse());
+        Map<String, Module> m = new HashMap<>();
+        m.put("Astral Deliverance",       new Module.AstralDeliverance());
+        m.put("Havoc Bringer",            new Module.HavocBringer());
+        m.put("Being Annihilator",        new Module.BeingAnnihilator());
+        m.put("Death Penalty",            new Module.DeathPenalty());
+        m.put("Shrink Ray",               new Module.ShrinkRay());
+        m.put("Amplifying Strike",        new Module.AmplifyingStrike());
+        m.put("AntiCubePortal",           new Module.AntiCubePortal());
+        m.put("Negative Mass Projector",  new Module.NegativeMassProjector());
+        m.put("Space Displacer",          new Module.SpaceDisplacer());
+        m.put("Wormhole Redirector",      new Module.WormholeRedirector());
+        m.put("Sharp Fortitude",          new Module.SharpFortitude());
+        m.put("Orbital Augment",          new Module.OrbitalAugment());
+        m.put("Black Hole Digestor",      new Module.BlackHoleDigestor());
+        m.put("Galaxy Compressor",        new Module.GalaxyCompressor());
+        m.put("Singularity Harness",      new Module.SingularityHarness());
+        m.put("Pulsar Harvester",         new Module.PulsarHarvester());
+        m.put("Project Funding",          new Module.ProjectFunding());
+        m.put("Restorative Bonus",        new Module.RestorativeBonus());
+        m.put("Multiverse Nexus",         new Module.MultiverseNexus());
+        m.put("Dimension Core",           new Module.DimensionCore());
+        m.put("Harmony Conductor",        new Module.HarmonyConductor());
+        m.put("Om Chip",                  new Module.OmChip());
+        m.put("Magnetic Hook",            new Module.MagneticHook());
+        m.put("Primordial Collapse",      new Module.PrimordialCollapse());
+        MODULES = Map.copyOf(m);
     }
 
     private ModuleUtils() {}
@@ -51,22 +53,18 @@ public final class ModuleUtils {
 
     public static Map<String, EquippedModule> getEquippedModules(final List<ValueRange> valueRanges) {
         Map<String, EquippedModule> equippedModuleMap = new HashMap<>();
-        addToMap(
-                ValueRangeUtils.getValue(valueRanges, 1, 1),
-                ValueRangeUtils.getValue(valueRanges, 2, 1),
-                equippedModuleMap);
-        addToMap(
-                ValueRangeUtils.getValue(valueRanges, 7, 1),
-                ValueRangeUtils.getValue(valueRanges, 8, 1),
-                equippedModuleMap);
-        addToMap(
-                ValueRangeUtils.getValue(valueRanges, 13, 1),
-                ValueRangeUtils.getValue(valueRanges, 14, 1),
-                equippedModuleMap);
-        addToMap(
-                ValueRangeUtils.getValue(valueRanges, 19, 1),
-                ValueRangeUtils.getValue(valueRanges, 20, 1),
-                equippedModuleMap);
+        for (int slot = 0; slot < ModuleSlotLayout.SLOT_COUNT; slot++) {
+            int primaryRow = ModuleSlotLayout.FIRST_SLOT_ROW
+                    + (slot * ModuleSlotLayout.SLOT_STRIDE)
+                    + ModuleSlotLayout.PRIMARY_ROW_OFFSET;
+            int assistRow = ModuleSlotLayout.FIRST_SLOT_ROW
+                    + (slot * ModuleSlotLayout.SLOT_STRIDE)
+                    + ModuleSlotLayout.ASSIST_ROW_OFFSET;
+            addToMap(
+                    ValueRangeUtils.getValue(valueRanges, primaryRow, ModuleSlotLayout.NAME_COL),
+                    ValueRangeUtils.getValue(valueRanges, assistRow,  ModuleSlotLayout.NAME_COL),
+                    equippedModuleMap);
+        }
         return equippedModuleMap;
     }
 

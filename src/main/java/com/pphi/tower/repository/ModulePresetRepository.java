@@ -1,7 +1,7 @@
 package com.pphi.tower.repository;
 
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.pphi.tower.config.AppConfig;
+import com.pphi.tower.model.sheets.GoogleSheet;
 import com.pphi.tower.model.sheets.modules.EquippedModule;
 import com.pphi.tower.model.sheets.modules.ModulePreset;
 import com.pphi.tower.model.sheets.modules.Preset;
@@ -16,25 +16,20 @@ import java.util.Map;
 public class ModulePresetRepository {
 
     private final GoogleSheetsRepository sheetsRepository;
-    private final AppConfig appConfig;
 
-    public ModulePresetRepository(
-            GoogleSheetsRepository sheetsRepository,
-            AppConfig appConfig) {
+    public ModulePresetRepository(GoogleSheetsRepository sheetsRepository) {
         this.sheetsRepository = sheetsRepository;
-        this.appConfig = appConfig;
     }
 
     public Map<String, EquippedModule> getActiveModules(final Preset preset) {
-        final String sheetId = preset.sheetId();
         final ModulePreset modulePreset = ModulePreset.getModulePreset(preset);
+        final GoogleSheet ref = new GoogleSheet.Ref(preset.sheetId(), modulePreset.sheetName(), modulePreset.range());
 
         try {
-            final List<ValueRange> modulePresetValues = sheetsRepository.readRanges(sheetId, modulePreset.sheetName(),
-                    modulePreset.range());
+            final List<ValueRange> modulePresetValues = sheetsRepository.readRanges(ref);
             return ModuleUtils.getEquippedModules(modulePresetValues);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to load module preset: " + preset, e);
         }
     }
 }

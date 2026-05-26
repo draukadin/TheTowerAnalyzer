@@ -3,7 +3,9 @@ package com.pphi.tower.repository;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.pphi.tower.config.SheetProperties;
 import com.pphi.tower.model.sheets.GoogleSheet;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
@@ -13,32 +15,29 @@ import java.util.List;
 public class GoogleSheetsRepository {
 
     private final Sheets sheets;
+    private final SheetProperties sheetProperties;
 
-    public GoogleSheetsRepository(Sheets sheets) {
+    public GoogleSheetsRepository(Sheets sheets, SheetProperties sheetProperties) {
         this.sheets = sheets;
+        this.sheetProperties = sheetProperties;
     }
 
     /**
      * Reads one or more (possibly non-contiguous) cell ranges from a worksheet.
      * Formulas are returned as their computed values, not as formula strings.
+     * Results are cached by the GoogleSheet identity; call DELETE /api/cache/sheets to evict.
      *
-     * @param googleSheet     sheetName and ranges
+     * @param googleSheet sheetKey, sheetName, and ranges
      * @return one ValueRange per requested range; call {@link ValueRange#getValues()} for the rows
      */
+    @Cacheable("sheets")
     public List<ValueRange> readRanges(GoogleSheet googleSheet) throws IOException {
-        return readRanges(googleSheet.sheetId(), googleSheet.sheetName(), googleSheet.ranges());
+        String actualSheetId = sheetProperties.resolve(googleSheet.sheetId());
+        return readRangesInternal(actualSheetId, googleSheet.sheetName(), googleSheet.ranges());
     }
 
-    /**
-     * Reads one or more (possibly non-contiguous) cell ranges from a worksheet.
-     * Formulas are returned as their computed values, not as formula strings.
-     *
-     * @param spreadsheetId Google Sheets document ID (from the URL)
-     * @param sheetName     worksheet tab name
-     * @param ranges        A1-notation ranges, e.g. ["A1:B3", "D5:D10", "F7"]
-     * @return one ValueRange per requested range; call {@link ValueRange#getValues()} for the rows
-     */
-    public List<ValueRange> readRanges(String spreadsheetId, String sheetName, List<String> ranges) throws IOException {
+    private List<ValueRange> readRangesInternal(String spreadsheetId, String sheetName, List<String> ranges)
+            throws IOException {
         List<String> qualifiedRanges = ranges.stream()
                 .map(r -> sheetName + "!" + r)
                 .toList();
@@ -51,19 +50,5 @@ public class GoogleSheetsRepository {
 
         List<ValueRange> valueRanges = response.getValueRanges();
         return valueRanges != null ? valueRanges : List.of();
-    }
-
-    /**
-     * Reads a single cell range from a worksheet.
-     * Formulas are returned as their computed values, not as formula strings.
-     *
-     * @param spreadsheetId Google Sheets document ID (from the URL)
-     * @param sheetName     worksheet tab name
-     * @param range         A1-notation range, e.g. "A1:B3" or "C5"
-     * @return the ValueRange for the requested range
-     */
-    public ValueRange readRange(String spreadsheetId, String sheetName, String range) throws IOException {
-        List<ValueRange> results = readRanges(spreadsheetId, sheetName, List.of(range));
-        return results.isEmpty() ? new ValueRange() : results.getFirst();
     }
 }
