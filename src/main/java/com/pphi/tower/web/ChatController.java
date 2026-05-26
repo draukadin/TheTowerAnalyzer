@@ -26,6 +26,10 @@ public class ChatController {
     public ChatResponse chat(@RequestBody ChatRequest request) {
         ChatResponse response = geminiService.chat(request);
         if (request.reportId1() != null && request.reportId2() != null) {
+            // Persist context preamble turns first so they're included in future history loads
+            for (ConversationTurn turn : response.prependedTurns()) {
+                chatHistoryRepository.save(request.reportId1(), request.reportId2(), turn.role(), turn.text());
+            }
             chatHistoryRepository.save(request.reportId1(), request.reportId2(), "user", request.prompt());
             chatHistoryRepository.save(request.reportId1(), request.reportId2(), "model", response.reply());
         }

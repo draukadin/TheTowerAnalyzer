@@ -750,7 +750,12 @@ async function sendGeminiChat(){
       body:JSON.stringify({prompt,contextTypes,reportId1:geminiCompareId1,reportId2:geminiCompareId2,history:chatHistory})
     });
     if(!res.ok)throw new Error(await res.text());
-    const{reply}=await res.json();
+    const data=await res.json();
+    const{reply,prependedTurns}=data;
+    // Silently add context preamble turns to history so they're included in future sends
+    if(prependedTurns&&prependedTurns.length>0){
+      for(const t of prependedTurns)chatHistory.push({role:t.role,text:t.text});
+    }
     chatHistory.push({role:'user',text:prompt});
     chatHistory.push({role:'model',text:reply});
     document.getElementById('geminiLoading').remove();
@@ -774,6 +779,8 @@ async function loadChatHistory(id1,id2){
     chatHistory=history.map(t=>({role:t.role,text:t.text}));
     const thread=document.getElementById('geminiThread');
     for(const turn of history){
+      // Context preamble turns are stored in history for Gemini but never shown in the UI
+      if(turn.role==='context'||turn.role==='context_ack')continue;
       const label=turn.role==='user'?'You':'Gemini';
       const cls=turn.role==='user'?'user':'model';
       thread.insertAdjacentHTML('beforeend',

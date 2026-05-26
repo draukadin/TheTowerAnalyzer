@@ -17,7 +17,7 @@ public class ModulesContext implements ChatContext {
 
     @Override
     public String getContent() {
-        return "=== Module Inventory ===\n\n" + inventoryData +
-               "=== Module Sub-Stats ===\n\n" + subStats;
+        return "## Module Inventory\n\n" + inventoryData +
+               "## Module Sub-Stats\n\n" + subStats;
     }
 }

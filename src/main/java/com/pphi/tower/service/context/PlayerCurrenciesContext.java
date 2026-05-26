@@ -17,20 +17,28 @@ public class PlayerCurrenciesContext implements ChatContext {
 
     @Override
     public String getContent() {
-        return "Coins: "               + currencies.coins()              + "\n" +
-               "Gems: "                + currencies.gems()               + "\n" +
-               "Stones: "              + currencies.stones()             + "\n" +
-               "Medals: "              + currencies.medals()             + "\n" +
-               "Elite Cells: "         + currencies.eliteCells()         + "\n" +
-               "Keys: "                + currencies.keys()               + "\n" +
-               "Tokens: "              + currencies.tokens()             + "\n" +
-               "Bits: "                + currencies.bits()               + "\n" +
-               "Tournament Tickets: "  + currencies.tournamentTickets()  + "\n" +
-               "Module Tickets: "      + currencies.moduleTickets()      + "\n" +
-               "Cannon Shards: "       + currencies.cannonShards()       + "\n" +
-               "Armor Shards: "        + currencies.armorShards()        + "\n" +
-               "Generator Shards: "    + currencies.generatorShards()    + "\n" +
-               "Core Shards: "         + currencies.coreShards()         + "\n" +
-               "Reroll Shards: "       + currencies.reRollShards()       + "\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append("| Currency | Amount |\n");
+        sb.append("| :--- | :--- |\n");
+        row(sb, "Coins",               currencies.coins());
+        row(sb, "Gems",                currencies.gems());
+        row(sb, "Stones",              currencies.stones());
+        row(sb, "Medals",              currencies.medals());
+        row(sb, "Elite Cells",         currencies.eliteCells());
+        row(sb, "Keys",                currencies.keys());
+        row(sb, "Tokens",              currencies.tokens());
+        row(sb, "Bits",                currencies.bits());
+        row(sb, "Tournament Tickets",  currencies.tournamentTickets());
+        row(sb, "Module Tickets",      currencies.moduleTickets());
+        row(sb, "Cannon Shards",       currencies.cannonShards());
+        row(sb, "Armor Shards",        currencies.armorShards());
+        row(sb, "Generator Shards",    currencies.generatorShards());
+        row(sb, "Core Shards",         currencies.coreShards());
+        row(sb, "Reroll Shards",       currencies.reRollShards());
+        return sb.toString();
+    }
+
+    private void row(StringBuilder sb, String currency, Object amount) {
+        sb.append(String.format("| %s | %s |%n", currency, amount));
     }
 }

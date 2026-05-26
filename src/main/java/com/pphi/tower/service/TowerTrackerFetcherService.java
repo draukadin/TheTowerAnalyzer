@@ -116,8 +116,8 @@ public class TowerTrackerFetcherService {
         for (Map.Entry<String, Module> entry : ModuleUtils.getAllModules().entrySet()) {
             String displayName = entry.getKey();
             Module module      = entry.getValue();
-            sb.append(String.format("--- %s [TYPE: %s] ---%n", displayName, module.type()));
-            sb.append(ValueRangeConcatenation.concatenate(googleSheetsRepository.readRanges(module)));
+            sb.append(String.format("### %s [TYPE: %s]%n%n", displayName, module.type()));
+            sb.append(ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(module)));
             sb.append("\n");
         }
         return sb.toString();
@@ -149,7 +149,7 @@ public class TowerTrackerFetcherService {
     // -------------------------------------------------------------------------
 
     public String fetchGuardians() throws IOException {
-        return ValueRangeConcatenation.concatenate(googleSheetsRepository.readRanges(TowerTrackerRanges.GUARDIANS));
+        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.GUARDIANS));
     }
 
     // -------------------------------------------------------------------------
@@ -157,7 +157,7 @@ public class TowerTrackerFetcherService {
     // -------------------------------------------------------------------------
 
     public String fetchBots() throws IOException {
-        return ValueRangeConcatenation.concatenate(googleSheetsRepository.readRanges(TowerTrackerRanges.BOTS));
+        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.BOTS));
     }
 
     // -------------------------------------------------------------------------
@@ -165,7 +165,7 @@ public class TowerTrackerFetcherService {
     // -------------------------------------------------------------------------
 
     public String fetchRelics() throws IOException {
-        return ValueRangeConcatenation.concatenate(googleSheetsRepository.readRanges(TowerTrackerRanges.RELICS));
+        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.RELICS));
     }
 
     // -------------------------------------------------------------------------
@@ -173,8 +173,8 @@ public class TowerTrackerFetcherService {
     // -------------------------------------------------------------------------
 
     private void appendSection(StringBuilder sb, String label, TowerTrackerRanges range) throws IOException {
-        sb.append("--- ").append(label).append(" ---\n");
-        sb.append(ValueRangeConcatenation.concatenate(googleSheetsRepository.readRanges(range)));
+        sb.append("### ").append(label).append("\n\n");
+        sb.append(ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(range)));
         sb.append("\n");
     }
 

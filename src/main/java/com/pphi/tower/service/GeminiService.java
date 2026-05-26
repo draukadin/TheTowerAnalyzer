@@ -8,6 +8,8 @@ import com.pphi.tower.web.dto.ChatRequest;
 import com.pphi.tower.web.dto.ChatResponse;
 import org.springframework.stereotype.Service;
 
+import com.pphi.tower.web.dto.ConversationTurn;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,10 +40,26 @@ public class GeminiService {
 
     public ChatResponse chat(ChatRequest request) {
         try {
-            List<ChatContext> contexts = buildContexts(request);
-            String systemPrompt = assembleSystemPrompt(contexts);
-            String reply = geminiRepository.sendChat(systemPrompt, request.prompt(), request.history());
-            return new ChatResponse(reply);
+            // Build context preamble only on the very first turn (empty history).
+            // After that it lives in the conversation history sent back by the client,
+            // so there is no need to re-fetch or re-transmit it.
+            boolean isFirstTurn = request.history() == null || request.history().isEmpty();
+            List<ConversationTurn> preamble = List.of();
+
+            if (isFirstTurn) {
+                List<ChatContext> contexts = buildContexts(request);
+                if (!contexts.isEmpty()) {
+                    String contextText = assembleContextText(contexts);
+                    preamble = List.of(
+                            new ConversationTurn("context", contextText),
+                            new ConversationTurn("context_ack",
+                                    "Context received. I have reviewed your player data and am ready to assist.")
+                    );
+                }
+            }
+
+            String reply = geminiRepository.sendChat(SYSTEM_PROMPT_BASE, request.prompt(), request.history(), preamble);
+            return new ChatResponse(reply, preamble);
         } catch (IOException e) {
             throw new RuntimeException("Failed to build chat context from tracker sheets", e);
         }
@@ -81,13 +99,10 @@ public class GeminiService {
         return contexts;
     }
 
-    private String assembleSystemPrompt(List<ChatContext> contexts) {
-        if (contexts.isEmpty()) return SYSTEM_PROMPT_BASE;
-
-        StringBuilder sb = new StringBuilder(SYSTEM_PROMPT_BASE);
-        sb.append("\n\nYou have been provided the following context:\n\n");
+    private String assembleContextText(List<ChatContext> contexts) {
+        StringBuilder sb = new StringBuilder("You have been provided the following player data:\n\n");
         for (ChatContext ctx : contexts) {
-            sb.append("### ").append(ctx.getLabel()).append(" ###\n");
+            sb.append("### ").append(ctx.getLabel()).append(" ###\n\n");
             sb.append(ctx.getContent()).append("\n");
         }
         return sb.toString();

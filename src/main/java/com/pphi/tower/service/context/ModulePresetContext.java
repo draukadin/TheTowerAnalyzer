@@ -27,19 +27,21 @@ public class ModulePresetContext implements ChatContext {
     @Override
     public String getContent() {
         StringBuilder sb = new StringBuilder();
+        sb.append("| Slot Type | Role | Module Name | Module Type |\n");
+        sb.append("| :--- | :--- | :--- | :--- |\n");
         slots.forEach((slotType, em) -> {
-            sb.append(slotType).append(" Module Slot:\n");
-            appendSlot(sb, "Primary", em.primarySlot());
-            appendSlot(sb, "Assist",  em.assistSlot());
+            moduleRow(sb, slotType, "Primary", em.primarySlot());
+            moduleRow(sb, slotType, "Assist",  em.assistSlot());
         });
         return sb.toString();
     }
 
-    private void appendSlot(StringBuilder sb, String role, Module module) {
+    private void moduleRow(StringBuilder sb, String slotType, String role, Module module) {
         if (module == null) {
-            sb.append(String.format("  %s: (empty)%n", role));
+            sb.append(String.format("| %s | %s | (empty) | - |%n", slotType, role));
         } else {
-            sb.append(String.format("  %s: %s [TYPE: %s]%n", role, module.name(), module.type()));
+            sb.append(String.format("| %s | %s | %s | %s |%n",
+                    slotType, role, module.name(), module.type()));
         }
     }
 }

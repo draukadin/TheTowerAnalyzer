@@ -25,13 +25,24 @@ public class GeminiRepository {
                 .build();
     }
 
-    public String sendChat(String systemPrompt, String userMessage, List<ConversationTurn> history) {
+    public String sendChat(String systemPrompt, String userMessage,
+                           List<ConversationTurn> history, List<ConversationTurn> preamble) {
         List<Map<String, Object>> contents = new ArrayList<>();
+
+        // Inject context preamble at the very start (only populated on the first turn)
+        if (preamble != null) {
+            for (ConversationTurn turn : preamble) {
+                contents.add(Map.of(
+                        "role", toGeminiRole(turn.role()),
+                        "parts", List.of(Map.of("text", turn.text()))
+                ));
+            }
+        }
 
         if (history != null) {
             for (ConversationTurn turn : history) {
                 contents.add(Map.of(
-                        "role", turn.role(),
+                        "role", toGeminiRole(turn.role()),
                         "parts", List.of(Map.of("text", turn.text()))
                 ));
             }
@@ -60,6 +71,23 @@ public class GeminiRepository {
             throw new RuntimeException("Empty response from Gemini API");
         }
         return response.candidates().getFirst().content().parts().getFirst().text();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Maps application-level turn roles to the two roles Gemini accepts.
+     * "context"     — the preamble user turn (context data)  → "user"
+     * "context_ack" — the preamble model acknowledgement     → "model"
+     */
+    private String toGeminiRole(String role) {
+        return switch (role) {
+            case "context", "user"        -> "user";
+            case "context_ack", "model"   -> "model";
+            default                       -> role;
+        };
     }
 
     // -------------------------------------------------------------------------

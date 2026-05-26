@@ -25,23 +25,27 @@ public class UltimateWeaponsContext implements ChatContext {
     }
 
     private void appendUW(StringBuilder sb, UltimateWeapon uw) {
-        sb.append("--- ").append(uw.name()).append(" ---\n");
         if (uw.locked()) {
-            sb.append("  Status: LOCKED\n\n");
+            sb.append(String.format("### %s *(LOCKED)*%n%n", uw.name()));
             return;
         }
-        sb.append(String.format("  Stat 1: %-10s (stones invested/required: %d / %d)%n",
-                uw.statOne(), uw.stonesInvestedOne(), uw.stonesRequiredOne()));
-        sb.append(String.format("  Stat 2: %-10s (stones invested/required: %d / %d)%n",
-                uw.statTwo(), uw.stonesInvestedTwo(), uw.stonesRequiredTwo()));
-        sb.append(String.format("  Stat 3: %-10s (stones invested/required: %d / %d)%n",
-                uw.statThree(), uw.stonesInvestedThree(), uw.stonesRequiredThree()));
-        if (!uw.uwPlusLocked()) {
-            sb.append(String.format("  UW+:    %-10s (stones invested/required: %d / %d)%n",
-                    uw.uwPlusStat(), uw.stonesInvestedUwPlus(), uw.stonesRequiredUwPlus()));
+
+        sb.append(String.format("### %s%n%n", uw.name()));
+        sb.append("| Stat | Value | Stones Invested | Stones Required |\n");
+        sb.append("| :--- | :--- | :--- | :--- |\n");
+        statRow(sb, "Stat 1", uw.statOne(),   uw.stonesInvestedOne(),   uw.stonesRequiredOne());
+        statRow(sb, "Stat 2", uw.statTwo(),   uw.stonesInvestedTwo(),   uw.stonesRequiredTwo());
+        statRow(sb, "Stat 3", uw.statThree(), uw.stonesInvestedThree(), uw.stonesRequiredThree());
+
+        if (uw.uwPlusLocked()) {
+            sb.append("| UW+ | LOCKED | - | - |\n");
         } else {
-            sb.append("  UW+: LOCKED\n");
+            statRow(sb, "UW+", uw.uwPlusStat(), uw.stonesInvestedUwPlus(), uw.stonesRequiredUwPlus());
         }
         sb.append("\n");
+    }
+
+    private void statRow(StringBuilder sb, String label, Number value, int invested, int required) {
+        sb.append(String.format("| %s | %s | %d | %d |%n", label, value, invested, required));
     }
 }

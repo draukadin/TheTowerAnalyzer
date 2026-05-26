@@ -1,3 +1,5 @@
 package com.pphi.tower.web.dto;
 
-public record ChatResponse(String reply) {}
+import java.util.List;
+
+public record ChatResponse(String reply, List<ConversationTurn> prependedTurns) {}
