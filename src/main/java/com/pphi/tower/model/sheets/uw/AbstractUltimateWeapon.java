@@ -24,10 +24,10 @@ public abstract class AbstractUltimateWeapon implements UltimateWeapon {
     private int stonesRequiredThree;
     private int stonesRequiredUwPlus;
 
-    protected Function<String, Number> statOneParser()   { return Integer::parseInt; }
-    protected Function<String, Number> statTwoParser()   { return Integer::parseInt; }
-    protected Function<String, Number> statThreeParser() { return Integer::parseInt; }
-    protected Function<String, Number> uwPlusStatParser() { return Integer::parseInt; }
+    protected Function<String, Number> statOneParser()    { return Double::parseDouble; }
+    protected Function<String, Number> statTwoParser()    { return Double::parseDouble; }
+    protected Function<String, Number> statThreeParser()  { return Double::parseDouble; }
+    protected Function<String, Number> uwPlusStatParser() { return Double::parseDouble; }
 
     protected AbstractUltimateWeapon(List<ValueRange> valueRanges) {
         try {

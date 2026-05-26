@@ -4,7 +4,9 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import com.pphi.tower.model.sheets.modules.EquippedModule;
 import com.pphi.tower.model.sheets.modules.Module;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,7 +15,7 @@ public final class ModuleUtils {
 
     private static final Map<String, Module> MODULES;
     static {
-        Map<String, Module> m = new HashMap<>();
+        Map<String, Module> m = new LinkedHashMap<>();
         m.put("Astral Deliverance",       new Module.AstralDeliverance());
         m.put("Havoc Bringer",            new Module.HavocBringer());
         m.put("Being Annihilator",        new Module.BeingAnnihilator());
@@ -38,10 +40,14 @@ public final class ModuleUtils {
         m.put("Om Chip",                  new Module.OmChip());
         m.put("Magnetic Hook",            new Module.MagneticHook());
         m.put("Primordial Collapse",      new Module.PrimordialCollapse());
-        MODULES = Map.copyOf(m);
+        MODULES = Collections.unmodifiableMap(m);
     }
 
     private ModuleUtils() {}
+
+    public static Map<String, Module> getAllModules() {
+        return MODULES;
+    }
 
     public static Module getModuleByName(final String name) {
         if (name.isBlank()) {

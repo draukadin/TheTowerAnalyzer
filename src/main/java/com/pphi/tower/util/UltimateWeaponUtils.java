@@ -75,6 +75,7 @@ public final class UltimateWeaponUtils {
         return s.replace("x", "")
                 .replace("#", "")
                 .replace("s", "")
+                .replace("m", "")
                 .replace("%", "")
                 .replace("Locked", "0");
     }

@@ -152,7 +152,7 @@
   .gemini-chat{margin-top:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;}
   .gemini-chat-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
   .gemini-context-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
-  .gemini-context-options{margin-bottom:1rem;display:flex;flex-direction:column;gap:6px;}
+  .gemini-context-options{margin-bottom:1rem;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
   .gemini-context-option{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;}
   .gemini-context-option input[type=checkbox]{accent-color:var(--accent);cursor:pointer;}
   .gemini-input-row{display:flex;gap:10px;align-items:flex-end;}
@@ -608,11 +608,51 @@ function renderComparePanel(summary){
       <div class="gemini-context-options">
         <label class="gemini-context-option">
           <input type="checkbox" id="geminiCtxComparison" checked>
-          Comparison report results
+          Comparison report
         </label>
         <label class="gemini-context-option">
           <input type="checkbox" id="geminiCtxProfile" checked>
           Player profile
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxCurrencies">
+          Currencies
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxLabs">
+          Laboratories
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxUltimateWeapons">
+          Ultimate weapons
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxModules">
+          Modules (inventory)
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxModulesFarming">
+          Farming preset
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxModulesTournament">
+          Tournament preset
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxWorkshop">
+          Workshop
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxGuardians">
+          Guardians
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxBots">
+          Bots
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxRelics">
+          Relics
         </label>
       </div>
       <div id="geminiThread" class="chat-thread"></div>
@@ -685,6 +725,16 @@ async function sendGeminiChat(){
   const contextTypes=[];
   if(document.getElementById('geminiCtxComparison').checked)contextTypes.push('comparison_report');
   if(document.getElementById('geminiCtxProfile').checked)contextTypes.push('user_profile');
+  if(document.getElementById('geminiCtxCurrencies').checked)contextTypes.push('player_currencies');
+  if(document.getElementById('geminiCtxLabs').checked)contextTypes.push('labs');
+  if(document.getElementById('geminiCtxUltimateWeapons').checked)contextTypes.push('ultimate_weapons');
+  if(document.getElementById('geminiCtxModules').checked)contextTypes.push('modules');
+  if(document.getElementById('geminiCtxModulesFarming').checked)contextTypes.push('modules_farming');
+  if(document.getElementById('geminiCtxModulesTournament').checked)contextTypes.push('modules_tournament');
+  if(document.getElementById('geminiCtxWorkshop').checked)contextTypes.push('workshop');
+  if(document.getElementById('geminiCtxGuardians').checked)contextTypes.push('guardians');
+  if(document.getElementById('geminiCtxBots').checked)contextTypes.push('bots');
+  if(document.getElementById('geminiCtxRelics').checked)contextTypes.push('relics');
   const sendBtn=document.getElementById('geminiSendBtn');
   sendBtn.disabled=true;
   const thread=document.getElementById('geminiThread');
