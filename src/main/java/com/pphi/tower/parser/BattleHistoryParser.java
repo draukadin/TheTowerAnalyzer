@@ -2,6 +2,7 @@ package com.pphi.tower.parser;
 
 import com.pphi.tower.exceptions.FieldToLineCountMismatchException;
 import com.pphi.tower.model.ScaleSuffix;
+import com.pphi.tower.model.TowerEra;
 import com.pphi.tower.model.TowerNumber;
 import com.pphi.tower.model.battlehistory.*;
 import com.pphi.tower.model.googledrive.BattleReportDriveFile;
@@ -87,6 +88,9 @@ public class BattleHistoryParser {
             }
             case "java.lang.String" -> {
                 return parseString(line);
+            }
+            case "com.pphi.tower.model.TowerEra" -> {
+                return TowerEra.parse(line);
             }
             default -> throw new RuntimeException(String.format("No handling for %s", name));
         }
