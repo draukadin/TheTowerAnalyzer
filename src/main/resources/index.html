@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Tower Analyzer</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <style>
   :root {
     --bg:#0d0f14; --surface:#141720; --surface2:#1c2030;
@@ -162,7 +163,17 @@
   .chat-thread{display:flex;flex-direction:column;gap:10px;margin-top:1rem;}
   .chat-turn{padding:11px 14px;border-radius:8px;font-size:13px;line-height:1.7;}
   .chat-turn.user{background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);}
-  .chat-turn.model{background:var(--surface2);border:1px solid var(--border);white-space:pre-wrap;}
+  .chat-turn.model{background:var(--surface2);border:1px solid var(--border);}
+  .chat-turn.model p{margin:0 0 .6em;}
+  .chat-turn.model p:last-child{margin-bottom:0;}
+  .chat-turn.model ul,.chat-turn.model ol{padding-left:1.4em;margin:.4em 0;}
+  .chat-turn.model li{margin:.2em 0;}
+  .chat-turn.model h1,.chat-turn.model h2,.chat-turn.model h3{font-size:1em;font-weight:700;margin:.8em 0 .3em;color:var(--accent);}
+  .chat-turn.model code{background:rgba(0,0,0,0.3);border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:.9em;}
+  .chat-turn.model pre{background:rgba(0,0,0,0.3);border-radius:6px;padding:.75em 1em;overflow-x:auto;margin:.5em 0;}
+  .chat-turn.model pre code{background:none;padding:0;}
+  .chat-turn.model strong{color:var(--text);font-weight:700;}
+  .chat-turn.model hr{border:none;border-top:1px solid var(--border);margin:.8em 0;}
   .chat-turn-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;font-weight:600;}
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;}
   .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:520px;max-width:92vw;max-height:82vh;overflow-y:auto;}
@@ -694,7 +705,7 @@ async function sendGeminiChat(){
     chatHistory.push({role:'model',text:reply});
     document.getElementById('geminiLoading').remove();
     thread.insertAdjacentHTML('beforeend',
-      `<div class="chat-turn model"><div class="chat-turn-label">Gemini</div>${escHtml(reply)}</div>`);
+      `<div class="chat-turn model"><div class="chat-turn-label">Gemini</div>${renderMarkdown(reply)}</div>`);
     thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
   }catch(e){
     document.getElementById('geminiLoading').remove();
@@ -716,7 +727,7 @@ async function loadChatHistory(id1,id2){
       const label=turn.role==='user'?'You':'Gemini';
       const cls=turn.role==='user'?'user':'model';
       thread.insertAdjacentHTML('beforeend',
-        `<div class="chat-turn ${cls}"><div class="chat-turn-label">${label}</div>${escHtml(turn.text)}</div>`);
+        `<div class="chat-turn ${cls}"><div class="chat-turn-label">${label}</div>${cls==='model'?renderMarkdown(turn.text):escHtml(turn.text)}</div>`);
     }
     if(history.length>0)thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
   }catch(e){/* silently ignore */}
@@ -733,6 +744,10 @@ async function clearChatHistory(){
 
 function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderMarkdown(s){
+  return marked.parse(String(s));
 }
 
 async function openProfileModal(){
