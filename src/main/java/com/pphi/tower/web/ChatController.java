@@ -39,7 +39,7 @@ public class ChatController {
                 chatHistoryRepository.save(request.reportId1(), id2, turn.role(), turn.text());
             }
             chatHistoryRepository.save(request.reportId1(), id2, "user", request.prompt());
-            chatHistoryRepository.save(request.reportId1(), id2, "model", response.reply(), response.thoughtSignature());
+            chatHistoryRepository.save(request.reportId1(), id2, "model", response.reply());
         }
         return response;
     }
@@ -49,14 +49,6 @@ public class ChatController {
         return Map.of(
                 "keys", new ArrayList<>(geminiProperties.getPrompts().keySet()),
                 "active", geminiProperties.getActivePrompt()
-        );
-    }
-
-    @GetMapping("/models")
-    public Map<String, Object> models() {
-        return Map.of(
-                "keys", new ArrayList<>(geminiProperties.getModels().keySet()),
-                "active", geminiProperties.getActiveModel()
         );
     }
 

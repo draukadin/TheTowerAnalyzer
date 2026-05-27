@@ -8,6 +8,4 @@ public record ChatRequest(
         String reportId1,
         String reportId2,
         List<ConversationTurn> history,
-        String promptKey,
-        String modelKey,
-        String thinkingLevel) {}
+        String promptKey) {}

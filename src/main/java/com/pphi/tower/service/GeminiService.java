@@ -73,13 +73,8 @@ public class GeminiService {
             String systemPrompt = geminiProperties.resolvePrompt(request.promptKey());
             if (systemPrompt == null) systemPrompt = FALLBACK_SYSTEM_PROMPT;
 
-            String modelId = geminiProperties.resolveModel(request.modelKey());
-
-            GeminiRepository.ChatResult result = geminiRepository.sendChat(
-                    systemPrompt, modelId, request.thinkingLevel(),
-                    request.prompt(), request.history(), preamble);
-
-            return new ChatResponse(result.text(), preamble, result.thoughtSignature());
+            String reply = geminiRepository.sendChat(systemPrompt, request.prompt(), request.history(), preamble);
+            return new ChatResponse(reply, preamble);
         } catch (IOException e) {
             throw new RuntimeException("Failed to build chat context from tracker sheets", e);
         }
