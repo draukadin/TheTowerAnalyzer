@@ -604,10 +604,22 @@ function renderComparePanel(summary){
         <div class="gemini-chat-title" style="margin-bottom:0">✦ Ask Gemini</div>
         <button class="btn" style="font-size:11px;padding:3px 10px;opacity:0.6" onclick="clearChatHistory()">Clear chat</button>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
         <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Base prompt</div>
-        <select class="compare-select" id="geminiPromptKey" style="min-width:160px;flex:1">
+        <select class="compare-select" id="geminiPromptKey" style="min-width:140px;flex:1">
           <option value="">Loading…</option>
+        </select>
+        <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Model</div>
+        <select class="compare-select" id="geminiModelKey" style="min-width:140px;flex:1">
+          <option value="">Loading…</option>
+        </select>
+        <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Thinking</div>
+        <select class="compare-select" id="geminiThinkingLevel" style="min-width:110px">
+          <option value="">None</option>
+          <option value="minimal">Minimal</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
         </select>
       </div>
       <div class="gemini-context-label">Context to include</div>
@@ -727,7 +739,7 @@ async function runComparison(id1){
     const chat=document.getElementById('geminiChat');
     chat.style.display='block';
     document.getElementById('geminiThread').innerHTML='';
-    await Promise.all([loadChatHistory(id1,id2), populatePromptSelector()]);
+    await Promise.all([loadChatHistory(id1,id2), populatePromptSelector(), populateModelSelector()]);
   }catch(e){
     document.getElementById('compareResult').innerHTML=`<div style="color:var(--red);padding:1rem">${e.message}</div>`;
   }
@@ -739,6 +751,16 @@ async function populatePromptSelector(){
     if(!res.ok)return;
     const{keys,active}=await res.json();
     const sel=document.getElementById('geminiPromptKey');
+    sel.innerHTML=keys.map(k=>`<option value="${escHtml(k)}"${k===active?' selected':''}>${escHtml(k)}</option>`).join('');
+  }catch(e){/* silently ignore */}
+}
+
+async function populateModelSelector(){
+  try{
+    const res=await fetch(`${API}/chat/models`);
+    if(!res.ok)return;
+    const{keys,active}=await res.json();
+    const sel=document.getElementById('geminiModelKey');
     sel.innerHTML=keys.map(k=>`<option value="${escHtml(k)}"${k===active?' selected':''}>${escHtml(k)}</option>`).join('');
   }catch(e){/* silently ignore */}
 }
@@ -773,17 +795,17 @@ async function sendGeminiChat(){
     const res=await fetch(`${API}/chat`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt,contextTypes,reportId1:geminiCompareId1,reportId2:geminiCompareId2,history:chatHistory,promptKey:document.getElementById('geminiPromptKey').value||null})
+      body:JSON.stringify({prompt,contextTypes,reportId1:geminiCompareId1,reportId2:geminiCompareId2,history:chatHistory,promptKey:document.getElementById('geminiPromptKey').value||null,modelKey:document.getElementById('geminiModelKey').value||null,thinkingLevel:document.getElementById('geminiThinkingLevel').value||null})
     });
     if(!res.ok)throw new Error(await res.text());
     const data=await res.json();
-    const{reply,prependedTurns}=data;
+    const{reply,prependedTurns,thoughtSignature}=data;
     // Silently add context preamble turns to history so they're included in future sends
     if(prependedTurns&&prependedTurns.length>0){
       for(const t of prependedTurns)chatHistory.push({role:t.role,text:t.text});
     }
     chatHistory.push({role:'user',text:prompt});
-    chatHistory.push({role:'model',text:reply});
+    chatHistory.push({role:'model',text:reply,...(thoughtSignature&&{thoughtSignature})});
     document.getElementById('geminiLoading').remove();
     thread.insertAdjacentHTML('beforeend',
       `<div class="chat-turn model"><div class="chat-turn-label">Gemini</div>${renderMarkdown(reply)}</div>`);

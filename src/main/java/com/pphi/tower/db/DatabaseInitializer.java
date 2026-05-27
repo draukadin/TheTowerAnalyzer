@@ -76,5 +76,12 @@ public class DatabaseInitializer {
                 CREATE INDEX IF NOT EXISTS idx_chat_history_pair
                 ON chat_history (report_id_1, report_id_2)
                 """);
+
+        // Migration: add thought_signature for Gemini thinking-model multi-turn support.
+        try {
+            jdbc.execute("ALTER TABLE chat_history ADD COLUMN thought_signature TEXT");
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
     }
 }
