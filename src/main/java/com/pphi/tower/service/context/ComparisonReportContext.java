@@ -202,4 +202,9 @@ public class ComparisonReportContext implements ChatContext {
         if (s == null) return null;
         return type.isInstance(s) ? (T) s : null;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

@@ -758,11 +758,7 @@ public class BattleDiagnostic {
                         String.format("Demon Mode triggered %d time(s) — indicates severe health "
                                 + "pressure sustained during the run.", counts.demonMode())));
             }
-            if (counts.wavesSkipped() > 0) {
-                obs.add(new Observation("Waves Skipped",
-                        String.format("%d wave(s) skipped — accelerated enemy scaling may have "
-                                + "contributed to a faster difficulty ramp.", counts.wavesSkipped())));
-            }
+            // Wave Skip / ELS cross-reference is emitted after the utility block below
             if (counts.thunderBotStuns() > 0) {
                 obs.add(new Observation("Thunder Bot Stuns",
                         String.format("%d stuns landed by Thunder Bot.", counts.thunderBotStuns())));
@@ -866,15 +862,59 @@ public class BattleDiagnostic {
                         String.format("%d recovery package(s) collected.",
                                 utility.recoveryPackages())));
             }
-            int skippedLevels = utility.enemyAttackLevelSkipped()
-                    + utility.enemyHealthLevelSkipped();
-            if (skippedLevels > 0) {
+        }
+
+        // ── Wave Skip × Enemy Level Skip cross-reference ──────────────────────
+        // These two mechanics directly offset each other: Wave Skip advances the wave counter
+        // (pushing enemies toward higher base stats faster in real time), while ELS suppresses
+        // those stat increases per-track. Reporting them in isolation is misleading — what
+        // matters is the net per-track effect relative to waves actually defended.
+        {
+            int wavesSkipped = counts != null ? counts.wavesSkipped() : 0;
+            int attackELS    = utility != null ? utility.enemyAttackLevelSkipped() : 0;
+            int healthELS    = utility != null ? utility.enemyHealthLevelSkipped() : 0;
+            int totalELS     = attackELS + healthELS;
+
+            boolean hasWaveSkip = wavesSkipped > 0;
+            boolean hasELS      = totalELS > 0;
+
+            if (hasWaveSkip && hasELS) {
+                long netAttack = (long) wavesSkipped - attackELS;
+                long netHealth = (long) wavesSkipped - healthELS;
+
+                String message;
+                if (netAttack <= 0 && netHealth <= 0) {
+                    message = String.format(
+                            "%d wave(s) skipped, but Enemy Level Skip triggers (%d attack, %d health) "
+                            + "exceeded the wave count on both stat tracks. Net enemy scaling was "
+                            + "suppressed by %d levels for Attack and %d levels for Health relative to "
+                            + "waves played — an overall difficulty decrease, not an acceleration.",
+                            wavesSkipped, attackELS, healthELS,
+                            Math.abs(netAttack), Math.abs(netHealth));
+                } else if (netAttack > 0 && netHealth > 0) {
+                    message = String.format(
+                            "%d wave(s) skipped with Enemy Level Skip active (%d attack, %d health). "
+                            + "Wave Skip outpaced ELS on both stat tracks — net enemy scaling "
+                            + "increased by %d attack levels and %d health levels relative to waves played.",
+                            wavesSkipped, attackELS, healthELS, netAttack, netHealth);
+                } else {
+                    message = String.format(
+                            "%d wave(s) skipped with Enemy Level Skip active (%d attack, %d health). "
+                            + "Net scaling per track: Attack %s%d levels, Health %s%d levels relative to waves played.",
+                            wavesSkipped, attackELS, healthELS,
+                            netAttack >= 0 ? "+" : "", netAttack,
+                            netHealth >= 0 ? "+" : "", netHealth);
+                }
+                obs.add(new Observation("Net Difficulty Impact (Wave Skip vs ELS)", message));
+            } else if (hasWaveSkip) {
+                obs.add(new Observation("Waves Skipped",
+                        String.format("%d wave(s) skipped — accelerated enemy scaling may have "
+                                + "contributed to a faster difficulty ramp.", wavesSkipped)));
+            } else if (hasELS) {
                 obs.add(new Observation("Enemy Levels Skipped",
                         String.format("%d enemy level(s) bypassed (%d attack, %d health). "
-                                        + "These effectively raise difficulty without adding wave count.",
-                                skippedLevels,
-                                utility.enemyAttackLevelSkipped(),
-                                utility.enemyHealthLevelSkipped())));
+                                + "These decrease difficulty by preventing enemy stats from increasing.",
+                                totalELS, attackELS, healthELS)));
             }
         }
     }

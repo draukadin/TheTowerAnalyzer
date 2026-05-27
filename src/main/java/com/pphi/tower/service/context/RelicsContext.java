@@ -17,4 +17,9 @@ public class RelicsContext implements ChatContext {
     public String getContent() {
         return relicsData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

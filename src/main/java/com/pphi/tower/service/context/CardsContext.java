@@ -17,4 +17,9 @@ public class CardsContext implements ChatContext {
     public String getContent() {
         return tableData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

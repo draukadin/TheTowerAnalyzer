@@ -17,4 +17,9 @@ public class WorkshopContext implements ChatContext {
     public String getContent() {
         return workshopData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

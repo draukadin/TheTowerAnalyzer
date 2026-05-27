@@ -41,4 +41,9 @@ public class PlayerCurrenciesContext implements ChatContext {
     private void row(StringBuilder sb, String currency, Object amount) {
         sb.append(String.format("| %s | %s |%n", currency, amount));
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

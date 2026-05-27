@@ -17,4 +17,9 @@ public class BotsContext implements ChatContext {
     public String getContent() {
         return botsData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

@@ -17,4 +17,9 @@ public class TierWaveContext implements ChatContext {
     public String getContent() {
         return tierWaveData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

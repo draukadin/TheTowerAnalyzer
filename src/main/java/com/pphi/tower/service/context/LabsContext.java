@@ -17,4 +17,9 @@ public class LabsContext implements ChatContext {
     public String getContent() {
         return labsData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

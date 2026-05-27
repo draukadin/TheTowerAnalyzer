@@ -17,4 +17,9 @@ public class VersionHistoryContext implements ChatContext {
     public String getContent() {
         return versionHistoryData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

@@ -20,4 +20,9 @@ public class ModulesContext implements ChatContext {
         return "## Module Inventory\n\n" + inventoryData +
                "## Module Sub-Stats\n\n" + subStats;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

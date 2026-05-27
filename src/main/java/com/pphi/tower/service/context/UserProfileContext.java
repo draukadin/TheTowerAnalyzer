@@ -37,4 +37,9 @@ public class UserProfileContext implements ChatContext {
             sb.append(label).append(": ").append(value.strip()).append("\n");
         }
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

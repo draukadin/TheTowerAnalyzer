@@ -44,4 +44,9 @@ public class ModulePresetContext implements ChatContext {
                     slotType, role, module.name(), module.type()));
         }
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

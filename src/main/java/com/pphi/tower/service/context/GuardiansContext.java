@@ -17,4 +17,9 @@ public class GuardiansContext implements ChatContext {
     public String getContent() {
         return guardiansData;
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }

@@ -48,4 +48,9 @@ public class UltimateWeaponsContext implements ChatContext {
     private void statRow(StringBuilder sb, String label, Number value, int invested, int required) {
         sb.append(String.format("| %s | %s | %d | %d |%n", label, value, invested, required));
     }
+
+    @Override
+    public String toString() {
+        return getContent();
+    }
 }
