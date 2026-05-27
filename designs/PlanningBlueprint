@@ -1,67 +1,4 @@
 ### The Complete Weekly Operational Blueprint
-
-#### Tower Eras
-* These are tracked as versions in the Player & Stuff worksheet now.  Most current version is at the top. Provided here for reference
-2.2.0	Minor	Death Wave Effect Wave Quantity 2
-2.1.0	Minor	Attack Speed Lab 61 → 62
-2.0.3	Patch	Cell / Kill Bonus 20 → 21
-2.0.2	Patch	Cell / Kill Bonus 19 → 20
-2.0.1	Patch	Coin Bonus+ 21 → 22
-2.0.0	Major	Coin Bonus+ 20 → 21
-1.3.0	Minor	Chain Thunder Lvl 1; Def% 25 → 26
-1.2.0	Minor	Spotlight Qty One (2 Beams)
-1.1.0	Minor	Modules Upgraded 101 → 140
-1.0.0	Major	Initial
-0.1.0	Major	Pre Modules to 140s
-
-#### Enhancements
-Workshop Enhancement,Multiplier,Farming,Tourney,Preset 3,Preset 4,Preset 5,Max,Next Level
-Damage +,x 1.52,52,52,,,,400,17.18 T
-Rend Armor Mult +,x 1.26,26,26,,,,400,206.25 B
-Critical Factor +,x 1.52,52,52,,,,400,17.18 T
-Damage / Meter +,x 1.26,26,26,,,,400,206.25 B
-Super Crit Multi +,x 1.52,52,52,,,,400,17.18 T
-Unlock ASPD + (205.31 T),x 1.00,0,0,,,,75,5.00 B
-Health +,x 1.46,46,46,,,,400,6.76 T
-Health Regen +,x 1.46,46,46,,,,400,6.76 T
-Defense Absolute +,x 1.00,0,0,,,,400,5.00 B
-Land Mine Damage +,x 1.00,0,0,,,,400,5.00 B
-Wall Health +,x 1.46,46,46,,,,400,6.76 T
-Unlock Orb Size + (377.94 T),x 1.00,0,0,,,,200,5.00 B
-Cash Bonus +,x 1.30,30,30,,,,400,355.04 B
-Coin Bonus +,x 1.22,22,22,,,,200,40.24 T
-Cells / Kill Bonus +,x 1.20,20,20,,,,200,22.02 T
-Free Upgrades +,x 1.08,8,8,,,,100,5.05 T
-Recovery Package +,x 1.10,10,10,,,,300,6.88 B
-Unlock ELS + (356.2 T),x 1.00,0,0,,,,60,5.00 B
-
-#### Currencies
-38.36T Coins
-Gems 5239
-Stones 9
-Medals 1199
-Elite Cell 413.61K
-Keys 0
-Tokens 205
-Bits 186
-Tournament Ticket 0
-Module Tickets 0
-Cannon Shards 660
-Armor Shards 2046
-Generator Shards 1859
-Core Shards 2107
-Reroll Shards 2677476
-
-#### Labs (Time remaining is the amount of time without the speed multiplier)
-Slot 1: Shatter Shards Lv 1 - 12d 13h 3m - 3x speed
-Slot 2: Armor Effect Ban Lv 2 - 13d 11h 9m - 2x speed
-Slot 3: Reroll Shards Lv 51 - 1d 4h 9m - 2x speed
-Slot 4: Attack Speed Lv 62 - 1d 21h 13m - 3x speed
-Slot 5: Lab Speed 98 - 23d 4h 30m - 4x speed
-
-#### Modules
-Inventory 282 / 300
-
 ---
 
 ## 📅 The Re-Calibrated "Safe Buffer" Timeline
@@ -69,13 +6,13 @@ Inventory 282 / 300
 Instead of waiting until the last 17 hours, we are going to start your accumulation phase early. This gives you a massive multi-day window to absorb the CPH hits from event missions without sweating your deadline.
 
 ### Phase 1: The Accelerated Utility Window (Right Now – Sunday, May 24)
-* **The Goal:** Capitalize on pure farming runs right now before the heavy event mission pressure disrupts your setups.
+* **The Goal:** Capitalize on pure farming runs right now before the heavy event mission pressure disrupts your setups. - Completed
 * **The Action:** Execute the 2-run plan to push **Coin Bonus +** (30.29T) and **Cells / Kill Bonus +** (15.26T). - Completed
-* **The Hard Cutoff:** Stop all workshop enhancement spending on **Sunday, May 24**.
+* **The Hard Cutoff:** Stop all workshop enhancement spending on **Sunday, May 24**. - Completed
 
 ### Phase 2: The Multi-Day Event Cushion (Sunday, May 24 – Thursday, May 28)
-* **The Lab Status Check:** Your **Armor Effect Ban Lv 2** lab is ticking down in Slot 2.
-* **The Action:** **Trigger the Hard Freeze early.** Every coin generated from Sunday onwards goes straight into the vault.
+* **The Lab Status Check:** Your **Armor Effect Ban Lv 2** lab is ticking down in Slot 2. 3d 3h 54m lab time running in a 2x slot  Will bump up to a 3x slot in 4h 26m
+* **The Action:** **Trigger the Hard Freeze early.** Every coin generated from Sunday onwards goes straight into the vault. Currently 80.57T
 * **The Strategy:** Use this 3.5-day window to aggressively knock out all your event missions. Even if a mission setup cuts your CPH in half, you have over **80 total hours** before the lab finishes. At an average of just 0.5T to 1T per hour during event runs, you will still easily cruise past the 42T target with days to spare.
 
 ### Phase 3: The Flawless Hand-Off (Thursday, May 28 @ ~4:30 AM)
@@ -97,14 +34,14 @@ This adjustment completely removes the stress of RNG event missions messing with
 ### 5. The Passive Desync Fix (Bits & Summon)
 
 * **The Rule:** Bits are completely on autopilot. You are entirely relying on the weekly maxed guild chest drip.
-* **The Action:** The second the milestone bits drop into your wallet over the next two weeks, you immediately dump them into the Summon cooldown upgrades ($95 \rightarrow 97 \rightarrow 99$) until you hit that flawless 90-second flat desync fix.
-* **Got the last 100 bits Friday and went from 86 to 186 bits.  Once the current farming run ends, will drop into the summon cooldown upgrade
+* **The Action:** The second the milestone bits drop into your wallet over the next two weeks, you immediately dump them into the Summon cooldown upgrades ($95 (Bought) \rightarrow 97 (Bought) \rightarrow 99$ 79 bits on hand, need 20 more) until you hit that flawless 90-second flat desync fix.
+* **Got the last 100 bits Friday and went from 86 to 186 bits.  Once the current farming run ends, will drop into the summon cooldown upgrade - Completed
 
 ### 6. The Module Inventory Management (The 300 Limit)
 
-* **The Rule:** Keep a strict eye on your inventory space to avoid capping out.
-* **The Action:** Merge or shatter lower-tier modules as needed to stay safely below the 300 cap.
-* **The Exception:** **Protect your Armor and Cannon modules.** Hoard them as fiercely as possible so they are instantly ready to be processed as soon as Shatter Shards Level 1 lab completes.
+* **The Rule:** Keep a strict eye on your inventory space to avoid capping out. - Completed
+* **The Action:** Merge or shatter lower-tier modules as needed to stay safely below the 300 cap. - Shattered all common modules
+* **The Exception:** **Protect your Armor and Cannon modules.** Hoard them as fiercely as possible so they are instantly ready to be processed as soon as Shatter Shards Level 1 lab completes. - Lvl 1 Shatter Shards lab completed
 
 ### 7. The 2100 Shard Trigger Limit
 
@@ -114,12 +51,12 @@ This adjustment completely removes the stress of RNG event missions messing with
 ### 8. Comprehensive Ultimate Weapon Stone Progression
 Phase 1: The Armor Shield Solution (Immediate Goal) - Completed
 
-    Target: Death Wave Armor Stripping (200 Stones)
-    Execution Window: Thursday morning / Friday morning before the tournament bracket locks.
-    Objective: Instantly dismantle the Champion tournament armor bottlenecks that hard-capped your crowd control.
+    Target: Death Wave Armor Stripping (200 Stones) - Completed
+    Execution Window: Thursday morning / Friday morning before the tournament bracket locks. - Completed
+    Objective: Instantly dismantle the Champion tournament armor bottlenecks that hard-capped your crowd control. - Completed
 
 Phase 2: Crowd Control & Crowd Saturation (Next Horizon)
-    Target: The Last Chain Lightning Quantity quantity (400 Stones)
+    Target: The Last Chain Lightning Quantity quantity (400 Stones) - In Progress 179 of 400 stones
     Objective: This maximizes your Dimension Core scaling by giving you the maximum possible coverage of chain links across the screen. It ensures your shock stacks apply universally across high-density fields to prime targets before they touch your wall.
 
 Phase 3: The Economy & Sync Maxing (Strategic Grind)
@@ -174,8 +111,8 @@ After protecting your core, look at your remaining post-run dividend and apply i
 
 *This* is the complete picture. It pumps your immediate earning power, locks down your Friday tournament tech, cleans up your workshop health stats, and perfectly times your multi-trillion cash reserves to meet your lab timer without a single hour of wasted efficiency.
 
-* **The Core Loop:** Continuous T10 farming, funneling liquid capital into the 15.26T Coin Bonus first, then the remaining low-hanging workshop fruit.
-* **The Milestones:** Slipping in the T12 and T13 stone pushes before Wednesday night to lock down the Death Wave Armor Stripping tech for Friday.
-* **The Hard Target:** Freezing all workshop spending on Day 10 to amass 42T liquid coins, perfectly timing the hand-off to the Cannon Ban lab the moment the Armor Ban finishes.
-* **The Maintenance:** Autopilot Summon upgrades, strict module inventory management protecting Armor/Cannon stock, and pulling the trigger on module levels at 2,100 shards.
+* **The Core Loop:** Continuous T10 farming, funneling liquid capital into the 15.26T Coin Bonus first, then the remaining low-hanging workshop fruit. - In progress
+* **The Milestones:** Slipping in the T12 and T13 stone pushes before Wednesday night to lock down the Death Wave Armor Stripping tech for Friday. - Completed
+* **The Hard Target:** Freezing all workshop spending on Day 10 to amass 42T liquid coins, perfectly timing the hand-off to the Cannon Ban lab the moment the Armor Ban finishes. - Completed
+* **The Maintenance:** Autopilot Summon upgrades, strict module inventory management protecting Armor/Cannon stock, and pulling the trigger on module levels at 2,100 shards. - Completed
 * **Module Inventory Management:** Need to keep modules coming in so we don't slow down the the Level 161 module goal and delay the sub-stat re-roll which is our main goal.
