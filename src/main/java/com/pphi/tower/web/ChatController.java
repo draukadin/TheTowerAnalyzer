@@ -1,5 +1,6 @@
 package com.pphi.tower.web;
 
+import com.pphi.tower.config.GeminiProperties;
 import com.pphi.tower.repository.ChatHistoryRepository;
 import com.pphi.tower.service.GeminiService;
 import com.pphi.tower.web.dto.ChatRequest;
@@ -7,7 +8,9 @@ import com.pphi.tower.web.dto.ChatResponse;
 import com.pphi.tower.web.dto.ConversationTurn;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -16,10 +19,14 @@ public class ChatController {
 
     private final GeminiService geminiService;
     private final ChatHistoryRepository chatHistoryRepository;
+    private final GeminiProperties geminiProperties;
 
-    public ChatController(GeminiService geminiService, ChatHistoryRepository chatHistoryRepository) {
+    public ChatController(GeminiService geminiService,
+                          ChatHistoryRepository chatHistoryRepository,
+                          GeminiProperties geminiProperties) {
         this.geminiService = geminiService;
         this.chatHistoryRepository = chatHistoryRepository;
+        this.geminiProperties = geminiProperties;
     }
 
     @PostMapping
@@ -34,6 +41,14 @@ public class ChatController {
             chatHistoryRepository.save(request.reportId1(), request.reportId2(), "model", response.reply());
         }
         return response;
+    }
+
+    @GetMapping("/prompts")
+    public Map<String, Object> prompts() {
+        return Map.of(
+                "keys", new ArrayList<>(geminiProperties.getPrompts().keySet()),
+                "active", geminiProperties.getActivePrompt()
+        );
     }
 
     @GetMapping("/history")

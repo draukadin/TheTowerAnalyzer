@@ -1,5 +1,6 @@
 package com.pphi.tower.service;
 
+import com.pphi.tower.config.GeminiProperties;
 import com.pphi.tower.model.sheets.modules.Preset;
 import com.pphi.tower.repository.GeminiRepository;
 import com.pphi.tower.repository.UserProfileRepository;
@@ -17,22 +18,25 @@ import java.util.List;
 @Service
 public class GeminiService {
 
-    private static final String SYSTEM_PROMPT_BASE =
+    private static final String FALLBACK_SYSTEM_PROMPT =
             "You are an expert analyst for The Tower: Tower Defense Game. " +
             "You help players understand their battle statistics, compare run performance, " +
             "and provide actionable advice to improve their gameplay. " +
             "Be concise, specific, and refer to the provided data when relevant.";
 
     private final GeminiRepository geminiRepository;
+    private final GeminiProperties geminiProperties;
     private final ComparisonService comparisonService;
     private final UserProfileRepository userProfileRepository;
     private final TowerTrackerFetcherService towerTrackerFetcherService;
 
     public GeminiService(GeminiRepository geminiRepository,
+                         GeminiProperties geminiProperties,
                          ComparisonService comparisonService,
                          UserProfileRepository userProfileRepository,
                          TowerTrackerFetcherService towerTrackerFetcherService) {
         this.geminiRepository = geminiRepository;
+        this.geminiProperties = geminiProperties;
         this.comparisonService = comparisonService;
         this.userProfileRepository = userProfileRepository;
         this.towerTrackerFetcherService = towerTrackerFetcherService;
@@ -58,7 +62,10 @@ public class GeminiService {
                 }
             }
 
-            String reply = geminiRepository.sendChat(SYSTEM_PROMPT_BASE, request.prompt(), request.history(), preamble);
+            String systemPrompt = geminiProperties.resolvePrompt(request.promptKey());
+            if (systemPrompt == null) systemPrompt = FALLBACK_SYSTEM_PROMPT;
+
+            String reply = geminiRepository.sendChat(systemPrompt, request.prompt(), request.history(), preamble);
             return new ChatResponse(reply, preamble);
         } catch (IOException e) {
             throw new RuntimeException("Failed to build chat context from tracker sheets", e);

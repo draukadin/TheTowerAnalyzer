@@ -7,4 +7,5 @@ public record ChatRequest(
         List<String> contextTypes,
         String reportId1,
         String reportId2,
-        List<ConversationTurn> history) {}
+        List<ConversationTurn> history,
+        String promptKey) {}

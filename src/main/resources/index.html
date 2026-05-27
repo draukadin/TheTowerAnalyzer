@@ -604,6 +604,12 @@ function renderComparePanel(summary){
         <div class="gemini-chat-title" style="margin-bottom:0">✦ Ask Gemini</div>
         <button class="btn" style="font-size:11px;padding:3px 10px;opacity:0.6" onclick="clearChatHistory()">Clear chat</button>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+        <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Base prompt</div>
+        <select class="compare-select" id="geminiPromptKey" style="min-width:160px;flex:1">
+          <option value="">Loading…</option>
+        </select>
+      </div>
       <div class="gemini-context-label">Context to include</div>
       <div class="gemini-context-options">
         <label class="gemini-context-option">
@@ -721,10 +727,20 @@ async function runComparison(id1){
     const chat=document.getElementById('geminiChat');
     chat.style.display='block';
     document.getElementById('geminiThread').innerHTML='';
-    await loadChatHistory(id1,id2);
+    await Promise.all([loadChatHistory(id1,id2), populatePromptSelector()]);
   }catch(e){
     document.getElementById('compareResult').innerHTML=`<div style="color:var(--red);padding:1rem">${e.message}</div>`;
   }
+}
+
+async function populatePromptSelector(){
+  try{
+    const res=await fetch(`${API}/chat/prompts`);
+    if(!res.ok)return;
+    const{keys,active}=await res.json();
+    const sel=document.getElementById('geminiPromptKey');
+    sel.innerHTML=keys.map(k=>`<option value="${escHtml(k)}"${k===active?' selected':''}>${escHtml(k)}</option>`).join('');
+  }catch(e){/* silently ignore */}
 }
 
 async function sendGeminiChat(){
@@ -757,7 +773,7 @@ async function sendGeminiChat(){
     const res=await fetch(`${API}/chat`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt,contextTypes,reportId1:geminiCompareId1,reportId2:geminiCompareId2,history:chatHistory})
+      body:JSON.stringify({prompt,contextTypes,reportId1:geminiCompareId1,reportId2:geminiCompareId2,history:chatHistory,promptKey:document.getElementById('geminiPromptKey').value||null})
     });
     if(!res.ok)throw new Error(await res.text());
     const data=await res.json();
