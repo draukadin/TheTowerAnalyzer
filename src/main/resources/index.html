@@ -657,6 +657,18 @@ function renderComparePanel(summary){
           Tournament preset
         </label>
         <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxCards">
+          Cards
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxCardsFarming">
+          Cards farming preset
+        </label>
+        <label class="gemini-context-option">
+          <input type="checkbox" id="geminiCtxCardsTournament">
+          Cards tournament preset
+        </label>
+        <label class="gemini-context-option">
           <input type="checkbox" id="geminiCtxWorkshop">
           Workshop
         </label>
@@ -777,6 +789,9 @@ async function sendGeminiChat(){
   if(document.getElementById('geminiCtxModules').checked)contextTypes.push('modules');
   if(document.getElementById('geminiCtxModulesFarming').checked)contextTypes.push('modules_farming');
   if(document.getElementById('geminiCtxModulesTournament').checked)contextTypes.push('modules_tournament');
+  if(document.getElementById('geminiCtxCards').checked)contextTypes.push('cards');
+  if(document.getElementById('geminiCtxCardsFarming').checked)contextTypes.push('cards_farming');
+  if(document.getElementById('geminiCtxCardsTournament').checked)contextTypes.push('cards_tournament');
   if(document.getElementById('geminiCtxWorkshop').checked)contextTypes.push('workshop');
   if(document.getElementById('geminiCtxGuardians').checked)contextTypes.push('guardians');
   if(document.getElementById('geminiCtxBots').checked)contextTypes.push('bots');

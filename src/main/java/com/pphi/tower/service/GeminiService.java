@@ -1,6 +1,7 @@
 package com.pphi.tower.service;
 
 import com.pphi.tower.config.GeminiProperties;
+import com.pphi.tower.model.sheets.cards.CardPresetType;
 import com.pphi.tower.model.sheets.modules.Preset;
 import com.pphi.tower.repository.GeminiRepository;
 import com.pphi.tower.repository.UserProfileRepository;
@@ -102,6 +103,13 @@ public class GeminiService {
                 case "modules_tournament"-> contexts.add(new ModulePresetContext(
                                                 Preset.TOURNAMENT,
                                                 towerTrackerFetcherService.fetchModulePreset(Preset.TOURNAMENT)));
+                case "cards"             -> contexts.add(new CardsContext(towerTrackerFetcherService.fetchCards()));
+                case "cards_farming"     -> contexts.add(new CardPresetContext(
+                                                CardPresetType.FARMING,
+                                                towerTrackerFetcherService.fetchCardPreset(CardPresetType.FARMING)));
+                case "cards_tournament"  -> contexts.add(new CardPresetContext(
+                                                CardPresetType.TOURNAMENT,
+                                                towerTrackerFetcherService.fetchCardPreset(CardPresetType.TOURNAMENT)));
                 case "workshop"          -> contexts.add(new WorkshopContext(towerTrackerFetcherService.fetchWorkshop()));
                 case "guardians"         -> contexts.add(new GuardiansContext(towerTrackerFetcherService.fetchGuardians()));
                 case "bots"              -> contexts.add(new BotsContext(towerTrackerFetcherService.fetchBots()));

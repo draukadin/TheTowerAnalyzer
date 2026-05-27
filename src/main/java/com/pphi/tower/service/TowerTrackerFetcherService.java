@@ -1,11 +1,11 @@
 package com.pphi.tower.service;
 
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.pphi.tower.config.AppConfig;
 import com.pphi.tower.model.ScaleSuffix;
 import com.pphi.tower.model.TowerNumber;
 import com.pphi.tower.model.sheets.Currencies;
 import com.pphi.tower.model.sheets.TowerTrackerRanges;
+import com.pphi.tower.model.sheets.cards.CardPresetType;
 import com.pphi.tower.model.sheets.modules.EquippedModule;
 import com.pphi.tower.model.sheets.modules.Module;
 import com.pphi.tower.model.sheets.modules.Preset;
@@ -23,19 +23,17 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class TowerTrackerFetcherService {
 
-    private final AppConfig appConfig;
     private final GoogleSheetsRepository googleSheetsRepository;
     private final ModulePresetRepository modulePresetRepository;
 
     public TowerTrackerFetcherService(
-            AppConfig appConfig,
             GoogleSheetsRepository googleSheetsRepository,
             ModulePresetRepository modulePresetRepository) {
-        this.appConfig = appConfig;
         this.googleSheetsRepository = googleSheetsRepository;
         this.modulePresetRepository = modulePresetRepository;
     }
@@ -131,6 +129,26 @@ public class TowerTrackerFetcherService {
         appendSection(sb, "Core Sub-Stats",      TowerTrackerRanges.CORE_SUB_STATS);
         appendSection(sb, "Rarity Chance",       TowerTrackerRanges.RARITY_CHANCE);
         return sb.toString();
+    }
+
+    // -------------------------------------------------------------------------
+    // Cards
+    // -------------------------------------------------------------------------
+
+    public String fetchCards() throws IOException {
+        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.CARDS));
+    }
+
+    public List<String> fetchCardPreset(CardPresetType type) throws IOException {
+        TowerTrackerRanges range = type == CardPresetType.FARMING
+                ? TowerTrackerRanges.CARD_PRESET_FARMING
+                : TowerTrackerRanges.CARD_PRESET_TOURNAMENT;
+        var valueRanges = googleSheetsRepository.readRanges(range);
+        if (valueRanges.isEmpty()) return List.of();
+        var rows = ValueRangeUtils.getRows(valueRanges.get(0));
+        return rows.stream()
+                .map(row -> row.isEmpty() ? "" : Objects.toString(row.get(0), ""))
+                .toList();
     }
 
     // -------------------------------------------------------------------------

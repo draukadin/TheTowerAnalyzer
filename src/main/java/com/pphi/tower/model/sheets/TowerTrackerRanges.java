@@ -39,6 +39,11 @@ public enum TowerTrackerRanges implements GoogleSheet {
     CORE_SUB_STATS("Substats", List.of("J24:P50"), "modules"),
     RARITY_CHANCE("Substats", List.of("B50:H50"), "modules"),
 
+    // Cards
+    CARDS("Master Sheet", List.of("B3:D33"), "cards"),
+    CARD_PRESET_FARMING("Card Preset", List.of("D5:D32"), "cards"),
+    CARD_PRESET_TOURNAMENT("Card Preset", List.of("H5:H32"), "cards"),
+
     // Relic Trackers
     RELICS("Relics", List.of("M2:N42", "P2:P42"), "relics"),
 
