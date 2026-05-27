@@ -239,7 +239,7 @@
 <script>
 const API='http://localhost:8080/api';
 let allReports=[],activeId=null,activePayload=null,activeView='reports',currentTab='stats';
-let geminiCompareId1=null,geminiCompareId2=null,chatHistory=[];
+let chatState={id1:null,id2:null,history:[]};
 
 async function init(){
   try{
@@ -558,6 +558,7 @@ async function renderDiagnosisPanel(summary){
     const res=await fetch(`${API}/reports/${encodeURIComponent(summary.id)}/diagnosis`);
     const d=await res.json();
     const failureName=(d.primaryFailure||'Unknown').replace(/_/g,' ');
+    chatState={id1:summary.id,id2:null,history:[]};
     document.getElementById('tabPanel').innerHTML=`
       <div class="diag-card">
         <div class="diag-header">
@@ -582,37 +583,32 @@ async function renderDiagnosisPanel(summary){
             <div class="obs-detail">${o.detail}</div>
           </div>`).join('')}
         </div>`:''}
-      <div style="height:2rem"></div>`;
+      <div style="height:2rem"></div>
+      ${buildGeminiChatHtml('diagnosis',false)}`;
+    await Promise.all([loadChatHistory(summary.id,null), populatePromptSelector(), populateModelSelector()]);
   }catch(e){
     document.getElementById('tabPanel').innerHTML=
       `<div class="empty-state" style="height:auto;padding:3rem"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
   }
 }
 
-function renderComparePanel(summary){
-  const others=allReports.filter(r=>r.id!==summary.id);
-  const opts=others.map(r=>`<option value="${r.id}">${r.runType} — T${r.tier} Wave ${r.wave.toLocaleString()}${r.towerEra?' — '+r.towerEra:''}</option>`).join('');
-  document.getElementById('tabPanel').innerHTML=`
-    <div class="compare-controls">
-      <span style="font-size:13px;color:var(--muted)">Compare against:</span>
-      <select class="compare-select" id="compareSelect">${opts}</select>
-      <button class="btn btn-primary" onclick="runComparison('${summary.id}')">Compare</button>
-    </div>
-    <div id="compareResult"></div>
-    <div id="geminiChat" class="gemini-chat" style="display:none">
+function buildGeminiChatHtml(mode, hidden){
+  const ctxId    = mode==='compare' ? 'geminiCtxComparison' : 'geminiCtxDiagnosis';
+  const ctxLabel = mode==='compare' ? 'Comparison report'  : 'Diagnosis report';
+  const placeholder = mode==='compare'
+    ? 'Ask anything about these runs… (Ctrl+Enter to send)'
+    : 'Ask anything about this run… (Ctrl+Enter to send)';
+  return `
+    <div id="geminiChat" class="gemini-chat"${hidden?' style="display:none"':''}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
         <div class="gemini-chat-title" style="margin-bottom:0">✦ Ask Gemini</div>
         <button class="btn" style="font-size:11px;padding:3px 10px;opacity:0.6" onclick="clearChatHistory()">Clear chat</button>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
         <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Base prompt</div>
-        <select class="compare-select" id="geminiPromptKey" style="min-width:140px;flex:1">
-          <option value="">Loading…</option>
-        </select>
+        <select class="compare-select" id="geminiPromptKey" style="min-width:140px;flex:1"><option value="">Loading…</option></select>
         <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Model</div>
-        <select class="compare-select" id="geminiModelKey" style="min-width:140px;flex:1">
-          <option value="">Loading…</option>
-        </select>
+        <select class="compare-select" id="geminiModelKey" style="min-width:140px;flex:1"><option value="">Loading…</option></select>
         <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Thinking</div>
         <select class="compare-select" id="geminiThinkingLevel" style="min-width:110px">
           <option value="">None</option>
@@ -625,8 +621,8 @@ function renderComparePanel(summary){
       <div class="gemini-context-label">Context to include</div>
       <div class="gemini-context-options">
         <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxComparison" checked>
-          Comparison report
+          <input type="checkbox" id="${ctxId}" checked>
+          ${ctxLabel}
         </label>
         <label class="gemini-context-option">
           <input type="checkbox" id="geminiCtxProfile" checked>
@@ -696,17 +692,30 @@ function renderComparePanel(summary){
       <div id="geminiThread" class="chat-thread"></div>
       <div class="gemini-input-row" style="margin-top:1rem">
         <textarea class="gemini-textarea" id="geminiPrompt"
-          placeholder="Ask anything about these runs… (Ctrl+Enter to send)"
+          placeholder="${placeholder}"
           onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))sendGeminiChat()"></textarea>
         <button class="btn btn-primary" id="geminiSendBtn" onclick="sendGeminiChat()">Send</button>
       </div>
     </div>`;
 }
 
+function renderComparePanel(summary){
+  const others=allReports.filter(r=>r.id!==summary.id);
+  const opts=others.map(r=>`<option value="${r.id}">${r.runType} — T${r.tier} Wave ${r.wave.toLocaleString()}${r.towerEra?' — '+r.towerEra:''}</option>`).join('');
+  document.getElementById('tabPanel').innerHTML=`
+    <div class="compare-controls">
+      <span style="font-size:13px;color:var(--muted)">Compare against:</span>
+      <select class="compare-select" id="compareSelect">${opts}</select>
+      <button class="btn btn-primary" onclick="runComparison('${summary.id}')">Compare</button>
+    </div>
+    <div id="compareResult"></div>
+    ${buildGeminiChatHtml('compare',true)}`;
+}
+
 async function runComparison(id1){
   const id2=document.getElementById('compareSelect').value;
   if(!id2)return;
-  geminiCompareId1=id1;geminiCompareId2=id2;chatHistory=[];
+  chatState={id1,id2,history:[]};
   document.getElementById('compareResult').innerHTML='<div class="loading-placeholder">Comparing…</div>';
   try{
     const res=await fetch(`${API}/reports/${encodeURIComponent(id1)}/comparison/${encodeURIComponent(id2)}`);
@@ -781,7 +790,8 @@ async function sendGeminiChat(){
   const prompt=document.getElementById('geminiPrompt').value.trim();
   if(!prompt)return;
   const contextTypes=[];
-  if(document.getElementById('geminiCtxComparison').checked)contextTypes.push('comparison_report');
+  if(document.getElementById('geminiCtxComparison')?.checked)contextTypes.push('comparison_report');
+  if(document.getElementById('geminiCtxDiagnosis')?.checked)contextTypes.push('diagnosis_report');
   if(document.getElementById('geminiCtxProfile').checked)contextTypes.push('user_profile');
   if(document.getElementById('geminiCtxCurrencies').checked)contextTypes.push('player_currencies');
   if(document.getElementById('geminiCtxLabs').checked)contextTypes.push('labs');
@@ -810,17 +820,17 @@ async function sendGeminiChat(){
     const res=await fetch(`${API}/chat`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt,contextTypes,reportId1:geminiCompareId1,reportId2:geminiCompareId2,history:chatHistory,promptKey:document.getElementById('geminiPromptKey').value||null,modelKey:document.getElementById('geminiModelKey').value||null,thinkingLevel:document.getElementById('geminiThinkingLevel').value||null})
+      body:JSON.stringify({prompt,contextTypes,reportId1:chatState.id1,reportId2:chatState.id2,history:chatState.history,promptKey:document.getElementById('geminiPromptKey').value||null,modelKey:document.getElementById('geminiModelKey').value||null,thinkingLevel:document.getElementById('geminiThinkingLevel').value||null})
     });
     if(!res.ok)throw new Error(await res.text());
     const data=await res.json();
     const{reply,prependedTurns,thoughtSignature}=data;
     // Silently add context preamble turns to history so they're included in future sends
     if(prependedTurns&&prependedTurns.length>0){
-      for(const t of prependedTurns)chatHistory.push({role:t.role,text:t.text});
+      for(const t of prependedTurns)chatState.history.push({role:t.role,text:t.text});
     }
-    chatHistory.push({role:'user',text:prompt});
-    chatHistory.push({role:'model',text:reply,...(thoughtSignature&&{thoughtSignature})});
+    chatState.history.push({role:'user',text:prompt});
+    chatState.history.push({role:'model',text:reply,...(thoughtSignature&&{thoughtSignature})});
     document.getElementById('geminiLoading').remove();
     thread.insertAdjacentHTML('beforeend',
       `<div class="chat-turn model"><div class="chat-turn-label">Gemini</div>${renderMarkdown(reply)}</div>`);
@@ -836,10 +846,12 @@ async function sendGeminiChat(){
 
 async function loadChatHistory(id1,id2){
   try{
-    const res=await fetch(`${API}/chat/history?reportId1=${encodeURIComponent(id1)}&reportId2=${encodeURIComponent(id2)}`);
+    const params=new URLSearchParams({reportId1:id1});
+    if(id2)params.append('reportId2',id2);
+    const res=await fetch(`${API}/chat/history?${params}`);
     if(!res.ok)return;
     const history=await res.json();
-    chatHistory=history.map(t=>({role:t.role,text:t.text}));
+    chatState.history=history.map(t=>({role:t.role,text:t.text}));
     const thread=document.getElementById('geminiThread');
     for(const turn of history){
       // Context preamble turns are stored in history for Gemini but never shown in the UI
@@ -854,10 +866,12 @@ async function loadChatHistory(id1,id2){
 }
 
 async function clearChatHistory(){
-  if(!geminiCompareId1||!geminiCompareId2)return;
+  if(!chatState.id1)return;
   try{
-    await fetch(`${API}/chat/history?reportId1=${encodeURIComponent(geminiCompareId1)}&reportId2=${encodeURIComponent(geminiCompareId2)}`,{method:'DELETE'});
-    chatHistory=[];
+    const params=new URLSearchParams({reportId1:chatState.id1});
+    if(chatState.id2)params.append('reportId2',chatState.id2);
+    await fetch(`${API}/chat/history?${params}`,{method:'DELETE'});
+    chatState.history=[];
     document.getElementById('geminiThread').innerHTML='';
   }catch(e){/* silently ignore */}
 }

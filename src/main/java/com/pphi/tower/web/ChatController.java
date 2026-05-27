@@ -32,13 +32,14 @@ public class ChatController {
     @PostMapping
     public ChatResponse chat(@RequestBody ChatRequest request) {
         ChatResponse response = geminiService.chat(request);
-        if (request.reportId1() != null && request.reportId2() != null) {
+        if (request.reportId1() != null) {
+            String id2 = request.reportId2() != null ? request.reportId2() : "";
             // Persist context preamble turns first so they're included in future history loads
             for (ConversationTurn turn : response.prependedTurns()) {
-                chatHistoryRepository.save(request.reportId1(), request.reportId2(), turn.role(), turn.text());
+                chatHistoryRepository.save(request.reportId1(), id2, turn.role(), turn.text());
             }
-            chatHistoryRepository.save(request.reportId1(), request.reportId2(), "user", request.prompt());
-            chatHistoryRepository.save(request.reportId1(), request.reportId2(), "model", response.reply(), response.thoughtSignature());
+            chatHistoryRepository.save(request.reportId1(), id2, "user", request.prompt());
+            chatHistoryRepository.save(request.reportId1(), id2, "model", response.reply(), response.thoughtSignature());
         }
         return response;
     }
@@ -62,14 +63,14 @@ public class ChatController {
     @GetMapping("/history")
     public List<ConversationTurn> history(
             @RequestParam String reportId1,
-            @RequestParam String reportId2) {
+            @RequestParam(required = false, defaultValue = "") String reportId2) {
         return chatHistoryRepository.findByPair(reportId1, reportId2);
     }
 
     @DeleteMapping("/history")
     public void clearHistory(
             @RequestParam String reportId1,
-            @RequestParam String reportId2) {
+            @RequestParam(required = false, defaultValue = "") String reportId2) {
         chatHistoryRepository.deleteByPair(reportId1, reportId2);
     }
 }

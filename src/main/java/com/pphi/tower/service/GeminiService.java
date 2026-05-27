@@ -8,6 +8,8 @@ import com.pphi.tower.repository.UserProfileRepository;
 import com.pphi.tower.service.context.*;
 import com.pphi.tower.web.dto.ChatRequest;
 import com.pphi.tower.web.dto.ChatResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.pphi.tower.web.dto.ConversationTurn;
@@ -19,6 +21,8 @@ import java.util.List;
 @Service
 public class GeminiService {
 
+    private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
+
     private static final String FALLBACK_SYSTEM_PROMPT =
             "You are an expert analyst for The Tower: Tower Defense Game. " +
             "You help players understand their battle statistics, compare run performance, " +
@@ -28,17 +32,20 @@ public class GeminiService {
     private final GeminiRepository geminiRepository;
     private final GeminiProperties geminiProperties;
     private final ComparisonService comparisonService;
+    private final DiagnosticService diagnosticService;
     private final UserProfileRepository userProfileRepository;
     private final TowerTrackerFetcherService towerTrackerFetcherService;
 
     public GeminiService(GeminiRepository geminiRepository,
                          GeminiProperties geminiProperties,
                          ComparisonService comparisonService,
+                         DiagnosticService diagnosticService,
                          UserProfileRepository userProfileRepository,
                          TowerTrackerFetcherService towerTrackerFetcherService) {
         this.geminiRepository = geminiRepository;
         this.geminiProperties = geminiProperties;
         this.comparisonService = comparisonService;
+        this.diagnosticService = diagnosticService;
         this.userProfileRepository = userProfileRepository;
         this.towerTrackerFetcherService = towerTrackerFetcherService;
     }
@@ -90,6 +97,12 @@ public class GeminiService {
                         contexts.add(new ComparisonReportContext(result, request.reportId1(), request.reportId2()));
                     }
                 }
+                case "diagnosis_report" -> {
+                    if (request.reportId1() != null) {
+                        var result = diagnosticService.diagnose(request.reportId1());
+                        contexts.add(new DiagnosisReportContext(result, request.reportId1()));
+                    }
+                }
                 case "user_profile"      -> contexts.add(new UserProfileContext(userProfileRepository.load()));
                 case "player_currencies" -> contexts.add(new PlayerCurrenciesContext(towerTrackerFetcherService.fetchCurrencies()));
                 case "labs"              -> contexts.add(new LabsContext(towerTrackerFetcherService.fetchLabs()));
@@ -118,6 +131,7 @@ public class GeminiService {
                 case "version_history"   -> contexts.add(new VersionHistoryContext(towerTrackerFetcherService.fetchVersionHistory()));
             }
         }
+        log.debug(String.format("Contexts: %s", contexts));
         return contexts;
     }
 
