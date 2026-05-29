@@ -16,6 +16,10 @@ public class BlackHole extends AbstractUltimateWeapon {
         return Double::parseDouble;
     }
 
+    @Override public String statOneLabel()   { return "Size"; }
+    @Override public String statTwoLabel()   { return "Duration"; }
+    @Override public String statThreeLabel() { return "Cooldown"; }
+
     public Number size()      { return statOne(); }
     public Number duration()  { return statTwo(); }
     public Number cooldown()  { return statThree(); }

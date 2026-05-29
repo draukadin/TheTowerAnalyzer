@@ -33,9 +33,9 @@ public class UltimateWeaponsContext implements ChatContext {
         sb.append(String.format("### %s%n%n", uw.name()));
         sb.append("| Stat | Value | Stones Invested | Stones Required |\n");
         sb.append("| :--- | :--- | :--- | :--- |\n");
-        statRow(sb, "Stat 1", uw.statOne(),   uw.stonesInvestedOne(),   uw.stonesRequiredOne());
-        statRow(sb, "Stat 2", uw.statTwo(),   uw.stonesInvestedTwo(),   uw.stonesRequiredTwo());
-        statRow(sb, "Stat 3", uw.statThree(), uw.stonesInvestedThree(), uw.stonesRequiredThree());
+        statRow(sb, uw.statOneLabel(),   uw.statOne(),   uw.stonesInvestedOne(),   uw.stonesRequiredOne());
+        statRow(sb, uw.statTwoLabel(),   uw.statTwo(),   uw.stonesInvestedTwo(),   uw.stonesRequiredTwo());
+        statRow(sb, uw.statThreeLabel(), uw.statThree(), uw.stonesInvestedThree(), uw.stonesRequiredThree());
 
         if (uw.uwPlusLocked()) {
             sb.append("| UW+ | LOCKED | - | - |\n");

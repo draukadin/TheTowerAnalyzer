@@ -8,6 +8,9 @@ public interface UltimateWeapon {
     Number statOne();
     Number statTwo();
     Number statThree();
+    default String statOneLabel()   { return "Stat 1"; }
+    default String statTwoLabel()   { return "Stat 2"; }
+    default String statThreeLabel() { return "Stat 3"; }
     Number uwPlusStat();
     int stonesInvestedOne();
     int stonesInvestedTwo();

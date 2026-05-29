@@ -11,7 +11,7 @@ final class UwSheetLayout {
     static final int STAT_ONE_ROW        = 2;
     static final int STAT_TWO_ROW        = 3;
     static final int STAT_THREE_ROW      = 4;
-    static final int STAT_COL            = 2;
+    static final int STAT_COL            = 5;
 
     static final int UW_PLUS_ROW         = 5;
     static final int UW_PLUS_LOCKED_COL  = 2;

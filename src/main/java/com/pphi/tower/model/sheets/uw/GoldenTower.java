@@ -21,6 +21,10 @@ public class GoldenTower extends AbstractUltimateWeapon {
         return Double::parseDouble;
     }
 
+    @Override public String statOneLabel()   { return "Bonus"; }
+    @Override public String statTwoLabel()   { return "Duration"; }
+    @Override public String statThreeLabel() { return "Cooldown"; }
+
     public Number bonus()        { return statOne(); }
     public Number duration()     { return statTwo(); }
     public Number cooldown()     { return statThree(); }

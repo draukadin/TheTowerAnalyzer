@@ -21,6 +21,10 @@ public class ChainLightning extends AbstractUltimateWeapon {
         return Double::parseDouble;
     }
 
+    @Override public String statOneLabel()   { return "Damage"; }
+    @Override public String statTwoLabel()   { return "Quantity"; }
+    @Override public String statThreeLabel() { return "Chance"; }
+
     public Number damage()      { return statOne(); }
     public Number quantity()    { return statTwo(); }
     public Number chance()      { return statThree(); }

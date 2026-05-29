@@ -21,6 +21,10 @@ public class Spotlight extends AbstractUltimateWeapon {
         return Double::parseDouble;
     }
 
+    @Override public String statOneLabel()   { return "Bonus"; }
+    @Override public String statTwoLabel()   { return "Angle"; }
+    @Override public String statThreeLabel() { return "Count"; }
+
     public Number bonus()       { return statOne(); }
     public Number angle()       { return statTwo(); }
     public Number count()       { return statThree(); }

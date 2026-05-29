@@ -10,6 +10,10 @@ public class ChronoField extends AbstractUltimateWeapon {
         super(valueRanges);
     }
 
+    @Override public String statOneLabel()   { return "Duration"; }
+    @Override public String statTwoLabel()   { return "Speed Reduction"; }
+    @Override public String statThreeLabel() { return "Cooldown"; }
+
     public Number duration()        { return statOne(); }
     public Number speedReduction()  { return statTwo(); }
     public Number cooldown()        { return statThree(); }

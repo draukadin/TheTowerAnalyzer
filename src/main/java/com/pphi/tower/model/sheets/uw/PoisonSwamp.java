@@ -10,6 +10,10 @@ public class PoisonSwamp extends AbstractUltimateWeapon {
         super(valueRanges);
     }
 
+    @Override public String statOneLabel()   { return "Damage"; }
+    @Override public String statTwoLabel()   { return "Duration"; }
+    @Override public String statThreeLabel() { return "Cooldown"; }
+
     public Number damage()      { return statOne(); }
     public Number duration()    { return statTwo(); }
     public Number cooldown()    { return statThree(); }
