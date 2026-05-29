@@ -1,67 +1,46 @@
-### The Complete Weekly Operational Blueprint
+### Operational Blueprint
 ---
 
 ## 📅 The Re-Calibrated "Safe Buffer" Timeline
+### Phase 1: The Accelerated Utility Window (Right Now – Sunday, May 24) - Completed
 
-Instead of waiting until the last 17 hours, we are going to start your accumulation phase early. This gives you a massive multi-day window to absorb the CPH hits from event missions without sweating your deadline.
+### Phase 2: The Multi-Day Event Cushion (Sunday, May 24 – Thursday, May 28) - Completed
 
-### Phase 1: The Accelerated Utility Window (Right Now – Sunday, May 24)
-* **The Goal:** Capitalize on pure farming runs right now before the heavy event mission pressure disrupts your setups. - Completed
-* **The Action:** Execute the 2-run plan to push **Coin Bonus +** (30.29T) and **Cells / Kill Bonus +** (15.26T). - Completed
-* **The Hard Cutoff:** Stop all workshop enhancement spending on **Sunday, May 24**. - Completed
-
-### Phase 2: The Multi-Day Event Cushion (Sunday, May 24 – Thursday, May 28)
-* **The Lab Status Check:** Your **Armor Effect Ban Lv 2** lab is ticking down in Slot 2. 3d 3h 54m lab time running in a 2x slot  Will bump up to a 3x slot in 4h 26m
-* **The Action:** **Trigger the Hard Freeze early.** Every coin generated from Sunday onwards goes straight into the vault. Currently 80.57T
-* **The Strategy:** Use this 3.5-day window to aggressively knock out all your event missions. Even if a mission setup cuts your CPH in half, you have over **80 total hours** before the lab finishes. At an average of just 0.5T to 1T per hour during event runs, you will still easily cruise past the 42T target with days to spare.
-
-### Phase 3: The Flawless Hand-Off (Thursday, May 28 @ ~4:30 AM)
+### Phase 3: The Flawless Hand-Off (Thursday, May 28 @ ~15:30) - Completed
 * **The Status:** Your 42T cash reserve has been safely sitting in the bank for a day or two, completely immune to event disruptions.
 * **The Trigger:** The second the Armor Ban lab hits 0d 0h 0m, you instantly start the **Cannon Effect Ban**.
+* Sitting on 86.69T Coins after starting Cannon Ban Lab
 
 ---
 
 ## 📈 Updated Strategic Checklist
 
-| Phase | Timeline | Operational Focus |
-| --- | --- | --- |
-| **Aggressive Utility** | Now – Sunday (May 24) | Maximize standard T10 runs; secure immediate Coin/Cell upgrades.|
-| **The Safe Buffer Freeze** | Sunday – Thursday (May 28) | <br>**Stop spending entirely.** Clear event missions without worrying about CPH drops.|
-| **The Perfect Hand-Off** | Thursday (May 28) @ 4:30 AM | Launch **Cannon Effect Ban** with 0 seconds of lab downtime.|
+### 1. The Passive Desync Fix (Bits & Summon) - NEAR COMPLETION (Target: Friday)
+* **The Status:** GB is locked at 90s (Range MAX, Duration 25.5s, Bonus 7x). Summon is at 91s.
+* **The Action:** Collect the final guild chest drip to cross from 79 to 179 bits, instantly purchasing the final 1-second cooldown reduction for Summon.
+* **The Result:** Absolute 1:1 sync between GB and Summon at 90s, locking in a flawless 2:1 macro-sync with the 180s GT/BH/DW core. This establishes the permanent baseline for all future Tier 10 farming runs.
 
-This adjustment completely removes the stress of RNG event missions messing with your core progression goals.
+### 2. The Module Pipeline & Lab-Sync Strategy
 
-### 5. The Passive Desync Fix (Bits & Summon)
+* **The Rule:** Transition from blind hoarding to a structured "compress and cash-out" cycle synchronized directly with your remaining **Shatter Shards lab levels (Levels 2–5)** to feed your push toward Level 141 and 161 sub-stat milestones.
+* **The Action:** Lock down your remaining fodder targets. Build and hold exactly **2 Cannon and 2 Generator Legendary+ fodder** as permanent wildcards (Currently have 1 Cannon and 1 Generator Legendary+ fodder). For your **Core slot**, aggressively merge duplicates—focusing heavily on *one specific rare name at a time*—to pump those 4 required Legendary+ fodders straight into your uniques without getting stuck in the Legendary Trap.
+* **The Strategy:** **The Rolling Hoard.** For your fully completed slots (Armor, and soon Cannon/Generator), use the auto-merge tool to compress excess drops into Epic or Epic+ packages to stay under the 300 inventory limit. **Hold them un-shattered ONLY while a Shatter Shards lab level is actively running.** The exact moment the lab level finishes and your multiplier steps up, cash out and shatter the entire hoard immediately for a massive shard windfall.
 
-* **The Rule:** Bits are completely on autopilot. You are entirely relying on the weekly maxed guild chest drip.
-* **The Action:** The second the milestone bits drop into your wallet over the next two weeks, you immediately dump them into the Summon cooldown upgrades ($95 (Bought) \rightarrow 97 (Bought) \rightarrow 99$ 79 bits on hand, need 20 more) until you hit that flawless 90-second flat desync fix.
-* **Got the last 100 bits Friday and went from 86 to 186 bits.  Once the current farming run ends, will drop into the summon cooldown upgrade - Completed
-
-### 6. The Module Inventory Management (The 300 Limit)
-
-* **The Rule:** Keep a strict eye on your inventory space to avoid capping out. - Completed
-* **The Action:** Merge or shatter lower-tier modules as needed to stay safely below the 300 cap. - Shattered all common modules
-* **The Exception:** **Protect your Armor and Cannon modules.** Hoard them as fiercely as possible so they are instantly ready to be processed as soon as Shatter Shards Level 1 lab completes. - Lvl 1 Shatter Shards lab completed
-
-### 7. The 2100 Shard Trigger Limit
+### 3. The 2100 Shard Trigger Limit
 
 * **The Rule:** Don't let shards sit idle if they can be actively pushing your module milestones toward level 161.
 * **The Action:** Keep tabs on your shard banks. The exact moment any individual shard type crosses the **2,100 threshold**, instantly burn them to grab another level in the corresponding module to boost your baseline stats.
 
-### 8. Comprehensive Ultimate Weapon Stone Progression
-Phase 1: The Armor Shield Solution (Immediate Goal) - Completed
-
-    Target: Death Wave Armor Stripping (200 Stones) - Completed
-    Execution Window: Thursday morning / Friday morning before the tournament bracket locks. - Completed
-    Objective: Instantly dismantle the Champion tournament armor bottlenecks that hard-capped your crowd control. - Completed
+### 4. Comprehensive Ultimate Weapon Stone Progression
+Phase 1: Second DW Effect Wave (Immediate Goal) - Completed
 
 Phase 2: Crowd Control & Crowd Saturation (Next Horizon)
-    Target: The Last Chain Lightning Quantity quantity (400 Stones) - In Progress 179 of 400 stones
+    Target: The Last Chain Lightning Quantity quantity (400 Stones) - In Progress 174 of 400 stones
     Objective: This maximizes your Dimension Core scaling by giving you the maximum possible coverage of chain links across the screen. It ensures your shock stacks apply universally across high-density fields to prime targets before they touch your wall.
 
 Phase 3: The Economy & Sync Maxing (Strategic Grind)
     Target: Black Hole Duration from 18s to 26s (508 Stones total)
-    Objective: Getting BH to a raw 26 seconds directly scales your coin multipliers during your massive T10 farming runs and gets it in sycn with Golden Tower which has a 38 second duration currently (+12 seconds above BH if you are running the standard duration balance) to extract maximum value from every single economic proc.
+    Objective: Getting BH to a raw 26 seconds directly scales your coin multipliers during your massive T10 farming runs and gets it in sync with Golden Tower which has a 38 second duration currently (+12 seconds above BH if you are running the standard duration balance) to extract maximum value from every single economic proc.
 
 Phase 4: Full-Screen Coverage (Late-Stage Completion)
     Target: Spotlight Angle from 31° to 40° (540 Stones total)
@@ -71,16 +50,16 @@ Phase 5: Drive to permanent Chrono Field
     Target: Bring the Cooldown and Duration into sync so that when the CF ends it begins immediately without a gap in coverage
     Objective: Increasing CF uptime will allow for increased crowd control by reducing the speed of enemies making it easier for Attack Speed/Knockback to keep them off the wall and give CL, and orbs more time to kill them.
 
-### 10. Laboratory Slot Optimization & Retiring Lab Speed
+### 5. Laboratory Slot Optimization & Retiring Lab Speed
 
 #### The Immediate 19-Day Holding Pattern
 
 * **The Action:** **Pause Defense % at Level 26.** Move **Attack Speed** into its current 3x slot rotation.
 * **The Reason:** This keeps Attack Speed steadily grinding while you wait out the final 19-day countdown for Lab Speed to finish.
 
-#### Slot A: The Premium 4x Speed Slot (Triggers in ~12 Days)
+#### Slot A: The Premium 4x Speed Slot (Triggers in ~6 Days)
 
-* **The Trigger:** **Lab Speed** maxes out to Level 99 in the 4x Speed Slot. (lvl 97 completed.  lvl 98 in progress. lvl 99 is the last level)
+* **The Trigger:** **Lab Speed** maxes out to Level 99 in the 4x Speed Slot. (lvl 99 last level in progress)
 * **The Action:** Instantly move **Attack Speed** into the permanent 4x Speed Slot to hyper-accelerate its final **84-day push to the absolute max cap**.
 * **The Strategic Objective:** Prioritize *Absolute Crowd Control* over damage mitigation. Maxing your attack speed limits enemy proximity, optimizes knockback, and ensures high-density tournament swarms are completely locked down before they can even touch your wall.
 
@@ -90,14 +69,49 @@ Phase 5: Drive to permanent Chrono Field
 * **The Action:** **Bring Defense % back online** at Level 26 in this newly opened 3x slot.
 * **The Objective:** Resume the long-term grind toward the Level 50 absolute tournament max, steadily building your raw damage mitigation baseline in the background while Attack Speed hogs the fast track.
 
-#### Slot C: The Ban Lab Hand-off Slot (Triggers in ~6 Days)
+Slot C: The Ban Lab Hand-off Slot
+* **The Trigger:** Cannon Effect Ban Level 2 concludes.
+* **The Action:** Immediately queue Core Effect Ban (Level 1) to prepare for the Dimension Core Ancestral transition,
+    OR launch Shatter Shards (Level 2) if raw shard income is delaying your Level 161 milestone push.
+* **The Objective:** Ensure the sub-stat pool is heavily pruned the exact moment Dimension Core makes the jump to Ancestral, saving precious reroll currency.
 
-* **The Trigger:** The double-ban cycle (**Armor & Cannon Effect Bans**) concludes, and your 42T cash reserve is handed off to the final lab.
-* **The Action:** Immediately slot the **Death Wave Armor Stripping Lab** (Starting at Level 0) into this open rotation for rapid, low-level, high-yield gains to support your weekend tournament performance.
-* **Secondary Focus (Structural Runway):** **Chrono Field Duration** / **Attack Speed**
-* *Objective:* Maintain your essential crowd control speed baseline while steadily building the mandatory duration foundation required for your next massive ultimate weapon stone phase.
+#### Slot D: Chrono Field Duration Grind
+* **The Trigger:** Shatter Shards Level 1 completes put Chrono Field Duration into this slot to being grinding out a longer lasting chrono field - Complete
+* *Objective:* Increase duration via Lab so stones can go into bringing down the CF Cool Down instead of increasing the CF duration.  This will save hundreds of stones toward getting a pCF
 
+#### Slot E: Utility Slot
+* **The Action:** Use this slot to complete researches that provide an immediate benefit
+* *Objective:*
+  * Bring Chain Thunder from Level 1 to Level 2 - Completed
+  * Bring Lightning Amplifier - Scatterer from Level 1 to Level 2 - In progress
+  * Bring Death Wave Armor Stripping from Level 0 to Level 2 - Level 0 to Level 1 completed; Level 1 to Level 2 - Pending
+* **The Trigger:** When you don't have any immediate goals to work on, put Reroll Shards in this slot
+* **The Action:** Work with Gemini to identify new short term research goals in place of Reroll Shards
 ---
+
+### Reroll Shard Allocation & Gating
+* **Current Reserve:** 2.8 Million Shards
+* **The Strategy:** High-aggression roll on Ancestral Amplifying Strike the moment Cannon Ban Level 2 hits 0d 0h 0m. Lock Ancestral Attack Speed first, followed by Crit Factor.
+* **The Core Reserve:** Maintain a hard floor of 1,000,000 shards to instantly perfect Dimension Core's sub-stats the second it pulls its final two natural epics for the Ancestral transition.
+
+### 🃏 Optimized Tournament Deck Execution
+* **The Pre-Run Build:** Pre-equip Energy Shield in the starting 16-card lineup. Drop the Coin card or Wave Skip card to clear the slot. Recovery Package Chance card MUST remain equipped to fuel the Galaxy Compressor engine.
+* **The Bench:** Death Ray remains permanently benched for Super Tower to maximize boss and Elite damage.
+* **The Wave 400 Pivot:** Manually swap Free Upgrades out for Extra Orb mid-run the exact moment the workshop maxes out, maximizing late-wave operational crowd control.
+
+### 🪙 Future Enhancement Horizon: The ELS+ Unlock
+* **The Hard Target:** 132T total coin pool (66T for Coin Bonus+, 66T for Cells/Kill+).
+* **The Rule:** Do not partial-buy. Hold all farming dividends from the post-Friday 2:1 sync until the full 132T is cleared above the 5.0T lab safety net.
+* **The Objective:** Cleanly trigger the ELS+ unlock tab to extend Tier 10 farming runs and smash the Elite cell bottleneck.
+
+### 🛡️ Defensive Module Strategy (Farming)
+* **The Rule:** Ancestral Orbital Augment is permanently locked for both Tournaments and Farming.
+* **The Justification:** Wall Health (Lvl 50) and Fortification (Lvl 32) labs provide enough raw baseline eHP to completely deprecate the need for Mythic+ Sharp Fortitude.
+* **The Sub-Stat Goal:** Leverage the Ancestral OA slot to hunt for Ancestral Defense % and Ancestral Wall stats to maximize the return on maxed wall labs.
+
+### 💎 Reroll Shard Quarantine & Lab Gating
+* **The Core Freeze Rule:** Primordial Collapse rolls are strictly frozen at its current baseline (+6m BH, 2.5x SL). Zero shards will be spent here until Core Effect Ban labs are advanced from Level 0.
+* **The 161 Allocation Strategy:** The 2.8M reroll shard bank is officially quarantined. It is exclusively reserved for hunting Ancestral Attack Speed/Crit on the Cannon module post-Cannon Ban Level 2, and for securing the 6th sub-stat slots the moment modules cross the Level 161 milestone threshold.
 
 ### Enhancement Workshop
 
@@ -109,10 +123,54 @@ After protecting your core, look at your remaining post-run dividend and apply i
     The Attack Cycle (The 2:1 Shift): Once Utility becomes an expensive single-level purchase, pivot your next major payout entirely to the Attack Tab. Bring your Major Three up to your next target level, then cleanly step your Minor Two up to exactly half that level. This provides an immediate burst of offensive power for the weekend brackets while biting a massive chunk out of the 247T Attack Speed gate.
     The Health Cycle (The Wall Cushion): After an intensive offensive push, dedicate your next farming payout to the Health tab. Distribute the coins across Health+, Health Regen+, and Wall Health+. Because your Wall Regen handles 95%+ of your total run damage, this cycle directly thickens your protective shield while quietly tunneling toward the 436T Orb Size unlock.
 
-*This* is the complete picture. It pumps your immediate earning power, locks down your Friday tournament tech, cleans up your workshop health stats, and perfectly times your multi-trillion cash reserves to meet your lab timer without a single hour of wasted efficiency.
-
 * **The Core Loop:** Continuous T10 farming, funneling liquid capital into the 15.26T Coin Bonus first, then the remaining low-hanging workshop fruit. - In progress
 * **The Milestones:** Slipping in the T12 and T13 stone pushes before Wednesday night to lock down the Death Wave Armor Stripping tech for Friday. - Completed
 * **The Hard Target:** Freezing all workshop spending on Day 10 to amass 42T liquid coins, perfectly timing the hand-off to the Cannon Ban lab the moment the Armor Ban finishes. - Completed
 * **The Maintenance:** Autopilot Summon upgrades, strict module inventory management protecting Armor/Cannon stock, and pulling the trigger on module levels at 2,100 shards. - Completed
 * **Module Inventory Management:** Need to keep modules coming in so we don't slow down the the Level 161 module goal and delay the sub-stat re-roll which is our main goal.
+
+### Thoughts and musings
+* Optimizing my modules is the current primary goal because of the long term goal of reaching level 161 on all the modules (requires shards and coins)
+* My Ultimate weapon long term goal is to get to pCF (required stones and coins)
+* In terms of resources both of these goals are independent of each other except for the coins to run their respective labs.
+* Shatter Shards is at 1 of 5 levels
+* Cannon Effect ban is at 1 of 4 - currently working on level 2
+* Armor Effect ban is at 2 of 4
+* Generator Effect ban is at 0 of 3
+* Core Effect ban is at 0 of 7
+* I will eventually need to re-roll sub stats on Generator and Core making getting some of those lab levels done important
+* I will eventually need to start leveling up other modules with shards so I have leveled assist modules but I think that should wait until the primary reaches 161
+* Enhancement upgrades are becoming very expensive
+  - high double digit trillions for utility
+  - low double digit trillions for attack
+  - single digit trillions for health
+  - 120T to spend on utility enhancements to unlock ELS+
+  - 205T to spend on attack enhancement to unlock Attack Speed+
+  - 378T to spend on health enhancements to unlock orb size+
+
+### Constraints
+* Economy is the current constraint on Enhancements and Labs
+* Stones and Tournament performance is the current constraint on Stones
+* Cell income is the biggest constraint on running more lab slots at 3x or 4x consecutively (this also requires stones to improve DW which is the biggest cell generating UW)
+* Waves completed in Champion is only about 600 which is right at the cut off for staying in Champions or getting demoted back to Platinum depending on bracket (biggest impact on stone income)
+* Not enough lab slots to research against all the bottle necks at the same time
+
+### Question
+1. What is the optimal path to take to improve Champion Tournament performance and remain above the demotion rankings?
+
+
+Enhancement			Factor	Level	Next Level Cost
+Damage +			x 1.52	52		17.18T
+Rend Armor Mult +	x 1.26	26		206.25B
+Critical Factor +	x 1.52	52		17.18T
+Damage / Meter +	x 1.26	26		206.25B
+Super Crit Multi +	x 1.52	52		17.18T
+
+Labs	Level	Target	Max
+Wall Health	50	50	50
+Wall Rebuild	6	6	20
+Wall Regen	20	30	30
+Wall Thorns	15	20	20
+Wall Invincibility	0	0	10
+Wall Fortification	32	60	60
+Garlic Thorns	10	10	10
