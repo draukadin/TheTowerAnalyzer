@@ -27,4 +27,4 @@ if not exist "%JAR%" (
     exit /b 1
 )
 
-java -jar "%JAR%"
+java -jar "%JAR%" %*
