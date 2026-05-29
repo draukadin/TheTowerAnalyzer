@@ -1,15 +1,16 @@
 ### Operational Blueprint
 ---
 
-## 📅 The Re-Calibrated "Safe Buffer" Timeline
-### Phase 1: The Accelerated Utility Window (Right Now – Sunday, May 24) - Completed
-
-### Phase 2: The Multi-Day Event Cushion (Sunday, May 24 – Thursday, May 28) - Completed
-
-### Phase 3: The Flawless Hand-Off (Thursday, May 28 @ ~15:30) - Completed
-* **The Status:** Your 42T cash reserve has been safely sitting in the bank for a day or two, completely immune to event disruptions.
-* **The Trigger:** The second the Armor Ban lab hits 0d 0h 0m, you instantly start the **Cannon Effect Ban**.
-* Sitting on 86.69T Coins after starting Cannon Ban Lab
+## Action Items
+* Create two new tournament cards presets
+  1. Staring: Attack Speed, Damage, Critical Chance, Super Tower, Ultimate Crit, Berserker, Health, Extra Defense, Health Regen, Recovery Package Chance, Slow Aura, Plasma Cannon, Second Wind, Demon Mode, Energy Shield, 🔄 Free Upgrades
+  2. 400+ Waves: Attack Speed, Damage, Critical Chance, Super Tower, Ultimate Crit, Berserker, Health, Extra Defense, Health Regen, Recovery Package Chance, Slow Aura, Plasma Cannon, Second Wind, Demon Mode, Energy Shield, 🔄 Land Mine Stun
+* Lock down coin spending - need to get back to 47T before Tuesday
+* After 47T coins can be spend on Critical Factor+, Damage+ and SuperCrit Multi+ as they become available
+* On Tuesday when Generator Effect Ban Level 1 finishes, put Cannon Effect Ban back in.
+* On Tuesday when Generator Effect Ban Level 1 finishes, ban Cash Bonus.
+* Lock Package chance; Leave Free Attack Upgrade and Free Utility Upgrade unlocked - Completed
+* Transfer levels from Singularity Harness to Galaxy Compressor when current farming run is ended to see two new sub-stat slots
 
 ---
 
@@ -52,7 +53,7 @@ Phase 5: Drive to permanent Chrono Field
 
 ### 5. Laboratory Slot Optimization & Retiring Lab Speed
 
-#### The Immediate 19-Day Holding Pattern
+#### Lab Plan
 
 * **The Action:** **Pause Defense % at Level 26.** Move **Attack Speed** into its current 3x slot rotation.
 * **The Reason:** This keeps Attack Speed steadily grinding while you wait out the final 19-day countdown for Lab Speed to finish.
@@ -63,17 +64,19 @@ Phase 5: Drive to permanent Chrono Field
 * **The Action:** Instantly move **Attack Speed** into the permanent 4x Speed Slot to hyper-accelerate its final **84-day push to the absolute max cap**.
 * **The Strategic Objective:** Prioritize *Absolute Crowd Control* over damage mitigation. Maxing your attack speed limits enemy proximity, optimizes knockback, and ensures high-density tournament swarms are completely locked down before they can even touch your wall.
 
-#### Slot B: The Legacy Cascade Slot (Triggers in ~12 Days)
+#### Slot B: The Legacy Cascade Slot (Triggers in ~6 Days)
 
 * **The Trigger:** Attack Speed vacates its 3x slot to claim the 4x premium throne.
 * **The Action:** **Bring Defense % back online** at Level 26 in this newly opened 3x slot.
 * **The Objective:** Resume the long-term grind toward the Level 50 absolute tournament max, steadily building your raw damage mitigation baseline in the background while Attack Speed hogs the fast track.
 
 Slot C: The Ban Lab Hand-off Slot
-* **The Trigger:** Cannon Effect Ban Level 2 concludes.
-* **The Action:** Immediately queue Core Effect Ban (Level 1) to prepare for the Dimension Core Ancestral transition,
-    OR launch Shatter Shards (Level 2) if raw shard income is delaying your Level 161 milestone push.
-* **The Objective:** Ensure the sub-stat pool is heavily pruned the exact moment Dimension Core makes the jump to Ancestral, saving precious reroll currency.
+* **The Trigger:** Generator Effect Ban Level 1 concludes.
+* **The Action:** Immediately queue Cannon Effect Ban (Level 1) to prepare for getting the Cannon module to level 161
+    Then begin Core Effect ban to get ready for Dimension Core being able to go to level 161
+    OR launch Shatter Shards (Level 2) if raw shard income is delaying your Level 161 milestone push for either the Cannon or Armor modules.
+* **The Objective:** Ensure the sub-stat pool is pruned for a tactical re-roll of GComp before going into Champion tournament
+* **The Objective:** Ensure the sub-stat pool is pruned the exact moment Dimension Core makes the jump to Ancestral, saving precious reroll currency.
 
 #### Slot D: Chrono Field Duration Grind
 * **The Trigger:** Shatter Shards Level 1 completes put Chrono Field Duration into this slot to being grinding out a longer lasting chrono field - Complete
@@ -85,8 +88,9 @@ Slot C: The Ban Lab Hand-off Slot
   * Bring Chain Thunder from Level 1 to Level 2 - Completed
   * Bring Lightning Amplifier - Scatterer from Level 1 to Level 2 - In progress
   * Bring Death Wave Armor Stripping from Level 0 to Level 2 - Level 0 to Level 1 completed; Level 1 to Level 2 - Pending
-* **The Trigger:** When you don't have any immediate goals to work on, put Reroll Shards in this slot
-* **The Action:** Work with Gemini to identify new short term research goals in place of Reroll Shards
+* **The Trigger:** When you don't have enough coins, put Reroll Shards in this slot however if you have enough coins, put Shatter Shards in this slot
+* **Other Actions:** Continue to analyze performance to identify additional short term research that provide an immediate benefit.  Analyze trad-offs against grinding Shatter Shards or Reroll shards
+
 ---
 
 ### Reroll Shard Allocation & Gating
@@ -157,20 +161,3 @@ After protecting your core, look at your remaining post-run dividend and apply i
 
 ### Question
 1. What is the optimal path to take to improve Champion Tournament performance and remain above the demotion rankings?
-
-
-Enhancement			Factor	Level	Next Level Cost
-Damage +			x 1.52	52		17.18T
-Rend Armor Mult +	x 1.26	26		206.25B
-Critical Factor +	x 1.52	52		17.18T
-Damage / Meter +	x 1.26	26		206.25B
-Super Crit Multi +	x 1.52	52		17.18T
-
-Labs	Level	Target	Max
-Wall Health	50	50	50
-Wall Rebuild	6	6	20
-Wall Regen	20	30	30
-Wall Thorns	15	20	20
-Wall Invincibility	0	0	10
-Wall Fortification	32	60	60
-Garlic Thorns	10	10	10
