@@ -25,6 +25,11 @@ public enum TowerTrackerRanges implements GoogleSheet {
     ENEMY_LABS("Master Sheet", List.of("AO1:AS22"), "laboratory-tracker"),
     MODULE_LABS("Master Sheet", List.of("AT1:AX21"), "laboratory-tracker"),
     BATTLE_CONDITION_LABS("Master Sheet", List.of("AZ1:BC21"), "laboratory-tracker"),
+    LAB_SLOT_ONE_PLANNING("Lab Planner", List.of("C2:G15"), "laboratory-tracker"),
+    LAB_SLOT_TWO_PLANNING("Lab Planner", List.of("K2:O15"), "laboratory-tracker"),
+    LAB_SLOT_THREE_PLANNING("Lab Planner", List.of("S2:W15"), "laboratory-tracker"),
+    LAB_SLOT_FOUR_PLANNING("Lab Planner", List.of("C28:G41"), "laboratory-tracker"),
+    LAB_SLOT_FIVE_PLANNING("Lab Planner", List.of("K28:O41"), "laboratory-tracker"),
 
     //Guardians
     GUARDIANS("Master Sheet", List.of("B1:H21"), "guardians"),

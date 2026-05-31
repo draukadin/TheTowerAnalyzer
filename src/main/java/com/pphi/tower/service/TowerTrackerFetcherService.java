@@ -83,6 +83,16 @@ public class TowerTrackerFetcherService {
         return sb.toString();
     }
 
+    public String fetchLabPlanning() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        appendSection(sb, "Lab Slot 1 Planning",             TowerTrackerRanges.LAB_SLOT_ONE_PLANNING);
+        appendSection(sb, "Lab Slot 2 Planning",             TowerTrackerRanges.LAB_SLOT_TWO_PLANNING);
+        appendSection(sb, "Lab Slot 3 Planning",             TowerTrackerRanges.LAB_SLOT_THREE_PLANNING);
+        appendSection(sb, "Lab Slot 4 Planning",             TowerTrackerRanges.LAB_SLOT_FOUR_PLANNING);
+        appendSection(sb, "Lab Slot 5 Planning",             TowerTrackerRanges.LAB_SLOT_FIVE_PLANNING);
+        return sb.toString();
+    }
+
     // -------------------------------------------------------------------------
     // Ultimate Weapons
     // -------------------------------------------------------------------------

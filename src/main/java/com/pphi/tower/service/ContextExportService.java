@@ -63,6 +63,9 @@ public class ContextExportService {
         log.info("Fetching labs...");
         contexts.add(new LabsContext(fetcherService.fetchLabs()));
 
+        log.info("Fetching Lab Slot planning...");
+        contexts.add(new LabPlanningContext(fetcherService.fetchLabPlanning()));
+
         log.info("Fetching ultimate weapons...");
         contexts.add(new UltimateWeaponsContext(fetcherService.fetchUltimateWeapons()));
 
