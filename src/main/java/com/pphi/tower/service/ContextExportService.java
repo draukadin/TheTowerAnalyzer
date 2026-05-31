@@ -1,6 +1,10 @@
 package com.pphi.tower.service;
 
+import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
+import com.pphi.tower.model.battlediagnostics.Observation;
+import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.model.sheets.cards.CardPresetType;
+import com.pphi.tower.service.context.ComparisonReportContext;
 import com.pphi.tower.model.sheets.modules.Preset;
 import com.pphi.tower.service.context.*;
 import org.slf4j.Logger;
@@ -25,6 +29,81 @@ public class ContextExportService {
 
     public ContextExportService(TowerTrackerFetcherService fetcherService) {
         this.fetcherService = fetcherService;
+    }
+
+    public Path exportDiagnosisToDocuments(DiagnosisResult result, String reportName) throws IOException {
+        Path outputDir = Path.of(System.getProperty("user.home"), "Documents", "TowerAnalyzer");
+        Files.createDirectories(outputDir);
+
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+        String baseName = reportName.isBlank() ? "diagnosis" : reportName;
+        Path outputFile = outputDir.resolve(baseName + "-" + timestamp + ".md");
+        Files.writeString(outputFile, buildDiagnosisMarkdown(result, reportName));
+        return outputFile;
+    }
+
+    private String buildDiagnosisMarkdown(DiagnosisResult result, String reportName) {
+        String timestamp = LocalDateTime.now().format(TIMESTAMP_FMT);
+        StringBuilder sb = new StringBuilder();
+        sb.append("# The Tower — Battle Run Diagnosis\n\n");
+        sb.append("_Generated: ").append(timestamp).append("_  \n");
+        if (!reportName.isBlank()) {
+            sb.append("_Report: ").append(reportName).append("_\n");
+        }
+        sb.append("\n---\n\n");
+
+        sb.append("## Primary Failure\n\n");
+        sb.append("**").append(result.primaryFailure()).append("**");
+        sb.append(" — Confidence: **").append(result.confidence()).append("**\n\n");
+        sb.append(result.explanation()).append("\n\n");
+
+        sb.append("---\n\n");
+        sb.append("## Diagnostic Metrics\n\n");
+        sb.append("| Metric | Value |\n");
+        sb.append("|--------|-------|\n");
+        sb.append("| Swarm Kill Share   | ").append(result.swarmKillShareFormatted()).append(" |\n");
+        sb.append("| Heavy Kill Share   | ").append(result.heavyKillShareFormatted()).append(" |\n");
+        sb.append("| Block Efficiency   | ").append(result.blockEfficiencyFormatted()).append(" |\n");
+        sb.append("| Vampire Density    | ").append(result.vampireDensityFormatted()).append(" |\n");
+        sb.append("| Ranged Density     | ").append(result.rangedDensityFormatted()).append(" |\n");
+        sb.append(String.format("| Life Steal (raw)   | %.2f |%n", result.lifeStealRaw()));
+        sb.append(String.format("| Total Damage Taken | %.2f |%n", result.totalDamageTakenRaw()));
+        sb.append("\n");
+
+        if (result.observations() != null && !result.observations().isEmpty()) {
+            sb.append("---\n\n");
+            sb.append("## Observations\n\n");
+            for (Observation obs : result.observations()) {
+                sb.append("### ").append(obs.label()).append("\n\n");
+                sb.append(obs.detail()).append("\n\n");
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public Path exportComparisonToDocuments(List<BattleHistory> comparisonResult, String id1, String id2) throws IOException {
+        Path outputDir = Path.of(System.getProperty("user.home"), "Documents", "TowerAnalyzer");
+        Files.createDirectories(outputDir);
+
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+        Path outputFile = outputDir.resolve("comparison-" + timestamp + ".md");
+        Files.writeString(outputFile, buildComparisonMarkdown(comparisonResult, id1, id2));
+        return outputFile;
+    }
+
+    private String buildComparisonMarkdown(List<BattleHistory> comparisonResult, String id1, String id2) {
+        String timestamp = LocalDateTime.now().format(TIMESTAMP_FMT);
+        StringBuilder sb = new StringBuilder();
+        sb.append("# The Tower — Battle Run Comparison\n\n");
+        sb.append("_Generated: ").append(timestamp).append("_  \n");
+        sb.append("_Report 1: ").append(id1).append("_  \n");
+        sb.append("_Report 2: ").append(id2).append("_\n\n");
+        sb.append("---\n\n");
+        sb.append("```\n");
+        sb.append(new ComparisonReportContext(comparisonResult, id1, id2).getContent());
+        sb.append("```\n");
+        return sb.toString();
     }
 
     public Path exportToDocuments() throws IOException {

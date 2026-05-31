@@ -50,16 +50,31 @@ public class TowerAnalyzerApplication {
                 return;
             }
 
+            List<String> argList = Arrays.asList(args);
+            boolean exportDiagnosis = argList.contains("--export-diagnosis");
+
             BattleHistoryParser parser    = new BattleHistoryParser();
             BattleDiagnostic    diagnostic = new BattleDiagnostic();
             RunComparison       comparison = new RunComparison(parser);
 
-            BattleHistory reportOne = parser.parse(Path.of(args[0]));
+            String reportPath = argList.stream()
+                    .filter(a -> !a.startsWith("--"))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("No report file path provided"));
+
+            BattleHistory reportOne = parser.parse(Path.of(reportPath));
             DiagnosisResult result  = diagnostic.analyzeReport(reportOne);
             System.out.println(result);
 
-            if (args.length >= 2) {
-                BattleHistory reportTwo      = parser.parse(Path.of(args[1]));
+            if (exportDiagnosis) {
+                String reportName = Path.of(reportPath).getFileName().toString().replaceFirst("[.][^.]+$", "");
+                Path output = contextExportService.exportDiagnosisToDocuments(result, reportName);
+                System.out.println("Diagnosis exported to: " + output.toAbsolutePath());
+            }
+
+            List<String> reportPaths = argList.stream().filter(a -> !a.startsWith("--")).toList();
+            if (reportPaths.size() >= 2) {
+                BattleHistory reportTwo      = parser.parse(Path.of(reportPaths.get(1)));
                 List<BattleHistory> results  = comparison.compareBattles(reportOne, reportTwo);
                 new ReflectionBattleComparisonReporter().printReport(results);
             }
