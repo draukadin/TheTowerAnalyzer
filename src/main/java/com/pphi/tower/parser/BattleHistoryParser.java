@@ -97,11 +97,11 @@ public class BattleHistoryParser {
     }
 
     private Object parseString(String line) {
-        try {
-            return line.split("\t")[1];
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            throw new RuntimeException(String.format("Failed to parse %s", line), ex);
+        String[] parts = line.split("\t");
+        if (parts.length < 2) {
+            return "Surrendered";
         }
+        return parts[1];
     }
 
     private Object parseDuration(String line) {
