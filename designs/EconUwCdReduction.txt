@@ -1,0 +1,100 @@
+### Situation
+* The cool downs of GT/BH/DW are 180 seconds
+* The cool downs of Golden Bot and Summon are 90 Seconds
+* GB and Summon are in a 2:1 sync with GT/BH/DW
+
+### GT/BH/DW Cool Down reduction to 170 seconds
+* New GB and Summon CD: 85 * 2 = 170
+* There are two options to get the Golden Bot Cooldown reduced by 5 seconds
+  * Option 1 use Medals to get reduce by 3 seconds and two lab levels to reduce by 2 seconds
+  * Option 2 use five lab levels to reduce by 5 seconds
+* Why not just use medals? The medal levels only reduce in increments of three so two medal levels would reduce the CD to 84 seconds
+
+#### Option 1 Resources Required
+|**Entity**|**Resources**|
+|:---|:---|
+|Golden Tower|226 Stones|
+|Black Hole|46 Stones|
+|Death Wave|200 Stones|
+|Golden Bot|460 Medals (-3 Seconds)|
+|Golden Bot|18h 15m lab time (-2 seconds)|
+|Summon|525 Bits|
+|Total Bits|525|
+|Total Stones|472|
+|Total Medals|460|
+
+#### Option 2 Resources Required
+
+|**Entity**|**Resources**|
+|:---|---:|
+|Golden Tower|226 Stones|
+|Black Hole|46 Stones|
+|Death Wave|200 Stones|
+|Golden Bot|2d 10h 16m lab time (-5 seconds)|
+|Summon|525 Bits|
+|Total Bits|525|
+|Total Stones|472|
+|Total Medals|0|
+
+
+Here is the breakdown of the pros and cons for both options to lower your Golden Bot cooldown to 85 seconds, keeping it in a perfect 2:1 sync with your newly reduced 170-second Ultimate Weapon cooldowns.
+
+---
+
+## Option 1: The Hybrid Approach (Medals + Labs)
+
+This option splits the 5-second reduction by using 460 medals for a 3-second drop and 2 lab levels for the remaining 2 seconds.
+
+* **Pros:**
+* **Massive Time Savings:** It requires only **18 hours and 15 minutes** of lab research time. This gets your sync online incredibly fast compared to grinding out days of lab work.
+* **Precision Targeting:** Because medals only reduce cooldowns in 3-second increments, combining a single medal buy with labs allows you to hit the exact 85-second target. Relying entirely on medals would overshoot to 84 seconds and break your clean 2:1 sync.
+
+* **Cons:**
+* **High Opportunity Cost for Medals:** Spending **460 medals** is a significant investment  that diverts resources away from upgrading other bot stats (like range) or buying event themes.
+
+---
+
+## Option 2: The Pure Lab Approach
+
+This option bypasses medals entirely and relies on grinding out 5 full lab levels to achieve the 5-second reduction.
+
+* **Pros:**
+* **Zero Medal Cost:** This saves you **460 medals** , leaving your event currency entirely free to be spent on other progression milestones or bot upgrades.
+
+* **Cons:**
+* **Extended Lab Bottleneck:** You will tie up a lab slot for **2 days, 10 hours, and 16 minutes**. This delays your economic sync and prevents that lab from working on other crucial research.
+
+---
+
+### Resource Summary Comparison
+
+| Metric | Option 1 (Hybrid) | Option 2 (Pure Lab) | Net Difference |
+| --- | --- | --- | --- |
+| **Stones Required** | 472 Stones | 472 Stones  | 0 |
+| **Summon Bits** | 525 Bits | 525 Bits | 0 |
+| **Medal Cost** | 460 Medals | 0 Medals | Option 1 costs 460 more |
+| **Lab Time** | 18h 15m  | 2d 10h 16m | Option 2 takes ~36h longer |
+
+# Preferred Option
+* Option 2
+
+### The 1.5-Run Transition Window
+During those ~14.5 hours of lab work, your alignment will look like this:
+* **GT / BH / DW:** Perfectly synced at 170 seconds (Instant Stone upgrade).
+* **Summon:** Perfectly synced at 85 seconds (Instant Bits upgrade).
+* **Golden Bot:** Temporarily at 90 seconds, drifting slightly against your new 170s/85s cycle.
+
+### Why the Temporary Desync is Worth It
+* **Negligible Coin Loss:** Golden Bot drifting for just 1.5 runs is a microscopic blip in your overall lifetime coin progression.
+* **Massive Medal Payoff:** In exchange for that tiny, temporary efficiency dip, you permanently pocket **460 medals**. You can instantly dump those saved medals into Golden Bot's **Range** or **Bonus**, which will permanently multiply your earnings across *all* future runs.
+
+---
+
+### Recommended Execution Order
+
+To make the transition as seamless as possible, you can line up the upgrades in this sequence:
+
+1. **Queue the Labs:** Dedicate a lab slot to the Golden Bot cooldown levels and ensure your $4\times$ cell speed-up is active.
+2. **Drop the Stones & Bits:** Upgrade your UW cooldowns and the Summon cooldown simultaneously to lock in their new 2:1 sync immediately.
+3. **The Interim Runs:** Knock out your ~1.5 farming runs while the lab grinds away.
+4. **Lock the Sync:** The moment those lab levels finish, Golden Bot drops to 85 seconds, and your entire economic engine snaps perfectly back into harmony.

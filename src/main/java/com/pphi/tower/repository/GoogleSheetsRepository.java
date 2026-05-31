@@ -1,10 +1,13 @@
 package com.pphi.tower.repository;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.pphi.tower.config.SheetProperties;
 import com.pphi.tower.model.sheets.GoogleSheet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +16,10 @@ import java.util.List;
 
 @Repository
 public class GoogleSheetsRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(GoogleSheetsRepository.class);
+    private static final long INITIAL_BACKOFF_MS = 5_000;
+    private static final long MAX_BACKOFF_MS = 60_000;
 
     private final Sheets sheets;
     private final SheetProperties sheetProperties;
@@ -42,13 +49,29 @@ public class GoogleSheetsRepository {
                 .map(r -> sheetName + "!" + r)
                 .toList();
 
-        BatchGetValuesResponse response = sheets.spreadsheets().values()
-                .batchGet(spreadsheetId)
-                .setRanges(qualifiedRanges)
-                .setValueRenderOption("FORMATTED_VALUE")
-                .execute();
-
-        List<ValueRange> valueRanges = response.getValueRanges();
-        return valueRanges != null ? valueRanges : List.of();
+        long backoffMs = INITIAL_BACKOFF_MS;
+        for (int attempt = 1; ; attempt++) {
+            try {
+                BatchGetValuesResponse response = sheets.spreadsheets().values()
+                        .batchGet(spreadsheetId)
+                        .setRanges(qualifiedRanges)
+                        .setValueRenderOption("FORMATTED_VALUE")
+                        .execute();
+                List<ValueRange> valueRanges = response.getValueRanges();
+                return valueRanges != null ? valueRanges : List.of();
+            } catch (GoogleJsonResponseException e) {
+                if (e.getStatusCode() != 429) {
+                    throw e;
+                }
+                log.warn("Rate limited by Sheets API (attempt {}), retrying in {}s...", attempt, backoffMs / 1000);
+                try {
+                    Thread.sleep(backoffMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while waiting to retry Sheets API call", ie);
+                }
+                backoffMs = Math.min(backoffMs * 2, MAX_BACKOFF_MS);
+            }
+        }
     }
 }
