@@ -8,4 +8,5 @@ public record ChatRequest(
         String reportId1,
         String reportId2,
         List<ConversationTurn> history,
-        String promptKey) {}
+        String promptKey,
+        String provider) {}

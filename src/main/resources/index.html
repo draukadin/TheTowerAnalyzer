@@ -239,7 +239,7 @@
 <script>
 const API='http://localhost:8080/api';
 let allReports=[],activeId=null,activePayload=null,activeView='reports',currentTab='stats';
-let chatState={id1:null,id2:null,history:[]};
+let chatState={id1:null,id2:null,history:[],provider:'gemini'};
 
 async function init(){
   try{
@@ -558,7 +558,7 @@ async function renderDiagnosisPanel(summary){
     const res=await fetch(`${API}/reports/${encodeURIComponent(summary.id)}/diagnosis`);
     const d=await res.json();
     const failureName=(d.primaryFailure||'Unknown').replace(/_/g,' ');
-    chatState={id1:summary.id,id2:null,history:[]};
+    chatState={id1:summary.id,id2:null,history:[],provider:'gemini'};
     document.getElementById('tabPanel').innerHTML=`
       <div class="diag-card">
         <div class="diag-header">
@@ -604,7 +604,13 @@ function buildGeminiChatHtml(mode, hidden){
   return `
     <div id="geminiChat" class="gemini-chat"${hidden?' style="display:none"':''}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-        <div class="gemini-chat-title" style="margin-bottom:0">✦ Ask Gemini</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="gemini-chat-title" style="margin-bottom:0" id="aiChatTitle">✦ Ask AI</div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-primary" id="providerGemini" style="font-size:11px;padding:3px 10px" onclick="switchProvider('gemini')">Gemini</button>
+            <button class="btn" id="providerClaude" style="font-size:11px;padding:3px 10px;opacity:0.5" onclick="switchProvider('claude')">Claude</button>
+          </div>
+        </div>
         <button class="btn" style="font-size:11px;padding:3px 10px;opacity:0.6" onclick="clearChatHistory()">Clear chat</button>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
@@ -708,7 +714,7 @@ function renderComparePanel(summary){
 async function runComparison(id1){
   const id2=document.getElementById('compareSelect').value;
   if(!id2)return;
-  chatState={id1,id2,history:[]};
+  chatState={id1,id2,history:[],provider:'gemini'};
   document.getElementById('compareResult').innerHTML='<div class="loading-placeholder">Comparing…</div>';
   try{
     const res=await fetch(`${API}/reports/${encodeURIComponent(id1)}/comparison/${encodeURIComponent(id2)}`);
@@ -766,12 +772,28 @@ async function runComparison(id1){
 
 async function populatePromptSelector(){
   try{
-    const res=await fetch(`${API}/chat/prompts`);
+    const res=await fetch(`${API}/chat/prompts?provider=${encodeURIComponent(chatState.provider||'gemini')}`);
     if(!res.ok)return;
     const{keys,active}=await res.json();
     const sel=document.getElementById('geminiPromptKey');
     sel.innerHTML=keys.map(k=>`<option value="${escHtml(k)}"${k===active?' selected':''}>${escHtml(k)}</option>`).join('');
   }catch(e){/* silently ignore */}
+}
+
+async function switchProvider(provider){
+  if(chatState.provider===provider)return;
+  chatState.provider=provider;
+  chatState.history=[];
+  document.getElementById('geminiThread').innerHTML='';
+  // Update button styles
+  document.getElementById('providerGemini').className='btn'+(provider==='gemini'?' btn-primary':'');
+  document.getElementById('providerGemini').style.opacity=provider==='gemini'?'1':'0.5';
+  document.getElementById('providerClaude').className='btn'+(provider==='claude'?' btn-primary':'');
+  document.getElementById('providerClaude').style.opacity=provider==='claude'?'1':'0.5';
+  await Promise.all([
+    loadChatHistory(chatState.id1,chatState.id2),
+    populatePromptSelector()
+  ]);
 }
 
 async function exportDiagnosis(id){
@@ -834,11 +856,14 @@ async function sendGeminiChat(){
      <div id="geminiLoading" class="loading-placeholder" style="padding:8px 0;text-align:left">Thinking…</div>`);
   document.getElementById('geminiPrompt').value='';
   thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const provider=chatState.provider||'gemini';
+  const modelRole=provider==='claude'?'assistant':'model';
+  const modelLabel=provider==='claude'?'Claude':'Gemini';
   try{
     const res=await fetch(`${API}/chat`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt,contextTypes,reportId1:chatState.id1,reportId2:chatState.id2,history:chatState.history,promptKey:document.getElementById('geminiPromptKey').value||null})
+      body:JSON.stringify({prompt,contextTypes,reportId1:chatState.id1,reportId2:chatState.id2,history:chatState.history,promptKey:document.getElementById('geminiPromptKey').value||null,provider})
     });
     if(!res.ok)throw new Error(await res.text());
     const data=await res.json();
@@ -848,10 +873,10 @@ async function sendGeminiChat(){
       for(const t of prependedTurns)chatState.history.push({role:t.role,text:t.text});
     }
     chatState.history.push({role:'user',text:prompt});
-    chatState.history.push({role:'model',text:reply});
+    chatState.history.push({role:modelRole,text:reply});
     document.getElementById('geminiLoading').remove();
     thread.insertAdjacentHTML('beforeend',
-      `<div class="chat-turn model"><div class="chat-turn-label">Gemini</div>${renderMarkdown(reply)}</div>`);
+      `<div class="chat-turn model"><div class="chat-turn-label">${modelLabel}</div>${renderMarkdown(reply)}</div>`);
     thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
   }catch(e){
     document.getElementById('geminiLoading').remove();
@@ -864,7 +889,9 @@ async function sendGeminiChat(){
 
 async function loadChatHistory(id1,id2){
   try{
-    const params=new URLSearchParams({reportId1:id1});
+    const provider=chatState.provider||'gemini';
+    const modelLabel=provider==='claude'?'Claude':'Gemini';
+    const params=new URLSearchParams({reportId1:id1,provider});
     if(id2)params.append('reportId2',id2);
     const res=await fetch(`${API}/chat/history?${params}`);
     if(!res.ok)return;
@@ -872,10 +899,10 @@ async function loadChatHistory(id1,id2){
     chatState.history=history.map(t=>({role:t.role,text:t.text}));
     const thread=document.getElementById('geminiThread');
     for(const turn of history){
-      // Context preamble turns are stored in history for Gemini but never shown in the UI
       if(turn.role==='context'||turn.role==='context_ack')continue;
-      const label=turn.role==='user'?'You':'Gemini';
-      const cls=turn.role==='user'?'user':'model';
+      const isUser=turn.role==='user';
+      const label=isUser?'You':modelLabel;
+      const cls=isUser?'user':'model';
       thread.insertAdjacentHTML('beforeend',
         `<div class="chat-turn ${cls}"><div class="chat-turn-label">${label}</div>${cls==='model'?renderMarkdown(turn.text):escHtml(turn.text)}</div>`);
     }
@@ -886,7 +913,8 @@ async function loadChatHistory(id1,id2){
 async function clearChatHistory(){
   if(!chatState.id1)return;
   try{
-    const params=new URLSearchParams({reportId1:chatState.id1});
+    const provider=chatState.provider||'gemini';
+    const params=new URLSearchParams({reportId1:chatState.id1,provider});
     if(chatState.id2)params.append('reportId2',chatState.id2);
     await fetch(`${API}/chat/history?${params}`,{method:'DELETE'});
     chatState.history=[];
