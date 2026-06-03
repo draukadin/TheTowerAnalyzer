@@ -207,6 +207,7 @@
     <button class="nav-btn" onclick="showView('cells')">Cell Income</button>
     <button class="nav-btn" onclick="showView('labspeed')">Lab Speed</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
+    <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
     <span class="status-dot" id="statusDot"></span>
@@ -946,6 +947,22 @@ function escHtml(s){
 
 function renderMarkdown(s){
   return marked.parse(String(s));
+}
+
+async function exportContext(){
+  const btn=document.getElementById('exportContextBtn');
+  btn.disabled=true;
+  btn.textContent='Exporting…';
+  try{
+    const res=await fetch(`${API}/reports/export-context`,{method:'POST'});
+    const data=await res.json();
+    alert('Context exported to:\n'+data.path);
+  }catch(e){
+    alert('Export failed: '+e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='&#8659; Export Context';
+  }
 }
 
 async function openProfileModal(){

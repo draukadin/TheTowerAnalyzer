@@ -95,4 +95,10 @@ public class ReportController {
         Path output = contextExportService.exportStatsToDocuments(id);
         return ResponseEntity.ok(Map.of("path", output.toAbsolutePath().toString()));
     }
+
+    @PostMapping("/export-context")
+    public ResponseEntity<Map<String, String>> exportContext() throws IOException {
+        Path output = contextExportService.exportToDocuments();
+        return ResponseEntity.ok(Map.of("path", output.toAbsolutePath().toString()));
+    }
 }
