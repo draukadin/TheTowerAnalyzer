@@ -68,6 +68,12 @@ public class RunRepository {
         return rows;
     }
 
+    public Optional<ReportSummaryDto> findSummaryById(String id) {
+        List<ReportSummaryDto> rows = jdbc.query(
+                "SELECT * FROM runs WHERE id = ?", SUMMARY_MAPPER, id);
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+    }
+
     public Optional<String> findPayloadById(String id) {
         List<String> results = jdbc.query(
                 "SELECT payload FROM runs WHERE id = ?",
