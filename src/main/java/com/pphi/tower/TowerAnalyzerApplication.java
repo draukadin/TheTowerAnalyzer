@@ -46,7 +46,7 @@ public class TowerAnalyzerApplication {
             if (Arrays.asList(args).contains("--export-context")) {
                 System.out.println("Fetching player data from Google Sheets...");
                 Path output = contextExportService.exportToDocuments();
-                System.out.println("Context exported to: " + output.toAbsolutePath());
+                System.out.println("Context exported to: " + output.toAbsolutePath() + " (one file per context)");
                 return;
             }
 
