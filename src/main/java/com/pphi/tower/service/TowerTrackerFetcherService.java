@@ -83,6 +83,19 @@ public class TowerTrackerFetcherService {
         return sb.toString();
     }
 
+    public String fetchLabTierList() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("""
+                Ranking hierarchy (best to worst): S+ > S > A > B > C > D > F
+                QOL = Quality of Life
+                Some labs have two rankings (e.g. "F / A") where the first applies without a prerequisite and the second applies once that prerequisite is met (e.g. Spotlight+).
+                Columns: Tier Available | Lab Name | Ranking 1 | Ranking 2 | Notes
+
+                """);
+        sb.append(ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.LAB_TIER_LIST)));
+        return sb.toString();
+    }
+
     public String fetchLabPlanning() throws IOException {
         StringBuilder sb = new StringBuilder();
         appendSection(sb, "Lab Slot 1 Planning",             TowerTrackerRanges.LAB_SLOT_ONE_PLANNING);

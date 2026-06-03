@@ -102,6 +102,7 @@ public class GeminiService {
                 case "player_currencies" -> contexts.add(new PlayerCurrenciesContext(towerTrackerFetcherService.fetchCurrencies()));
                 case "labs"              -> contexts.add(new LabsContext(towerTrackerFetcherService.fetchLabs()));
                 case "lab_planning"      -> contexts.add(new LabPlanningContext(towerTrackerFetcherService.fetchLabPlanning()));
+                case "lab_tier_list"     -> contexts.add(new LabTierListContext(towerTrackerFetcherService.fetchLabTierList()));
                 case "ultimate_weapons"  -> contexts.add(new UltimateWeaponsContext(towerTrackerFetcherService.fetchUltimateWeapons()));
                 case "modules"           -> contexts.add(new ModulesContext(
                                                 towerTrackerFetcherService.fetchModuleInventory(),

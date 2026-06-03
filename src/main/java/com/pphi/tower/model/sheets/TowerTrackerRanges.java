@@ -52,6 +52,9 @@ public enum TowerTrackerRanges implements GoogleSheet {
     // Relic Trackers
     RELICS("Relics", List.of("M2:N42", "P2:P42"), "relics"),
 
+    // Lab Tier List
+    LAB_TIER_LIST("The Tier List v28.2", List.of("B:F"), "lab-tier-list"),
+
     // Ultimate Weapons
     CHAIN_LIGHTNING("UW Cost Calculator v3", List.of("B7:O12"), "ultimate-weapons"),
     SMART_MISSILES("UW Cost Calculator v3", List.of("B14:O19"), "ultimate-weapons"),
