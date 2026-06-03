@@ -548,7 +548,25 @@ function renderStatsPanel(summary,p){
       <div class="stat-card"><div class="label">Generator Shards</div><div class="value">${curr.generatorShards||0}</div></div>
       <div class="stat-card"><div class="label">Core Shards</div><div class="value">${curr.coreShards||0}</div></div>
     </div>
-    <div style="height:2rem"></div>`;
+    <div style="margin:1rem 0 2rem;display:flex;gap:0.5rem">
+      <button class="btn" onclick="exportStats('${summary.id}')">Export to Markdown</button>
+      <span id="statsExportStatus" style="font-size:12px;color:var(--muted);align-self:center"></span>
+    </div>`;
+}
+
+async function exportStats(id){
+  const status=document.getElementById('statsExportStatus');
+  status.textContent='Exporting…';
+  try{
+    const res=await fetch(`${API}/reports/${encodeURIComponent(id)}/stats/export`,{method:'POST'});
+    if(!res.ok)throw new Error(res.statusText);
+    const data=await res.json();
+    status.textContent='Saved: '+data.path;
+    setTimeout(()=>{status.textContent='';},8000);
+  }catch(e){
+    status.style.color='var(--red)';
+    status.textContent='Export failed: '+e.message;
+  }
 }
 
 async function renderDiagnosisPanel(summary){

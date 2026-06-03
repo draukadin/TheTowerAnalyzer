@@ -89,4 +89,10 @@ public class ReportController {
         Path output = contextExportService.exportComparisonToDocuments(result, id, id2);
         return ResponseEntity.ok(Map.of("path", output.toAbsolutePath().toString()));
     }
+
+    @PostMapping("/{id}/stats/export")
+    public ResponseEntity<Map<String, String>> exportStats(@PathVariable String id) throws IOException {
+        Path output = contextExportService.exportStatsToDocuments(id);
+        return ResponseEntity.ok(Map.of("path", output.toAbsolutePath().toString()));
+    }
 }
