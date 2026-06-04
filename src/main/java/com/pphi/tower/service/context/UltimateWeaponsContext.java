@@ -1,14 +1,15 @@
 package com.pphi.tower.service.context;
 
-import com.pphi.tower.model.sheets.uw.UltimateWeapon;
+import com.pphi.tower.repository.UwRepository.UwPlayerData;
+import com.pphi.tower.repository.UwRepository.UwStatPlayerData;
 
 import java.util.List;
 
 public class UltimateWeaponsContext implements ChatContext {
 
-    private final List<UltimateWeapon> weapons;
+    private final List<UwPlayerData> weapons;
 
-    public UltimateWeaponsContext(List<UltimateWeapon> weapons) {
+    public UltimateWeaponsContext(List<UwPlayerData> weapons) {
         this.weapons = weapons;
     }
 
@@ -24,29 +25,42 @@ public class UltimateWeaponsContext implements ChatContext {
         return sb.toString();
     }
 
-    private void appendUW(StringBuilder sb, UltimateWeapon uw) {
-        if (uw.locked()) {
+    private void appendUW(StringBuilder sb, UwPlayerData uw) {
+        if (!uw.unlocked()) {
             sb.append(String.format("### %s *(LOCKED)*%n%n", uw.name()));
             return;
         }
 
         sb.append(String.format("### %s%n%n", uw.name()));
-        sb.append("| Stat | Value | Stones Invested | Stones Required |\n");
-        sb.append("| :--- | :--- | :--- | :--- |\n");
-        statRow(sb, uw.statOneLabel(),   uw.statOne(),   uw.stonesInvestedOne(),   uw.stonesRequiredOne());
-        statRow(sb, uw.statTwoLabel(),   uw.statTwo(),   uw.stonesInvestedTwo(),   uw.stonesRequiredTwo());
-        statRow(sb, uw.statThreeLabel(), uw.statThree(), uw.stonesInvestedThree(), uw.stonesRequiredThree());
+        sb.append("| Stat | Level | Value | Stones Invested | Stones to Next | Stones to Max |\n");
+        sb.append("| :--- | :--- | :--- | ---: | ---: | ---: |\n");
 
-        if (uw.uwPlusLocked()) {
-            sb.append("| UW+ | LOCKED | - | - |\n");
-        } else {
-            statRow(sb, "UW+", uw.uwPlusStat(), uw.stonesInvestedUwPlus(), uw.stonesRequiredUwPlus());
+        for (UwStatPlayerData stat : uw.stats()) {
+            if ("UW_PLUS".equals(stat.statKey())) {
+                if (!uw.uwPlusUnlocked()) {
+                    sb.append(String.format("| %s (%s) | — | LOCKED | — | — | — |%n",
+                            uw.uwPlusName(), stat.label()));
+                } else {
+                    appendStatRow(sb, stat.label() + " (UW+)", stat);
+                }
+            } else {
+                appendStatRow(sb, stat.label(), stat);
+            }
         }
         sb.append("\n");
     }
 
-    private void statRow(StringBuilder sb, String label, Number value, int invested, int required) {
-        sb.append(String.format("| %s | %s | %d | %d |%n", label, value, invested, required));
+    private void appendStatRow(StringBuilder sb, String label, UwStatPlayerData stat) {
+        String next = stat.stonesToNext() != null
+                ? String.valueOf(stat.stonesToNext())
+                : "Max";
+        sb.append(String.format("| %s | %d / %d | %s | %d | %s | %d |%n",
+                label,
+                stat.currentLevel(), stat.maxLevel(),
+                stat.currentValue(),
+                stat.stonesInvested(),
+                next,
+                stat.stonesToMax()));
     }
 
     @Override

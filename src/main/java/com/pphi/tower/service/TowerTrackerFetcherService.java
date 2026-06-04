@@ -9,9 +9,9 @@ import com.pphi.tower.model.sheets.cards.CardPresetType;
 import com.pphi.tower.model.sheets.modules.EquippedModule;
 import com.pphi.tower.model.sheets.modules.Module;
 import com.pphi.tower.model.sheets.modules.Preset;
-import com.pphi.tower.model.sheets.uw.*;
 import com.pphi.tower.repository.GoogleSheetsRepository;
 import com.pphi.tower.repository.ModulePresetRepository;
+import com.pphi.tower.repository.UwRepository;
 import com.pphi.tower.util.CurrenciesLayout;
 import com.pphi.tower.util.ModuleUtils;
 import com.pphi.tower.util.ValueRangeConcatenation;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,12 +29,15 @@ public class TowerTrackerFetcherService {
 
     private final GoogleSheetsRepository googleSheetsRepository;
     private final ModulePresetRepository modulePresetRepository;
+    private final UwRepository uwRepository;
 
     public TowerTrackerFetcherService(
             GoogleSheetsRepository googleSheetsRepository,
-            ModulePresetRepository modulePresetRepository) {
+            ModulePresetRepository modulePresetRepository,
+            UwRepository uwRepository) {
         this.googleSheetsRepository = googleSheetsRepository;
         this.modulePresetRepository = modulePresetRepository;
+        this.uwRepository = uwRepository;
     }
 
     // -------------------------------------------------------------------------
@@ -110,18 +112,8 @@ public class TowerTrackerFetcherService {
     // Ultimate Weapons
     // -------------------------------------------------------------------------
 
-    public List<UltimateWeapon> fetchUltimateWeapons() throws IOException {
-        List<UltimateWeapon> weapons = new ArrayList<>();
-        weapons.add(new ChainLightning(googleSheetsRepository.readRanges(TowerTrackerRanges.CHAIN_LIGHTNING)));
-        weapons.add(new SmartMissiles(googleSheetsRepository.readRanges(TowerTrackerRanges.SMART_MISSILES)));
-        weapons.add(new DeathWave(googleSheetsRepository.readRanges(TowerTrackerRanges.DEATH_WAVE)));
-        weapons.add(new ChronoField(googleSheetsRepository.readRanges(TowerTrackerRanges.CHRONO_FIELD)));
-        weapons.add(new InnerLandMines(googleSheetsRepository.readRanges(TowerTrackerRanges.INNER_LAND_MINES)));
-        weapons.add(new GoldenTower(googleSheetsRepository.readRanges(TowerTrackerRanges.GOLDEN_TOWER)));
-        weapons.add(new PoisonSwamp(googleSheetsRepository.readRanges(TowerTrackerRanges.POISON_SWAMP)));
-        weapons.add(new BlackHole(googleSheetsRepository.readRanges(TowerTrackerRanges.BLACK_HOLE)));
-        weapons.add(new Spotlight(googleSheetsRepository.readRanges(TowerTrackerRanges.SPOTLIGHT)));
-        return weapons;
+    public List<UwRepository.UwPlayerData> fetchUltimateWeapons() {
+        return uwRepository.getAllUwState();
     }
 
     // -------------------------------------------------------------------------
