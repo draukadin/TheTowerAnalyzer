@@ -194,6 +194,37 @@
   .btn-fetch:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
   .btn-fetch:disabled{opacity:0.5;cursor:not-allowed;}
   .btn-fetch.loading{color:var(--muted);}
+
+  /* ── UW Tracker ──────────────────────────────── */
+  .uw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;}
+  .uw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+    overflow:hidden;}
+  .uw-card-header{display:flex;align-items:center;gap:10px;padding:9px 13px;
+    background:var(--surface2);border-bottom:1px solid var(--border);}
+  .uw-name{font-size:13px;font-weight:700;flex:1;}
+  .uw-toggle{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);
+    cursor:pointer;user-select:none;white-space:nowrap;}
+  .uw-toggle input{accent-color:var(--green);cursor:pointer;}
+  .uw-toggle input:disabled{cursor:not-allowed;}
+  .uw-stats-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .uw-stats-table th{background:var(--surface2);padding:5px 10px;text-align:left;
+    font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);font-weight:600;}
+  .uw-stats-table th:last-child,.uw-stats-table th:nth-child(3),.uw-stats-table th:nth-child(4){text-align:right;}
+  .uw-stats-table td{padding:6px 10px;border-top:1px solid var(--border);}
+  .uw-stats-table tr.uw-plus-row td{border-top:2px solid var(--border2);}
+  .uw-val{font-family:var(--mono);color:var(--accent);font-weight:600;min-width:70px;}
+  .uw-stones{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;}
+  .uw-lvl-cell{text-align:right;}
+  .uw-level-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;
+    color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:52px;}
+  .uw-level-select:disabled{opacity:0.4;cursor:not-allowed;}
+  .uw-row-locked td{opacity:0.38;}
+  .uw-stones-total{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:1.25rem;}
+  .uw-stones-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:8px 14px;font-size:12px;}
+  .uw-stones-chip .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;
+    color:var(--muted);margin-bottom:3px;}
+  .uw-stones-chip .val{font-family:var(--mono);font-weight:700;color:var(--gold);}
 </style>
 </head>
 <body>
@@ -207,6 +238,7 @@
     <button class="nav-btn" onclick="showView('cells')">Cell Income</button>
     <button class="nav-btn" onclick="showView('labspeed')">Lab Speed</button>
     <button class="nav-btn" onclick="showView('shards')">Shard Rate</button>
+    <button class="nav-btn" onclick="showView('uw')">UW Tracker</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -348,11 +380,12 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
   else if(view==='shards')renderShardsView();
+  else if(view==='uw')renderUwView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -1400,6 +1433,152 @@ function fmtDuration(s){
 function fmtPct(v){return v!=null?(v*100).toFixed(1)+'%':'—';}
 function pct(v,total){return total?Math.round((v/total)*100):0;}
 function camel(s){return s.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase());}
+
+// ── UW Tracker ─────────────────────────────────────────────────────────────
+
+const UW_COLORS={
+  CL:'#4facf7', SM:'#7c9fcf', DW:'#f26b6b', CF:'#3dd68c',
+  ILM:'#a875f7', GT:'#f5c842', PS:'#6bcf7c', BH:'#6b9ef2', SP:'#d0d0d0'
+};
+
+const UW_FMT={
+  'Damage':      v=>`x${fmtUwN(v)}`,
+  'Quantity':    v=>`x${fmtUwN(v)}`,
+  'Chance':      v=>`${v}%`,
+  'Duration':    v=>`${fmtUwN(v)}s`,
+  '-Speed':      v=>`${fmtUwN(v)}%`,
+  'Cooldown':    v=>`${fmtUwN(v)}s`,
+  'Multiplier':  v=>`x${v}`,
+  'Angle':       v=>`${fmtUwN(v)}°`,
+  'Size':        v=>`${fmtUwN(v)}m`,
+  'Smite':       v=>`${v}%`,
+  'Cover Fire':  v=>`${fmtUwN(v)}s`,
+  'Kill Wall':   v=>`x${fmtUwN(v)}`,
+  'Chrono Loop': v=>`${v} r/2s`,
+  'Charged Mines':v=>`${v}/s`,
+  'Golden Combo':v=>`${v}%`,
+  'Death Creep': v=>`+${fmtUwN(v)}%`,
+  'Consume':     v=>`${v}%`,
+  'Light Range': v=>`x${v}`
+};
+function fmtUwN(v){return Number.isInteger(v)?v.toLocaleString():v;}
+function fmtStatVal(label,val){const f=UW_FMT[label];return f?f(val):String(val);}
+
+async function renderUwView(){
+  document.getElementById('mainContent').innerHTML=
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading UW data…</div>';
+  try{
+    const res=await fetch(`${API}/uw`);
+    if(!res.ok)throw new Error(res.statusText);
+    const uws=await res.json();
+    const totalInvested=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesInvested,0);
+    const totalNextAll=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesToMax,0);
+    const totalToTargets=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesToTarget,0);
+    const unlocked=uws.filter(u=>u.unlocked).length;
+    document.getElementById('mainContent').innerHTML=`
+      <div class="report-title" style="margin-bottom:1rem">Ultimate Weapons</div>
+      <div class="uw-stones-total">
+        <div class="uw-stones-chip"><div class="lbl">UWs Unlocked</div><div class="val">${unlocked} / 9</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Total Stones Invested</div><div class="val">${totalInvested.toLocaleString()}</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Stones to Planned Targets</div><div class="val" style="color:var(--orange)">${totalToTargets.toLocaleString()}</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Stones to Max Everything</div><div class="val">${totalNextAll.toLocaleString()}</div></div>
+      </div>
+      <div class="uw-grid">${uws.map(renderUwCard).join('')}</div>`;
+  }catch(e){
+    document.getElementById('mainContent').innerHTML=
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function renderUwCard(uw){
+  const color=UW_COLORS[uw.code]||'var(--accent)';
+  const baseStats=uw.stats.filter(s=>s.statKey!=='UW_PLUS');
+  const uwPlus=uw.stats.find(s=>s.statKey==='UW_PLUS');
+  const uwStonesToTarget=uw.stats.reduce((s,st)=>s+st.stonesToTarget,0);
+  return `
+    <div class="uw-card" style="border-top:3px solid ${color}">
+      <div class="uw-card-header">
+        <span class="uw-name" style="color:${color}">${uw.name}</span>
+        <label class="uw-toggle">
+          <input type="checkbox" ${uw.unlocked?'checked':''}
+            onchange="setUwUnlocked(${uw.uwId},this.checked)"> Unlocked
+        </label>
+        <label class="uw-toggle">
+          <input type="checkbox" ${uw.uwPlusUnlocked?'checked':''} ${!uw.unlocked?'disabled':''}
+            onchange="setUwPlusUnlocked(${uw.uwId},this.checked)"> ${uw.uwPlusName}
+        </label>
+        ${uwStonesToTarget>0?`<span style="font-size:10px;color:var(--orange);white-space:nowrap;margin-left:4px">→ ${uwStonesToTarget.toLocaleString()} stones</span>`:''}
+      </div>
+      <table class="uw-stats-table">
+        <thead><tr>
+          <th>Stat</th><th>Value</th>
+          <th style="text-align:right">Lvl</th>
+          <th style="text-align:right">Target</th>
+          <th style="text-align:right">→ Target</th>
+          <th style="text-align:right">Invested</th>
+          <th style="text-align:right">→ Max</th>
+        </tr></thead>
+        <tbody>
+          ${baseStats.map(s=>renderUwStatRow(s,uw.unlocked,false)).join('')}
+          ${uwPlus?renderUwStatRow(uwPlus,uw.unlocked,!uw.uwPlusUnlocked,true):''}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderUwStatRow(stat,uwUnlocked,isLocked,isUwPlus=false){
+  const disabled=!uwUnlocked||isLocked;
+  const valDisplay=disabled?'—':fmtStatVal(stat.label,stat.currentValue);
+  const investedDisplay=disabled?'—':stat.stonesInvested.toLocaleString();
+  const toMaxDisplay=disabled?'—':(stat.stonesToMax>0?stat.stonesToMax.toLocaleString():'<span style="color:var(--green);font-size:10px">Max</span>');
+  const toTargetDisplay=disabled?'—':(stat.stonesToTarget>0
+    ?`<span style="color:var(--orange)">${stat.stonesToTarget.toLocaleString()}</span>`
+    :(stat.targetLevel>0&&stat.targetLevel<=stat.currentLevel
+      ?'<span style="color:var(--green);font-size:10px">Met</span>'
+      :'—'));
+  const lvlOpts=Array.from({length:stat.maxLevel+1},(_,i)=>
+    `<option value="${i}"${i===stat.currentLevel?' selected':''}>${String(i).padStart(2,'0')}</option>`
+  ).join('');
+  const tgtOpts=Array.from({length:stat.maxLevel+1},(_,i)=>
+    `<option value="${i}"${i===stat.targetLevel?' selected':''}>${String(i).padStart(2,'0')}</option>`
+  ).join('');
+  return `<tr class="${disabled?'uw-row-locked':''}${isUwPlus?' uw-plus-row':''}">
+    <td>${stat.label}</td>
+    <td class="uw-val">${valDisplay}</td>
+    <td class="uw-lvl-cell">
+      <select class="uw-level-select" ${disabled?'disabled':''}
+        onchange="setStatLevel(${stat.statId},parseInt(this.value))">${lvlOpts}</select>
+    </td>
+    <td class="uw-lvl-cell">
+      <select class="uw-level-select" ${disabled?'disabled':''}
+        onchange="setTargetLevel(${stat.statId},parseInt(this.value))">${tgtOpts}</select>
+    </td>
+    <td class="uw-stones">${toTargetDisplay}</td>
+    <td class="uw-stones">${investedDisplay}</td>
+    <td class="uw-stones">${toMaxDisplay}</td>
+  </tr>`;
+}
+
+async function setUwUnlocked(uwId,unlocked){
+  await fetch(`${API}/uw/${uwId}/unlocked`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({unlocked})});
+  renderUwView();
+}
+async function setUwPlusUnlocked(uwId,unlocked){
+  await fetch(`${API}/uw/${uwId}/uw-plus-unlocked`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({unlocked})});
+  renderUwView();
+}
+async function setStatLevel(statId,level){
+  await fetch(`${API}/uw/stat/${statId}/level`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
+  renderUwView();
+}
+async function setTargetLevel(statId,level){
+  await fetch(`${API}/uw/stat/${statId}/target-level`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
+  renderUwView();
+}
 
 init();
 </script>

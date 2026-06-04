@@ -121,5 +121,75 @@ public class DatabaseInitializer {
         } catch (Exception ignored) {
             // Column already exists — safe to continue.
         }
+
+        // ── Ultimate Weapons ──────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS uw (
+                    id           INTEGER PRIMARY KEY,
+                    code         TEXT NOT NULL UNIQUE,
+                    name         TEXT NOT NULL,
+                    uw_plus_name TEXT NOT NULL
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS uw_stat (
+                    id         INTEGER PRIMARY KEY,
+                    uw_id      INTEGER NOT NULL REFERENCES uw(id),
+                    stat_key   TEXT    NOT NULL,
+                    label      TEXT    NOT NULL,
+                    max_level  INTEGER NOT NULL,
+                    sort_order INTEGER NOT NULL DEFAULT 0,
+                    UNIQUE(uw_id, stat_key)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS uw_stat_level_value (
+                    uw_stat_id     INTEGER NOT NULL REFERENCES uw_stat(id),
+                    level          INTEGER NOT NULL,
+                    value          REAL    NOT NULL,
+                    stones_to_next INTEGER,
+                    PRIMARY KEY (uw_stat_id, level)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS uw_player_state (
+                    uw_id            INTEGER NOT NULL REFERENCES uw(id) PRIMARY KEY,
+                    unlocked         INTEGER NOT NULL DEFAULT 0,
+                    uw_plus_unlocked INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS uw_stat_player_level (
+                    uw_stat_id    INTEGER NOT NULL REFERENCES uw_stat(id) PRIMARY KEY,
+                    current_level INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS uw_stat_level_history (
+                    id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+                    uw_stat_id INTEGER  NOT NULL REFERENCES uw_stat(id),
+                    old_level  INTEGER  NOT NULL,
+                    new_level  INTEGER  NOT NULL,
+                    changed_at DATETIME NOT NULL DEFAULT (datetime('now'))
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE INDEX IF NOT EXISTS idx_uw_stat_level_history_stat
+                ON uw_stat_level_history (uw_stat_id, changed_at)
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS uw_stat_target_level (
+                    uw_stat_id   INTEGER NOT NULL REFERENCES uw_stat(id) PRIMARY KEY,
+                    target_level INTEGER NOT NULL DEFAULT 0
+                )
+                """);
     }
 }
