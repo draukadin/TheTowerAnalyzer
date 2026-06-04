@@ -10,6 +10,8 @@ public class PlayerCurrenciesContext implements ChatContext {
         this.currencies = currencies;
     }
 
+    public Currencies getCurrencies() { return currencies; }
+
     @Override
     public String getLabel() {
         return "Player Currencies";

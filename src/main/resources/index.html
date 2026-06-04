@@ -206,6 +206,7 @@
     <button class="nav-btn active" onclick="showView('reports')">Reports</button>
     <button class="nav-btn" onclick="showView('cells')">Cell Income</button>
     <button class="nav-btn" onclick="showView('labspeed')">Lab Speed</button>
+    <button class="nav-btn" onclick="showView('shards')">Shard Rate</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -347,10 +348,11 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
+  else if(view==='shards')renderShardsView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -1173,6 +1175,196 @@ async function loadLabSpeed(days){
       <div style="height:2rem"></div>`;
   }catch(e){
     document.getElementById('labPanel').innerHTML=`<div style="color:var(--red);padding:1rem">${e.message}</div>`;
+  }
+}
+
+function shardLevelInputs(){
+  const saved  = k => localStorage.getItem('shardLevel_'  + k) || '1';
+  const savedTgt = k => localStorage.getItem('shardTarget_' + k) || '161';
+  const savedDiscount = () => localStorage.getItem('shardDiscountLevel') || '0';
+  const numInput = (id, min, max, val, onChange) =>
+    `<input type="number" id="${id}" min="${min}" max="${max}" value="${val}"
+      style="width:70px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+             color:var(--text);padding:4px 8px;font-size:13px;font-family:var(--mono)"
+      onchange="${onChange}">`;
+  const typeLabel = {'cannon':'Cannon','armor':'Armor','generator':'Generator','core':'Core'};
+  return `
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:-0.5rem;margin-bottom:0.5rem">
+      <div style="display:grid;grid-template-columns:repeat(4,auto);gap:8px 20px;align-items:center">
+        ${['cannon','armor','generator','core'].map(t=>`
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${typeLabel[t]}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <label style="font-size:12px;color:var(--muted)">Cur:</label>
+              ${numInput('shardLvl_'+t,   1,300,saved(t),   `saveShardLevel('${t}',this.value);reloadShards()`)}
+              <label style="font-size:12px;color:var(--muted)">→ Tgt:</label>
+              ${numInput('shardTgt_'+t, 2,300,savedTgt(t), `localStorage.setItem('shardTarget_${t}',this.value);reloadShards()`)}
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:8px">
+        <label style="font-size:12px" title="Module Shard Cost lab level (0–30, each level = 1% discount)">Shard Cost Lab Lvl:</label>
+        ${numInput('shardDiscountLvl',0,30,savedDiscount(),`localStorage.setItem('shardDiscountLevel',this.value);reloadShards()`)}
+        <span id="shardDiscountPct" style="font-size:12px;color:var(--gold)">${savedDiscount()}%</span>
+      </div>
+    </div>`;
+}
+
+function saveShardLevel(type,val){localStorage.setItem('shardLevel_'+type,val);}
+function reloadShards(){
+  const disc=Number(document.getElementById('shardDiscountLvl')?.value)||0;
+  document.getElementById('shardDiscountPct').textContent=disc+'%';
+  loadShards(document.getElementById('shardDaysSlider').value);
+}
+
+async function renderShardsView(){
+  document.getElementById('mainContent').innerHTML=`
+    <div class="report-title" style="margin-bottom:1rem">Shard Earning Rate</div>
+    <div class="window-controls" style="margin-bottom:0.5rem">
+      <label>Window:</label>
+      <input type="range" min="3" max="90" value="30" id="shardDaysSlider" oninput="updateShardDays(this.value)">
+      <span id="shardDaysLabel">30 days</span>
+      <label style="margin-left:1rem">Source:</label>
+      <select id="shardDataSource" onchange="reloadShards()"
+        style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;
+               color:var(--text);font-size:12px;padding:4px 8px;font-family:var(--font)">
+        <option value="BATTLE_REPORTS">Battle Reports (farming runs only, fetched shards)</option>
+        <option value="SNAPSHOTS">Currency Snapshots (all sources blended, all run types)</option>
+      </select>
+    </div>
+    <div id="shardSourceNote" style="font-size:12px;color:var(--muted);margin-bottom:0.75rem">
+      Farming runs only · excludes Tournament, Dissonance, Event
+    </div>
+    ${shardLevelInputs()}
+    <div id="shardsPanel"><div class="loading-placeholder">Loading…</div></div>`;
+  loadShards(30);
+}
+
+function updateShardDays(val){
+  document.getElementById('shardDaysLabel').textContent=val+' days';
+  loadShards(val);
+}
+
+async function loadShards(days){
+  const lvl=t=>Number(document.getElementById('shardLvl_'+t)?.value)||1;
+  const tgt=t=>Number(document.getElementById('shardTgt_'+t)?.value)||161;
+  const cannon=lvl('cannon'),armor=lvl('armor'),generator=lvl('generator'),core=lvl('core');
+  const cannonTgt=tgt('cannon'),armorTgt=tgt('armor'),generatorTgt=tgt('generator'),coreTgt=tgt('core');
+  const discount=Number(document.getElementById('shardDiscountLvl')?.value)||0;
+  const dataSource=document.getElementById('shardDataSource')?.value||'BATTLE_REPORTS';
+  const isSnapshots=dataSource==='SNAPSHOTS';
+
+  // Update source note
+  const noteEl=document.getElementById('shardSourceNote');
+  if(noteEl){
+    if(isSnapshots){
+      // Fetch snapshot count and warn if low
+      try{
+        const cnt=await fetch(`${API}/analysis/shards/snapshot-count`).then(r=>r.json());
+        noteEl.innerHTML=cnt<5
+          ? `<span style="color:var(--orange)">⚠ Only ${cnt} snapshot${cnt===1?'':'s'} on record — accumulate at least 5 via Export Context before relying on this mode (need 4 intervals for reliable 2σ filtering).</span>`
+          : `<span style="color:var(--green)">✓ ${cnt} snapshots · rates computed from currency inventory deltas</span>`;
+      }catch(e){noteEl.textContent='Currency Snapshots mode';}
+    } else {
+      noteEl.textContent='Farming runs only · excludes Tournament, Dissonance, Event';
+    }
+  }
+
+  try{
+    const url=isSnapshots
+      ? `${API}/analysis/shards?days=${days}`
+          +`&cannonLevel=${cannon}&armorLevel=${armor}&generatorLevel=${generator}&coreLevel=${core}`
+          +`&shardCostDiscountLevel=${discount}`
+          +`&targetLevel=${cannonTgt}`
+          +`&dataSource=SNAPSHOTS`
+      : `${API}/analysis/shards?days=${days}`
+          +`&cannonLevel=${cannon}&armorLevel=${armor}&generatorLevel=${generator}&coreLevel=${core}`
+          +`&shardCostDiscountLevel=${discount}`
+          +`&cannonTargetLevel=${cannonTgt}&armorTargetLevel=${armorTgt}&generatorTargetLevel=${generatorTgt}&coreTargetLevel=${coreTgt}`
+          +`&dataSource=BATTLE_REPORTS`;
+    const res=await fetch(url);
+    const d=await res.json();
+    const a=d.averages, sd=d.stdDev, pr=d.projections;
+    const pts=d.dataPoints;
+
+    const fmtH=h=>{
+      if(h==null||h<0)return '—';
+      if(h<1)return Math.round(h*60)+'m';
+      if(h<24)return h.toFixed(1)+'h';
+      return (h/24).toFixed(1)+'d';
+    };
+
+    const discountBadge=proj=>proj.discountLevel>0
+      ? `<span style="color:var(--green);font-size:10px"> (${proj.discountLevel}% off)</span>`
+      : '';
+
+    const nextLine=proj=>{
+      const hasDiscount=proj.discountLevel>0 && proj.shardsToNextLevelEffective!==proj.shardsToNextLevelBase;
+      return `next upgrade: `
+        + (hasDiscount
+            ? `<span style="text-decoration:line-through;color:var(--muted)">${proj.shardsToNextLevelBase.toLocaleString()}</span> `
+              + `<b style="color:var(--gold)">${proj.shardsToNextLevelEffective.toLocaleString()}</b>${discountBadge(proj)}`
+            : `<b style="color:var(--gold)">${proj.shardsToNextLevelEffective.toLocaleString()}</b>`)
+        + ` · <b style="color:var(--gold)">${fmtH(proj.hoursToNextLevel)}</b>`;
+    };
+
+    const lvl161Line=proj=>{
+      if(proj.shardsToTargetLevelEffective<=0) return `<span style="color:var(--green)">✓ Already at Lvl ${proj.targetLevel}+</span>`;
+      const hasDiscount=proj.discountLevel>0 && proj.shardsToTargetLevelEffective!==proj.shardsToTargetLevelBase;
+      return `To <b style="color:var(--accent2)">Lvl ${proj.targetLevel}</b>: `
+        + (hasDiscount
+            ? `<span style="text-decoration:line-through;color:var(--muted)">${proj.shardsToTargetLevelBase.toLocaleString()}</span> `
+              + `<b style="color:var(--accent)">${proj.shardsToTargetLevelEffective.toLocaleString()}</b>${discountBadge(proj)}`
+            : `<b style="color:var(--accent)">${proj.shardsToTargetLevelEffective.toLocaleString()}</b>`)
+        + ` · <b style="color:var(--accent)">${fmtH(proj.hoursToTargetLevel)}</b>`;
+    };
+
+    const projCard=(label,avg,std,proj)=>`
+      <div class="stat-card">
+        <div class="label">${label} · Avg/hr</div>
+        <div class="value green">${fmtRaw(avg)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">±${fmtRaw(std)} std dev</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.8">
+          <b style="color:var(--text)">Lvl ${proj.currentLevel}</b> · ${nextLine(proj)}<br>
+          ${lvl161Line(proj)}
+        </div>
+      </div>`;
+
+    const maxRate=Math.max(...pts.flatMap(p=>[p.cannonPerHour,p.armorPerHour,p.generatorPerHour,p.corePerHour]),1);
+
+    document.getElementById('shardsPanel').innerHTML=`
+      <div class="stat-grid" style="margin-bottom:1.5rem">
+        <div class="stat-card"><div class="label">Runs Analyzed</div><div class="value accent">${d.runsAnalyzed}</div></div>
+        ${projCard('Cannon',   a.cannon,    sd.cannon,    pr.cannon)}
+        ${projCard('Armor',    a.armor,     sd.armor,     pr.armor)}
+        ${projCard('Generator',a.generator, sd.generator, pr.generator)}
+        ${projCard('Core',     a.core,      sd.core,      pr.core)}
+      </div>
+      <table class="trend-table">
+        <thead><tr>
+          <th>Date</th><th style="text-align:right">Tier</th><th style="text-align:right">Wave</th>
+          <th style="text-align:right">Cannon/hr</th><th style="text-align:right">Armor/hr</th>
+          <th style="text-align:right">Generator/hr</th><th style="text-align:right">Core/hr</th>
+          <th>Duration</th><th>Best Rate</th>
+        </tr></thead>
+        <tbody>${pts.map(p=>{
+          const best=Math.max(p.cannonPerHour,p.armorPerHour,p.generatorPerHour,p.corePerHour);
+          return `<tr>
+            <td>${p.battleDate}</td>
+            <td class="val-num">T${p.tier}</td>
+            <td class="val-num">${p.wave.toLocaleString()}</td>
+            <td class="val-num">${fmtRaw(p.cannonPerHour)}</td>
+            <td class="val-num">${fmtRaw(p.armorPerHour)}</td>
+            <td class="val-num">${fmtRaw(p.generatorPerHour)}</td>
+            <td class="val-num">${fmtRaw(p.corePerHour)}</td>
+            <td style="color:var(--muted)">${fmtDuration(p.realTimeSeconds)}</td>
+            <td><div class="bar-fill green" style="width:${Math.round(best/maxRate*80)}px;height:5px;border-radius:3px;display:inline-block"></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      <div style="height:2rem"></div>`;
+  }catch(e){
+    document.getElementById('shardsPanel').innerHTML=`<div style="color:var(--red);padding:1rem">${e.message}</div>`;
   }
 }
 

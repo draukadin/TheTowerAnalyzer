@@ -62,6 +62,44 @@ public class DatabaseInitializer {
                 """);
 
         jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS currency_snapshots (
+                    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                    snapshot_time  TIMESTAMP NOT NULL,
+                    cannon_shards  INTEGER,
+                    armor_shards   INTEGER,
+                    generator_shards INTEGER,
+                    core_shards    INTEGER,
+                    reroll_shards  INTEGER,
+                    gems           INTEGER,
+                    stones         INTEGER,
+                    medals         INTEGER,
+                    elite_cells    REAL,
+                    tokens         INTEGER,
+                    bits           INTEGER
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE INDEX IF NOT EXISTS idx_currency_snapshots_time
+                ON currency_snapshots (snapshot_time)
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_level_snapshots (
+                    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                    snapshot_time TIMESTAMP NOT NULL,
+                    module_name   TEXT NOT NULL,
+                    module_type   TEXT NOT NULL,
+                    level         INTEGER NOT NULL
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE INDEX IF NOT EXISTS idx_module_level_snapshots_time
+                ON module_level_snapshots (snapshot_time)
+                """);
+
+        jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS chat_history (
                     id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     report_id_1 TEXT NOT NULL,

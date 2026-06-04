@@ -88,6 +88,47 @@ public class RunRepository {
                 from.toString(), to.toString());
     }
 
+    public record ShardRunRow(
+            String id, String battleDate, int tier, int wave,
+            TowerEra towerEra, long realTimeSeconds, String payload) {}
+
+    public List<ShardRunRow> findFarmingRunsWithPayload(LocalDate from, LocalDate to) {
+        return jdbc.query("""
+                SELECT id, battle_date, tier, wave, tower_era, real_time_seconds, payload
+                FROM runs
+                WHERE battle_date >= ? AND battle_date <= ?
+                  AND LOWER(run_type) NOT IN ('tournament','dissonance','event')
+                ORDER BY battle_date ASC
+                """,
+                (rs, rn) -> new ShardRunRow(
+                        rs.getString("id"),
+                        rs.getString("battle_date"),
+                        rs.getInt("tier"),
+                        rs.getInt("wave"),
+                        TowerEra.parse(rs.getString("tower_era")),
+                        rs.getLong("real_time_seconds"),
+                        rs.getString("payload")),
+                from.toString(), to.toString());
+    }
+
+    public List<ShardRunRow> findAllRunsWithPayload(LocalDate from, LocalDate to) {
+        return jdbc.query("""
+                SELECT id, battle_date, tier, wave, tower_era, real_time_seconds, payload
+                FROM runs
+                WHERE battle_date >= ? AND battle_date <= ?
+                ORDER BY battle_date ASC
+                """,
+                (rs, rn) -> new ShardRunRow(
+                        rs.getString("id"),
+                        rs.getString("battle_date"),
+                        rs.getInt("tier"),
+                        rs.getInt("wave"),
+                        TowerEra.parse(rs.getString("tower_era")),
+                        rs.getLong("real_time_seconds"),
+                        rs.getString("payload")),
+                from.toString(), to.toString());
+    }
+
     public List<ReportSummaryDto> findByRunType(String runType) {
         List<ReportSummaryDto> rows = jdbc.query(
                 "SELECT * FROM runs WHERE run_type = ?", SUMMARY_MAPPER, runType);

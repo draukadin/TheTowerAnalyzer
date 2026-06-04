@@ -6,6 +6,7 @@ import com.pphi.tower.model.battlediagnostics.Observation;
 import com.pphi.tower.model.battlehistory.*;
 import com.pphi.tower.model.sheets.cards.CardPresetType;
 import com.pphi.tower.model.TowerNumber;
+import com.pphi.tower.repository.CurrencySnapshotRepository;
 import com.pphi.tower.repository.RunRepository;
 import com.pphi.tower.service.context.ComparisonReportContext;
 import com.pphi.tower.model.sheets.modules.Preset;
@@ -31,11 +32,16 @@ public class ContextExportService {
 
     private final TowerTrackerFetcherService fetcherService;
     private final RunRepository runRepository;
+    private final CurrencySnapshotRepository snapshotRepository;
     private final ObjectMapper objectMapper;
 
-    public ContextExportService(TowerTrackerFetcherService fetcherService, RunRepository runRepository, ObjectMapper objectMapper) {
+    public ContextExportService(TowerTrackerFetcherService fetcherService,
+                                RunRepository runRepository,
+                                CurrencySnapshotRepository snapshotRepository,
+                                ObjectMapper objectMapper) {
         this.fetcherService = fetcherService;
         this.runRepository = runRepository;
+        this.snapshotRepository = snapshotRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -464,6 +470,23 @@ public class ContextExportService {
 
         log.info("Fetching version history...");
         contexts.add(new VersionHistoryContext(fetcherService.fetchVersionHistory()));
+
+        // ── Snapshot persistence ──────────────────────────────────────────────
+        // Runs after all contexts are populated so currency and module data are
+        // captured together under the same snapshot_time.
+        // Wrapped in try/catch: persistence failure must never break the export.
+        try {
+            LocalDateTime snapshotTime = LocalDateTime.now();
+            contexts.forEach(c -> {
+                if (c instanceof PlayerCurrenciesContext cc)
+                    snapshotRepository.saveCurrencySnapshot(snapshotTime, cc.getCurrencies());
+                if (c instanceof ModulesContext mc)
+                    snapshotRepository.saveModuleLevelSnapshots(snapshotTime, mc.getModules());
+            });
+            log.info("Currency snapshot saved at {}", snapshotTime);
+        } catch (Exception e) {
+            log.warn("Snapshot persistence failed (non-fatal): {}", e.getMessage());
+        }
 
         return contexts;
     }

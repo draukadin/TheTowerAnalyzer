@@ -1,0 +1,9 @@
+Provide a metric on the shards per real hour by type (cannon, armor, core, generator)
+
+1. Reading all the stats files
+2. Extracting shard earnings by type per run
+3. Dividing by real time elapsed to get shards/hour or shards/day
+4. Presenting it cleanly with averages and trends
+
+Also worth noting — the metric you really want is probably **shards per real hour** rather than per run, since run lengths vary.
+That normalizes for overnight runs vs shorter sessions and gives you a stable planning number to work with for the 30,500 shard target per module.
