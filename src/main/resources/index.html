@@ -1284,8 +1284,9 @@ async function loadShards(days){
           +`&dataSource=BATTLE_REPORTS`;
     const res=await fetch(url);
     const d=await res.json();
-    const a=d.averages, sd=d.stdDev, pr=d.projections;
-    const pts=d.dataPoints;
+    const zeroShards={cannon:0,armor:0,generator:0,core:0};
+    const a=d.averages??zeroShards, sd=d.stdDev??zeroShards, pr=d.projections??{};
+    const pts=d.dataPoints??[];
 
     const fmtH=h=>{
       if(h==null||h<0)return '—';

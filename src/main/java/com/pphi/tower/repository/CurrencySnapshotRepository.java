@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,14 @@ import java.util.stream.Collectors;
 
 @Repository
 public class CurrencySnapshotRepository {
+
+    /**
+     * SQLite JDBC's FastDateParser cannot handle Java's ISO_LOCAL_DATE_TIME format
+     * ("T" separator, nanosecond precision). We store and query as plain text strings
+     * in this format and parse them back with LocalDateTime.parse() on read.
+     * ISO format is lexicographically ordered so SQLite string comparison is correct.
+     */
+    private static final DateTimeFormatter STORE_FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final JdbcTemplate jdbc;
 
@@ -44,7 +53,7 @@ public class CurrencySnapshotRepository {
 
     private static final RowMapper<CurrencySnapshot> SNAPSHOT_MAPPER = (rs, rn) ->
             new CurrencySnapshot(
-                    rs.getTimestamp("snapshot_time").toLocalDateTime(),
+                    LocalDateTime.parse(rs.getString("snapshot_time"), STORE_FMT),
                     rs.getInt("cannon_shards"),
                     rs.getInt("armor_shards"),
                     rs.getInt("generator_shards"),
@@ -52,7 +61,7 @@ public class CurrencySnapshotRepository {
 
     private static final RowMapper<ModuleLevelSnapshot> MODULE_MAPPER = (rs, rn) ->
             new ModuleLevelSnapshot(
-                    rs.getTimestamp("snapshot_time").toLocalDateTime(),
+                    LocalDateTime.parse(rs.getString("snapshot_time"), STORE_FMT),
                     rs.getString("module_name"),
                     rs.getString("module_type"),
                     rs.getInt("level"));
@@ -68,7 +77,7 @@ public class CurrencySnapshotRepository {
                  elite_cells, tokens, bits)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                snapshotTime,
+                STORE_FMT.format(snapshotTime),
                 currencies.cannonShards(), currencies.armorShards(),
                 currencies.generatorShards(), currencies.coreShards(),
                 currencies.reRollShards(), currencies.gems(),
@@ -84,7 +93,7 @@ public class CurrencySnapshotRepository {
                     (snapshot_time, module_name, module_type, level)
                     VALUES (?, ?, ?, ?)
                     """,
-                    snapshotTime, m.name(), m.type(), m.level());
+                    STORE_FMT.format(snapshotTime), m.name(), m.type(), m.level());
         }
     }
 
@@ -95,7 +104,8 @@ public class CurrencySnapshotRepository {
                 SELECT * FROM currency_snapshots
                 WHERE snapshot_time >= ? AND snapshot_time <= ?
                 ORDER BY snapshot_time ASC
-                """, SNAPSHOT_MAPPER, from, to);
+                """, SNAPSHOT_MAPPER,
+                STORE_FMT.format(from), STORE_FMT.format(to));
 
         List<SnapshotPair> pairs = new ArrayList<>();
         for (int i = 0; i < snapshots.size() - 1; i++) {
@@ -117,7 +127,8 @@ public class CurrencySnapshotRepository {
                 SELECT * FROM module_level_snapshots
                 WHERE snapshot_time >= ? AND snapshot_time <= ?
                 ORDER BY snapshot_time ASC
-                """, MODULE_MAPPER, from, to)
+                """, MODULE_MAPPER,
+                STORE_FMT.format(from), STORE_FMT.format(to))
                 .stream()
                 .collect(Collectors.groupingBy(ModuleLevelSnapshot::time));
     }

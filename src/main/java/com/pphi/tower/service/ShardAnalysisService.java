@@ -90,6 +90,32 @@ public class ShardAnalysisService {
                                                     int generatorLevel, int coreLevel,
                                                     int shardCostDiscountLevel,
                                                     int targetLevel) {
+        try {
+            return computeSnapshotRates(days, cannonLevel, armorLevel, generatorLevel, coreLevel,
+                    shardCostDiscountLevel, targetLevel);
+        } catch (Exception e) {
+            log.warn("Snapshot-based shard rate computation failed, returning empty result: {}", e.getMessage());
+            return emptySnapshotResult(days);
+        }
+    }
+
+    private ShardRateDto emptySnapshotResult(int days) {
+        ShardAverages zero = new ShardAverages(0, 0, 0, 0);
+        ShardStdDev   zeroSd = new ShardStdDev(0, 0, 0, 0);
+        ShardProjections emptyProj = new ShardProjections(
+                project(1, 0, 0, 161),
+                project(1, 0, 0, 161),
+                project(1, 0, 0, 161),
+                project(1, 0, 0, 161));
+        return new ShardRateDto(days, 0, 0, zero, zero, zeroSd, zeroSd,
+                List.of(), emptyProj, emptyProj);
+    }
+
+    private ShardRateDto computeSnapshotRates(int days,
+                                               int cannonLevel, int armorLevel,
+                                               int generatorLevel, int coreLevel,
+                                               int shardCostDiscountLevel,
+                                               int targetLevel) {
         LocalDateTime to   = LocalDateTime.now();
         LocalDateTime from = to.minusDays(days);
         double multiplier  = 1.0 - Math.min(30, shardCostDiscountLevel) / 100.0;
