@@ -6,7 +6,7 @@ public enum TowerTrackerRanges implements GoogleSheet {
 
     //Workshops Tracker
     WORKSHOP("Master Sheet", List.of("C1:C50", "D1:D50", "N1:N50"), "workshop-tracker"),
-    ENHANCEMENTS("Master Sheet", List.of("P1:P20", "R1:R20", "W1:W20", "X1:x20"), "workshop-tracker"),
+    ENHANCEMENTS("Master Sheet", List.of("P1:P20", "R1:R20", "W1:W20", "X1:X20"), "workshop-tracker"),
 
     // Player and Stuff Trackers
     TIER_WAVE("Master Sheet", List.of("E1:N23"), "player-tracker"),
@@ -53,18 +53,7 @@ public enum TowerTrackerRanges implements GoogleSheet {
     RELICS("Relics", List.of("M2:N42", "P2:P42"), "relics"),
 
     // Lab Tier List
-    LAB_TIER_LIST("The Tier List v28.2", List.of("B:F"), "lab-tier-list"),
-
-    // Ultimate Weapons
-    CHAIN_LIGHTNING("UW Cost Calculator v3", List.of("B7:O12"), "ultimate-weapons"),
-    SMART_MISSILES("UW Cost Calculator v3", List.of("B14:O19"), "ultimate-weapons"),
-    DEATH_WAVE("UW Cost Calculator v3", List.of("B21:O26"), "ultimate-weapons"),
-    CHRONO_FIELD("UW Cost Calculator v3", List.of("B28:O33"), "ultimate-weapons"),
-    INNER_LAND_MINES("UW Cost Calculator v3", List.of("B35:O40"), "ultimate-weapons"),
-    GOLDEN_TOWER("UW Cost Calculator v3", List.of("B42:O47"), "ultimate-weapons"),
-    POISON_SWAMP("UW Cost Calculator v3", List.of("B49:O54"), "ultimate-weapons"),
-    BLACK_HOLE("UW Cost Calculator v3", List.of("B56:O61"), "ultimate-weapons"),
-    SPOTLIGHT("UW Cost Calculator v3", List.of("B63:O68"), "ultimate-weapons");
+    LAB_TIER_LIST("The Tier List v28.2", List.of("B:F"), "lab-tier-list");
 
     private final String sheetName;
     private final List<String> ranges;
