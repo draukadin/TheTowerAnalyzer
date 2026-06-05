@@ -392,6 +392,43 @@
     padding:10px 16px;min-width:130px;}
   .labs-summary-stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
   .labs-summary-stat .val{font-size:1.1rem;font-weight:700;font-family:var(--mono);}
+
+  /* ── Cosmetics ───────────────────────────────── */
+  .cosmetic-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:1.5rem;}
+  .cosmetic-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 15px;}
+  .cosmetic-sum-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+  .cosmetic-sum-card .count{font-size:1.15rem;font-weight:700;font-family:var(--mono);color:var(--green);}
+  .cosmetic-sum-card .count span{font-size:.85rem;color:var(--muted);}
+  .cosmetic-sum-card .bonus{font-size:11px;color:var(--accent);font-family:var(--mono);margin-top:3px;}
+  .cosmetic-section{margin-bottom:1.75rem;}
+  .cosmetic-section-header{display:flex;align-items:center;justify-content:space-between;
+    font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:.6rem;}
+  .cosmetic-section-meta{font-family:var(--mono);color:var(--accent);font-size:11px;}
+  .cosmetic-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);
+    border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);}
+  .cosmetic-table th{background:var(--surface2);padding:7px 12px;text-align:left;
+    font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  .cosmetic-table td{padding:7px 12px;border-top:1px solid var(--border);}
+  .cosmetic-table tr:hover td{background:var(--surface2);}
+  .cosmetic-table tr.not-owned td{opacity:.5;}
+  .reroll-badge{font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:4px;
+    background:rgba(245,200,66,.15);color:var(--gold);border:1px solid rgba(245,200,66,.3);}
+  .milestone-badge{font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:4px;
+    background:rgba(79,142,247,.12);color:var(--accent);}
+  .unlock-badge{font-size:10px;padding:1px 6px;border-radius:4px;}
+  .unlock-badge.Free{background:rgba(61,214,140,.12);color:var(--green);}
+  .unlock-badge.Pass{background:rgba(124,92,252,.12);color:var(--accent2);}
+  .cosmetic-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
+  .cosmetic-search{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border2);
+    border-radius:6px;color:var(--text);font-size:12px;padding:5px 10px;font-family:var(--font);}
+  .cosmetic-search:focus{outline:none;border-color:var(--accent);}
+  .cosmetic-filter-btn{padding:4px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .cosmetic-filter-btn:hover,.cosmetic-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.08);}
+  /* dynamic field visibility in add modal */
+  #addCosmeticModal .field-event,
+  #addCosmeticModal .field-milestone{display:none;}
 </style>
 </head>
 <body>
@@ -409,6 +446,7 @@
     <button class="nav-btn" onclick="showView('modules')">Modules</button>
     <button class="nav-btn" onclick="showView('relics')">Relics</button>
     <button class="nav-btn" onclick="showView('labs')">Labs</button>
+    <button class="nav-btn" onclick="showView('cosmetics')">Cosmetics</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -550,7 +588,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -559,6 +597,7 @@ function showView(view){
   else if(view==='modules')renderModulesView();
   else if(view==='relics')renderRelicsView();
   else if(view==='labs')renderLabsView();
+  else if(view==='cosmetics')renderCosmeticsView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -2683,6 +2722,267 @@ async function saveNewRelic(){
   }catch(e){alert('Failed to save: '+e.message);}
 }
 
+// ── Cosmetics ─────────────────────────────────────────────────────────────────
+let cosmeticData = [], cosmeticSearch = '', cosmeticOwnedFilter = 'All';
+
+async function renderCosmeticsView() {
+  document.getElementById('mainContent').innerHTML =
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading cosmetics…</div>';
+  try {
+    const res = await fetch(`${API}/cosmetics`);
+    if (!res.ok) throw new Error(res.statusText);
+    cosmeticData = await res.json();
+    buildCosmeticsPage();
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function buildCosmeticsPage() {
+  const categories = [
+    { id: 'event',          label: 'Event Skins' },
+    { id: 'milestone_skin', label: 'Milestone Skins' },
+    { id: 'song',           label: 'Songs' },
+    { id: 'guardian',       label: 'Guardians' },
+    { id: 'menu',           label: 'Menu' },
+    { id: 'profile_banner', label: 'Profile Banners' },
+  ];
+
+  // Summary per logical category
+  const bonusRate = { tower_skin: 0.004, background_skin: 0.008, milestone_skin: 0.004,
+                      song: 0.006, guardian: 0.006, menu: 0.006, profile_banner: 0.006 };
+
+  // Event skins: deduplicate by eventId (count each event once for the summary)
+  const events = groupEventSkins(cosmeticData);
+  const eventOwned   = events.filter(e => e.towerOwned || e.bgOwned).length;
+  const towerOwned   = cosmeticData.filter(i => i.categoryId === 'tower_skin'      && i.owned).length;
+  const bgOwned      = cosmeticData.filter(i => i.categoryId === 'background_skin' && i.owned).length;
+  const towerBonus   = towerOwned * 0.004;
+  const bgBonus      = bgOwned * 0.008;
+  const towerMax     = cosmeticData.filter(i => i.categoryId === 'tower_skin').length;
+  const bgMax        = cosmeticData.filter(i => i.categoryId === 'background_skin').length;
+
+  function catSummary(catId) {
+    const items = cosmeticData.filter(i => i.categoryId === catId);
+    const owned = items.filter(i => i.owned).length;
+    const bonus = owned * (bonusRate[catId] || 0);
+    const maxBonus = items.length * (bonusRate[catId] || 0);
+    return { items, owned, total: items.length, bonus, maxBonus };
+  }
+
+  const totalActive = cosmeticData.filter(i => i.owned).reduce((s, i) => s + bonusRate[i.categoryId], 0);
+  const totalMax    = cosmeticData.reduce((s, i) => s + bonusRate[i.categoryId], 0);
+
+  // Summary cards
+  const summaryHtml = `
+    <div class="cosmetic-sum-card" style="border-color:rgba(79,142,247,.3)">
+      <div class="lbl">Total Bonus</div>
+      <div class="count" style="color:var(--accent)">x${totalActive.toFixed(3)}<span> / x${totalMax.toFixed(3)}</span></div>
+    </div>
+    <div class="cosmetic-sum-card">
+      <div class="lbl">Event Towers</div>
+      <div class="count">${towerOwned}<span> / ${towerMax}</span></div>
+      <div class="bonus">+${(towerBonus*100).toFixed(1)}%</div>
+    </div>
+    <div class="cosmetic-sum-card">
+      <div class="lbl">Event Backgrounds</div>
+      <div class="count">${bgOwned}<span> / ${bgMax}</span></div>
+      <div class="bonus">+${(bgBonus*100).toFixed(1)}%</div>
+    </div>
+    ${['milestone_skin','song','guardian','menu','profile_banner'].map(cid => {
+      const s = catSummary(cid);
+      const lbl = { milestone_skin:'Milestone Skins', song:'Songs', guardian:'Guardians',
+                    menu:'Menu', profile_banner:'Profile Banners' }[cid];
+      return `<div class="cosmetic-sum-card">
+        <div class="lbl">${lbl}</div>
+        <div class="count">${s.owned}<span> / ${s.total}</span></div>
+        <div class="bonus">+${(s.bonus*100).toFixed(1)}%</div>
+      </div>`;
+    }).join('')}`;
+
+  document.getElementById('mainContent').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div class="report-title">Cosmetics</div>
+      <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openAddCosmeticModal()">+ Add Cosmetic</button>
+    </div>
+    <div class="section-title">Bonus Summary</div>
+    <div class="cosmetic-summary">${summaryHtml}</div>
+
+    <div class="cosmetic-controls">
+      <input class="cosmetic-search" type="text" placeholder="Search by name or event…"
+        value="${escHtml(cosmeticSearch)}" oninput="cosmeticSearch=this.value;buildCosmeticsPage()">
+      <button class="cosmetic-filter-btn${cosmeticOwnedFilter==='All'?' active':''}"
+        onclick="cosmeticOwnedFilter='All';buildCosmeticsPage()">All</button>
+      <button class="cosmetic-filter-btn${cosmeticOwnedFilter==='Owned'?' active':''}"
+        onclick="cosmeticOwnedFilter='Owned';buildCosmeticsPage()">Owned only</button>
+      <button class="cosmetic-filter-btn${cosmeticOwnedFilter==='Missing'?' active':''}"
+        onclick="cosmeticOwnedFilter='Missing';buildCosmeticsPage()">Missing only</button>
+    </div>
+
+    <div class="section-title">Event Skins</div>
+    ${renderEventSkinsTable(events)}
+
+    <div class="section-title">Milestone Skins</div>
+    ${renderSimpleTable(cosmeticData.filter(i=>i.categoryId==='milestone_skin'), 'milestone')}
+
+    <div class="section-title">Songs</div>
+    ${renderSimpleTable(cosmeticData.filter(i=>i.categoryId==='song'), 'simple')}
+
+    <div class="section-title">Guardians</div>
+    ${renderSimpleTable(cosmeticData.filter(i=>i.categoryId==='guardian'), 'simple')}
+
+    <div class="section-title">Menu</div>
+    ${renderSimpleTable(cosmeticData.filter(i=>i.categoryId==='menu'), 'simple')}
+
+    <div class="section-title">Profile Banners</div>
+    ${renderSimpleTable(cosmeticData.filter(i=>i.categoryId==='profile_banner'), 'simple')}
+  `;
+}
+
+function groupEventSkins(data) {
+  const map = new Map();
+  for (const item of data) {
+    if (item.categoryId !== 'tower_skin' && item.categoryId !== 'background_skin') continue;
+    const key = item.eventId;
+    if (!map.has(key)) map.set(key, { eventId: key, eventName: item.eventName, rerollMultiplier: item.rerollMultiplier,
+      towerId: null, towerName: '', towerOwned: false, bgId: null, bgName: '', bgOwned: false });
+    const e = map.get(key);
+    if (item.categoryId === 'tower_skin') { e.towerId = item.id; e.towerName = item.name; e.towerOwned = item.owned; }
+    else                                  { e.bgId    = item.id; e.bgName   = item.name; e.bgOwned   = item.owned; }
+  }
+  return [...map.values()];
+}
+
+function renderEventSkinsTable(events) {
+  const q = cosmeticSearch.toLowerCase();
+  let rows = events;
+  if (q) rows = rows.filter(e =>
+    e.eventName.toLowerCase().includes(q) ||
+    e.towerName.toLowerCase().includes(q) ||
+    e.bgName.toLowerCase().includes(q));
+  if (cosmeticOwnedFilter === 'Owned')   rows = rows.filter(e => e.towerOwned && e.bgOwned);
+  if (cosmeticOwnedFilter === 'Missing') rows = rows.filter(e => !e.towerOwned || !e.bgOwned);
+  if (!rows.length) return '<div style="color:var(--muted);font-size:13px;padding:.5rem 0">No events match the current filter.</div>';
+  return `<table class="cosmetic-table">
+    <thead><tr>
+      <th>Event</th><th>Tower Skin</th><th style="text-align:center">Owned</th>
+      <th>Background Skin</th><th style="text-align:center">Owned</th><th>Reroll</th>
+    </tr></thead>
+    <tbody>${rows.map(e => `
+      <tr class="${e.towerOwned&&e.bgOwned?'':'not-owned'}">
+        <td style="font-weight:600">${escHtml(e.eventName)}</td>
+        <td>${escHtml(e.towerName)}</td>
+        <td style="text-align:center">
+          <label class="owned-toggle" title="Tower skin owned">
+            <input type="checkbox" ${e.towerOwned?'checked':''} onchange="toggleCosmetic(${e.towerId},this.checked)">
+          </label>
+        </td>
+        <td>${escHtml(e.bgName)}</td>
+        <td style="text-align:center">
+          <label class="owned-toggle" title="Background skin owned">
+            <input type="checkbox" ${e.bgOwned?'checked':''} onchange="toggleCosmetic(${e.bgId},this.checked)">
+          </label>
+        </td>
+        <td>${e.rerollMultiplier > 1 ? `<span class="reroll-badge">x${e.rerollMultiplier}</span>` : ''}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function renderSimpleTable(items, mode) {
+  const q = cosmeticSearch.toLowerCase();
+  let rows = items;
+  if (q) rows = rows.filter(i => i.name.toLowerCase().includes(q));
+  if (cosmeticOwnedFilter === 'Owned')   rows = rows.filter(i => i.owned);
+  if (cosmeticOwnedFilter === 'Missing') rows = rows.filter(i => !i.owned);
+  if (!rows.length) return '<div style="color:var(--muted);font-size:13px;padding:.5rem 0">Nothing matches the current filter.</div>';
+  const milestoneHeaders = mode === 'milestone'
+    ? '<th>Tier</th><th>Unlock</th>'
+    : '';
+  return `<table class="cosmetic-table">
+    <thead><tr>
+      <th>Name</th>${milestoneHeaders}<th style="text-align:center">Owned</th>
+    </tr></thead>
+    <tbody>${rows.map(i => {
+      const extra = mode === 'milestone' ? `
+        <td><span class="milestone-badge">${escHtml(i.milestoneTier||'')}</span></td>
+        <td><span class="unlock-badge ${i.milestoneUnlock==='Free'?'Free':'Pass'}">${escHtml(i.milestoneUnlock||'')}</span></td>` : '';
+      return `<tr class="${i.owned?'':'not-owned'}">
+        <td style="font-weight:600">${escHtml(i.name)}</td>${extra}
+        <td style="text-align:center">
+          <label class="owned-toggle">
+            <input type="checkbox" ${i.owned?'checked':''} onchange="toggleCosmetic(${i.id},this.checked)">
+          </label>
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody></table>`;
+}
+
+async function toggleCosmetic(id, owned) {
+  try {
+    await fetch(`${API}/cosmetics/${id}/owned`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ owned })
+    });
+    const idx = cosmeticData.findIndex(i => i.id === id);
+    if (idx >= 0) cosmeticData[idx] = { ...cosmeticData[idx], owned };
+    buildCosmeticsPage();
+  } catch(e) { alert('Failed to update: ' + e.message); }
+}
+
+function openAddCosmeticModal() {
+  document.getElementById('addCosmeticModal').style.display = 'flex';
+  onCosmeticCategoryChange();
+}
+
+function closeAddCosmeticModal() {
+  document.getElementById('addCosmeticModal').style.display = 'none';
+}
+
+function onCosmeticCategoryChange() {
+  const cat = document.getElementById('newCosmeticCategory').value;
+  const isEvent = cat === 'event';
+  const isMilestone = cat === 'milestone_skin';
+  document.querySelectorAll('#addCosmeticModal .field-event').forEach(el => el.style.display = isEvent ? 'block' : 'none');
+  document.querySelectorAll('#addCosmeticModal .field-item').forEach(el => el.style.display = isEvent ? 'none' : 'block');
+  document.querySelectorAll('#addCosmeticModal .field-milestone').forEach(el => el.style.display = isMilestone ? 'block' : 'none');
+}
+
+async function saveNewCosmetic() {
+  const cat = document.getElementById('newCosmeticCategory').value;
+  try {
+    let res;
+    if (cat === 'event') {
+      res = await fetch(`${API}/cosmetics/events`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          eventName:     document.getElementById('newEventName').value.trim(),
+          reroll:        parseInt(document.getElementById('newEventReroll').value) || 1,
+          towerSkinName: document.getElementById('newTowerSkinName').value.trim(),
+          bgSkinName:    document.getElementById('newBgSkinName').value.trim()
+        })
+      });
+    } else {
+      res = await fetch(`${API}/cosmetics/items`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          categoryId:      cat,
+          name:            document.getElementById('newCosmeticName').value.trim(),
+          milestoneNumber: cat === 'milestone_skin' ? (parseInt(document.getElementById('newMilestoneNumber').value) || null) : null,
+          milestoneTier:   cat === 'milestone_skin' ? document.getElementById('newMilestoneTier').value.trim() || null : null,
+          milestoneUnlock: cat === 'milestone_skin' ? document.getElementById('newMilestoneUnlock').value || null : null
+        })
+      });
+    }
+    if (!res.ok) throw new Error(await res.text());
+    cosmeticData = await res.json();
+    closeAddCosmeticModal();
+    buildCosmeticsPage();
+  } catch(e) { alert('Failed to save: ' + e.message); }
+}
+
 init();
 </script>
 
@@ -2778,6 +3078,73 @@ init();
     <div class="modal-actions">
       <button class="btn" onclick="closeAddRelicModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveNewRelic()">Add Relic</button>
+    </div>
+  </div>
+</div>
+<div id="addCosmeticModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddCosmeticModal()">
+  <div class="modal">
+    <div class="modal-title">Add New Cosmetic</div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-input" id="newCosmeticCategory" onchange="onCosmeticCategoryChange()">
+        <option value="event">Event Skin Pair</option>
+        <option value="milestone_skin">Milestone Skin</option>
+        <option value="song">Song</option>
+        <option value="guardian">Guardian</option>
+        <option value="menu">Menu</option>
+        <option value="profile_banner">Profile Banner</option>
+      </select>
+    </div>
+
+    <!-- Event skin pair fields -->
+    <div class="form-group field-event">
+      <label class="form-label">Event Name</label>
+      <input class="form-input" id="newEventName" type="text" placeholder="e.g. Cherry Blossom">
+    </div>
+    <div class="form-group field-event">
+      <label class="form-label">Reroll Multiplier</label>
+      <select class="form-input" id="newEventReroll">
+        <option value="1">x1</option>
+        <option value="2">x2</option>
+        <option value="3">x3</option>
+      </select>
+    </div>
+    <div class="form-group field-event">
+      <label class="form-label">Tower Skin Name</label>
+      <input class="form-input" id="newTowerSkinName" type="text" placeholder="e.g. Cherry Blossom">
+    </div>
+    <div class="form-group field-event">
+      <label class="form-label">Background Skin Name</label>
+      <input class="form-input" id="newBgSkinName" type="text" placeholder="e.g. Sakura">
+    </div>
+
+    <!-- Individual item fields -->
+    <div class="form-group field-item">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="newCosmeticName" type="text" placeholder="Item name">
+    </div>
+    <div class="form-group field-item field-milestone">
+      <label class="form-label">Milestone Number</label>
+      <input class="form-input" id="newMilestoneNumber" type="number" min="1" placeholder="e.g. 22">
+    </div>
+    <div class="form-group field-item field-milestone">
+      <label class="form-label">Tier</label>
+      <input class="form-input" id="newMilestoneTier" type="text" placeholder="e.g. Tier 22">
+    </div>
+    <div class="form-group field-item field-milestone">
+      <label class="form-label">Unlock</label>
+      <select class="form-input" id="newMilestoneUnlock">
+        <option value="Free">Free</option>
+        <option value="Pass 1">Pass 1</option><option value="Pass 2">Pass 2</option>
+        <option value="Pass 3">Pass 3</option><option value="Pass 4">Pass 4</option>
+        <option value="Pass 5">Pass 5</option><option value="Pass 6">Pass 6</option>
+        <option value="Pass 7">Pass 7</option><option value="Pass 8">Pass 8</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddCosmeticModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewCosmetic()">Add</button>
     </div>
   </div>
 </div>

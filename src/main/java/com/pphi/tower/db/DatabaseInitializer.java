@@ -348,5 +348,42 @@ public class DatabaseInitializer {
                         """);
             }
         } catch (Exception ignored) {}
+
+        // ── Cosmetics ─────────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS cosmetic_category (
+                    id               TEXT NOT NULL PRIMARY KEY,
+                    display_name     TEXT NOT NULL,
+                    bonus_per_item   REAL NOT NULL
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS cosmetic_event (
+                    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name              TEXT    NOT NULL UNIQUE,
+                    reroll_multiplier INTEGER NOT NULL DEFAULT 1
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS cosmetic_item (
+                    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    category_id      TEXT    NOT NULL REFERENCES cosmetic_category(id),
+                    name             TEXT    NOT NULL,
+                    owned            INTEGER NOT NULL DEFAULT 0,
+                    event_id         INTEGER REFERENCES cosmetic_event(id),
+                    milestone_number INTEGER,
+                    milestone_tier   TEXT,
+                    milestone_unlock TEXT,
+                    UNIQUE(category_id, name)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE INDEX IF NOT EXISTS idx_cosmetic_item_category
+                ON cosmetic_item (category_id)
+                """);
     }
 }
