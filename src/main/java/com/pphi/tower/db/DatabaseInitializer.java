@@ -424,5 +424,18 @@ public class DatabaseInitializer {
                 CREATE INDEX IF NOT EXISTS idx_tower_version_change_version
                 ON tower_version_change (version)
                 """);
+
+        // ── Tier Personal Bests ───────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS tier_personal_best (
+                    tier           INTEGER PRIMARY KEY,
+                    wave           INTEGER NOT NULL DEFAULT 0,
+                    attack_waves   INTEGER NOT NULL DEFAULT 0,
+                    defense_waves  INTEGER NOT NULL DEFAULT 0,
+                    utility_waves  INTEGER NOT NULL DEFAULT 0,
+                    uw_waves       INTEGER NOT NULL DEFAULT 0
+                )
+                """);
     }
 }

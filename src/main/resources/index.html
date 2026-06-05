@@ -474,6 +474,7 @@
     <button class="nav-btn" onclick="showView('labs')">Labs</button>
     <button class="nav-btn" onclick="showView('cosmetics')">Cosmetics</button>
     <button class="nav-btn" onclick="showView('currencies')">Currencies</button>
+    <button class="nav-btn" onclick="showView('tierpb')">Tier PB</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
@@ -616,7 +617,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','versions'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','versions'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -627,6 +628,7 @@ function showView(view){
   else if(view==='labs')renderLabsView();
   else if(view==='cosmetics')renderCosmeticsView();
   else if(view==='currencies')renderCurrenciesView();
+  else if(view==='tierpb')renderTierPbView();
   else if(view==='versions')renderVersionTrackerView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
@@ -3111,6 +3113,137 @@ async function saveCurrencies() {
     status.style.color = 'var(--red)';
     status.textContent = 'Save failed: ' + e.message;
   }
+}
+
+// ── Tier Personal Best ────────────────────────────────────────────────────
+
+const DISSONANCE_TYPES = ['attack','defense','utility','uw'];
+const DISSONANCE_LABELS = {attack:'Attack',defense:'Defense',utility:'Utility',uw:'Ult. Weapon'};
+
+async function renderTierPbView() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div style="max-width:1050px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <div>
+          <div class="report-title">Tier Personal Bests</div>
+          <div style="color:var(--muted);font-size:13px">Wave counts per tier — dissonance boosts computed from Dissonant Echo lab level</div>
+        </div>
+        <button class="btn btn-primary" onclick="addTierPbRow()">+ Add Tier</button>
+      </div>
+      <div id="tierPbTournament" style="margin-bottom:1rem"></div>
+      <div id="tierPbStatus" style="font-size:12px;color:var(--muted);margin-bottom:0.75rem;min-height:18px"></div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);border-radius:var(--radius);overflow:hidden">
+        <thead>
+          <tr style="background:var(--surface2)">
+            <th style="padding:9px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Tier</th>
+            <th style="padding:9px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Wave PB</th>
+            <th style="padding:9px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px" colspan="2">Attack</th>
+            <th style="padding:9px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px" colspan="2">Defense</th>
+            <th style="padding:9px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px" colspan="2">Utility</th>
+            <th style="padding:9px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px" colspan="2">Ult. Weapon</th>
+          </tr>
+          <tr style="background:var(--surface2);border-top:1px solid var(--border)">
+            <th colspan="2"></th>
+            ${['attack','defense','utility','uw'].map(() => `
+              <th style="padding:4px 12px;text-align:center;font-size:10px;color:var(--muted);font-weight:500">Waves</th>
+              <th style="padding:4px 12px;text-align:center;font-size:10px;color:var(--muted);font-weight:500">Boost</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody id="tierPbBody">
+          <tr><td colspan="10" style="padding:2rem;text-align:center;color:var(--muted)">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  try {
+    const data = await fetch(`${API}/tier-pb`).then(r => r.json());
+    renderTierPbTournament(data.tournamentBoost, data.echoLevels);
+    renderTierPbRows(data.tiers);
+  } catch(e) {
+    document.getElementById('tierPbBody').innerHTML =
+      `<tr><td colspan="10" style="padding:2rem;text-align:center;color:var(--red)">Failed to load: ${e.message}</td></tr>`;
+  }
+}
+
+function renderTierPbTournament(boost, echoLevels) {
+  const types = [
+    {key:'attack',  label:'Attack',      color:'var(--red)'},
+    {key:'defense', label:'Defense',     color:'var(--accent)'},
+    {key:'utility', label:'Utility',     color:'var(--accent2)'},
+    {key:'uw',      label:'Ult. Weapon', color:'var(--gold)'}
+  ];
+  document.getElementById('tierPbTournament').innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 18px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">
+        Tournament Dissonance Boost
+      </div>
+      <div style="display:flex;gap:2rem;flex-wrap:wrap">
+        ${types.map(t => `
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${t.label}</div>
+            <div style="font-size:1.3rem;font-weight:700;font-family:var(--mono);color:${t.color}">x${boost[t.key]}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">Echo Lv ${echoLevels[t.key]}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderTierPbRows(rows) {
+  const tbody = document.getElementById('tierPbBody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="padding:2rem;text-align:center;color:var(--muted)">No tiers yet — click Add Tier to get started.</td></tr>`;
+    return;
+  }
+  const types = ['attack','defense','utility','uw'];
+  tbody.innerHTML = rows.map(r => `
+    <tr style="border-top:1px solid var(--border)">
+      <td style="padding:7px 12px;font-family:var(--mono);font-weight:700;color:var(--accent)">T${r.tier}</td>
+      <td style="padding:4px 8px"><input type="number" min="0" value="${r.wave}"
+        style="width:90px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-family:var(--mono);font-size:13px"
+        onchange="saveTierPbWave(${r.tier}, this.value)"></td>
+      ${types.map(t => {
+        const waves = r[t + 'Waves'];
+        const color = waves >= 5000 ? 'rgba(61,214,140,0.15)' : waves > 0 ? 'rgba(245,158,66,0.15)' : '';
+        const borderColor = waves >= 5000 ? 'rgba(61,214,140,0.4)' : waves > 0 ? 'rgba(245,158,66,0.4)' : 'var(--border2)';
+        return `
+        <td style="padding:4px 8px">
+          <input type="number" min="0" max="5000" value="${waves}"
+            style="width:80px;background:${color || 'var(--surface2)'};border:1px solid ${borderColor};border-radius:6px;color:var(--text);padding:4px 8px;font-family:var(--mono);font-size:13px"
+            onchange="saveTierPbDissonance(${r.tier}, '${t.toUpperCase()}', this.value)">
+        </td>
+        <td style="padding:7px 12px;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center">x${r[t + 'Boost']}</td>`;
+      }).join('')}
+    </tr>`).join('');
+}
+
+async function saveTierPbWave(tier, wave) {
+  await tierPbPatch(`${API}/tier-pb/${tier}/wave`, { wave: parseInt(wave) || 0 });
+}
+
+async function saveTierPbDissonance(tier, type, waves) {
+  await tierPbPatch(`${API}/tier-pb/${tier}/dissonance`, { type, waves: parseInt(waves) || 0 });
+}
+
+async function tierPbPatch(url, body) {
+  const status = document.getElementById('tierPbStatus');
+  try {
+    const res = await fetch(url, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error(await res.text());
+    status.style.color = 'var(--green)';
+    status.textContent = 'Saved ✓';
+    setTimeout(() => { status.textContent = ''; status.style.color = 'var(--muted)'; }, 2000);
+  } catch(e) {
+    status.style.color = 'var(--red)';
+    status.textContent = 'Save failed: ' + e.message;
+  }
+}
+
+async function addTierPbRow() {
+  const rows = await fetch(`${API}/tier-pb`).then(r => r.json());
+  const nextTier = rows.length ? Math.max(...rows.map(r => r.tier)) + 1 : 1;
+  await fetch(`${API}/tier-pb/${nextTier}`, { method: 'POST' });
+  await renderTierPbView();
 }
 
 let verChangeRows = [];

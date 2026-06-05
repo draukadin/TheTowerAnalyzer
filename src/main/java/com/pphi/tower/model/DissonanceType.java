@@ -5,7 +5,7 @@ public enum DissonanceType {
     ATTACK(5),
     DEFENSE(5),
     UTILITY(3),
-    ULTIMATED_WEAPONS(5);
+    UW(5);
 
     private final int multiplier;
 
