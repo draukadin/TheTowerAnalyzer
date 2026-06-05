@@ -425,7 +425,11 @@ public class ContextExportService {
         List<ChatContext> contexts = new ArrayList<>();
 
         log.info("Fetching player currencies...");
-        contexts.add(new PlayerCurrenciesContext(fetcherService.fetchCurrencies()));
+        com.pphi.tower.model.sheets.Currencies currencies = snapshotRepository.findLatest()
+                .orElseGet(() -> {
+                    try { return fetcherService.fetchCurrencies(); } catch (IOException e) { throw new RuntimeException(e); }
+                });
+        contexts.add(new PlayerCurrenciesContext(currencies));
 
         log.info("Fetching labs...");
         contexts.add(new LabsContext(fetcherService.fetchLabs()));
