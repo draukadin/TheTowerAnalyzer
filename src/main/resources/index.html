@@ -225,6 +225,73 @@
   .uw-stones-chip .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;
     color:var(--muted);margin-bottom:3px;}
   .uw-stones-chip .val{font-family:var(--mono);font-weight:700;color:var(--gold);}
+
+  /* ── Module Tracker ──────────────────────────────── */
+  .mod-type-section{margin-bottom:2rem;}
+  .mod-type-header{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    margin-bottom:0.75rem;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .mod-type-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;}
+  .mod-type-badge.Cannon{background:rgba(245,158,66,0.15);color:var(--orange);}
+  .mod-type-badge.Generator{background:rgba(61,214,140,0.15);color:var(--green);}
+  .mod-type-badge.Armor{background:rgba(79,142,247,0.15);color:var(--accent);}
+  .mod-type-badge.Core{background:rgba(124,92,252,0.15);color:var(--accent2);}
+  .mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;}
+  .mod-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .mod-card.owned{border-color:rgba(255,255,255,0.18);}
+  .mod-card-header{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .mod-code{font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.07);}
+  .mod-name{font-size:13px;font-weight:700;flex:1;}
+  .mod-equipped-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
+  .mod-equipped-badge.primary{background:rgba(61,214,140,0.15);color:var(--green);}
+  .mod-equipped-badge.assist{background:rgba(79,142,247,0.15);color:var(--accent);}
+  .mod-body{padding:11px 13px;display:flex;flex-direction:column;gap:10px;}
+  .mod-effect{font-size:12px;color:var(--muted);line-height:1.55;font-style:italic;}
+  .mod-ability-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .mod-ability-chip{font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:4px;border:1px solid var(--border2);color:var(--text);}
+  .mod-ability-chip.current{border-color:var(--gold);color:var(--gold);background:rgba(245,200,66,0.1);}
+  .mod-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .mod-select{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;
+    color:var(--text);font-size:12px;padding:3px 6px;font-family:var(--font);cursor:pointer;}
+  .mod-input{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;
+    color:var(--text);font-size:12px;padding:3px 6px;font-family:var(--mono);width:60px;}
+  .mod-label{font-size:11px;color:var(--muted);}
+  .mod-substats{border-top:1px solid var(--border);padding-top:8px;}
+  .mod-substats-title{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:6px;}
+  .mod-substat-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+  .mod-slot-num{font-size:10px;color:var(--muted);font-family:var(--mono);width:14px;text-align:right;flex-shrink:0;}
+  .mod-substat-rarity{font-size:10px;font-weight:700;font-family:var(--mono);padding:1px 5px;
+    border-radius:3px;flex-shrink:0;min-width:64px;text-align:center;}
+  .mod-substat-rarity.Common{background:rgba(122,128,153,0.15);color:var(--muted);}
+  .mod-substat-rarity.Rare{background:rgba(79,142,247,0.15);color:var(--accent);}
+  .mod-substat-rarity.Epic{background:rgba(124,92,252,0.15);color:var(--accent2);}
+  .mod-substat-rarity.Legendary{background:rgba(245,158,66,0.15);color:var(--orange);}
+  .mod-substat-rarity.Mythic{background:rgba(61,214,140,0.15);color:var(--green);}
+  .mod-substat-rarity.Ancestral{background:rgba(245,200,66,0.2);color:var(--gold);}
+  .mod-lock-btn{font-size:10px;padding:1px 5px;border-radius:3px;border:1px solid var(--border2);
+    background:transparent;color:var(--muted);cursor:pointer;flex-shrink:0;}
+  .mod-lock-btn.locked{border-color:var(--gold);color:var(--gold);}
+  .mod-copies{border-top:1px solid var(--border);padding-top:8px;}
+  .mod-copies-title{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:6px;}
+  .mod-copies-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .mod-copy-chip{font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:4px;
+    border:1px solid var(--border2);cursor:pointer;transition:all 0.12s;}
+  .mod-copy-chip:hover{border-color:var(--red);color:var(--red);}
+  .mod-copy-chip.Epic{border-color:rgba(124,92,252,0.5);color:var(--accent2);}
+  .mod-copy-chip.Legendary{border-color:rgba(245,158,66,0.5);color:var(--orange);}
+  .mod-copy-chip.Mythic{border-color:rgba(61,214,140,0.5);color:var(--green);}
+  .mod-add-copy{font-size:11px;padding:2px 8px;border-radius:4px;border:1px dashed var(--border2);
+    background:transparent;color:var(--muted);cursor:pointer;}
+  .mod-add-copy:hover{border-color:var(--accent);color:var(--accent);}
+  .mod-footer{display:flex;gap:12px;align-items:center;font-size:11px;color:var(--muted);flex-wrap:wrap;}
+  .mod-presets{border-top:1px solid var(--border);padding-top:8px;}
+  .mod-presets-title{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:6px;}
+  .mod-preset-chips{display:flex;gap:5px;flex-wrap:wrap;}
+  .mod-preset-chip{font-size:11px;padding:2px 9px;border-radius:4px;border:1px solid var(--border2);
+    cursor:pointer;transition:all 0.12s;color:var(--muted);user-select:none;}
+  .mod-preset-chip.active.Farming{background:rgba(61,214,140,0.15);border-color:rgba(61,214,140,0.5);color:var(--green);}
+  .mod-preset-chip.active.Tournament{background:rgba(79,142,247,0.15);border-color:rgba(79,142,247,0.5);color:var(--accent);}
+  .mod-preset-chip.active.Testing{background:rgba(245,158,66,0.15);border-color:rgba(245,158,66,0.5);color:var(--orange);}
+  .mod-preset-chip.taken{opacity:0.3;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -239,6 +306,7 @@
     <button class="nav-btn" onclick="showView('labspeed')">Lab Speed</button>
     <button class="nav-btn" onclick="showView('shards')">Shard Rate</button>
     <button class="nav-btn" onclick="showView('uw')">UW Tracker</button>
+    <button class="nav-btn" onclick="showView('modules')">Modules</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -380,12 +448,13 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
   else if(view==='shards')renderShardsView();
   else if(view==='uw')renderUwView();
+  else if(view==='modules')renderModulesView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -1559,25 +1628,349 @@ function renderUwStatRow(stat,uwUnlocked,isLocked,isUwPlus=false){
   </tr>`;
 }
 
+function saveUwScroll(){sessionStorage.setItem('uw-scroll',document.getElementById('mainContent').scrollTop);}
+function restoreUwScroll(){
+  const top=parseInt(sessionStorage.getItem('uw-scroll')||'0',10);
+  requestAnimationFrame(()=>document.getElementById('mainContent').scrollTop=top);
+}
+async function refreshUwView(){await renderUwView();restoreUwScroll();}
+
 async function setUwUnlocked(uwId,unlocked){
+  saveUwScroll();
   await fetch(`${API}/uw/${uwId}/unlocked`,{method:'PUT',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({unlocked})});
-  renderUwView();
+  refreshUwView();
 }
 async function setUwPlusUnlocked(uwId,unlocked){
+  saveUwScroll();
   await fetch(`${API}/uw/${uwId}/uw-plus-unlocked`,{method:'PUT',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({unlocked})});
-  renderUwView();
+  refreshUwView();
 }
 async function setStatLevel(statId,level){
+  saveUwScroll();
   await fetch(`${API}/uw/stat/${statId}/level`,{method:'PUT',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
-  renderUwView();
+  refreshUwView();
 }
 async function setTargetLevel(statId,level){
+  saveUwScroll();
   await fetch(`${API}/uw/stat/${statId}/target-level`,{method:'PUT',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
-  renderUwView();
+  refreshUwView();
+}
+
+// ── Module Tracker ──────────────────────────────────────────────────────────
+
+const MOD_TYPE_COLOR={Cannon:'var(--orange)',Generator:'var(--green)',Armor:'var(--accent)',Core:'var(--accent2)'};
+const MOD_RARITIES=['Epic','Epic+','Legendary','Legendary+','Mythic','Mythic+','Ancestral'];
+const MOD_COPY_RARITIES=['Epic','Epic+','Legendary','Legendary+','Mythic','Mythic+'];
+const MOD_SUB_RARITIES=['Common','Rare','Epic','Legendary','Mythic','Ancestral'];
+
+const MOD_SUBSTATS={
+  Cannon:[
+    {key:'attack_speed',label:'Attack Speed'},{key:'critical_chance',label:'Critical Chance'},
+    {key:'critical_factor',label:'Critical Factor'},{key:'attack_range',label:'Attack Range'},
+    {key:'damage_per_meter',label:'Damage / Meter'},{key:'multishot_chance',label:'Multishot Chance'},
+    {key:'multishot_targets',label:'Multishot Targets'},{key:'rapid_fire_chance',label:'Rapid Fire Chance'},
+    {key:'rapid_fire_duration',label:'Rapid Fire Duration'},{key:'bounce_shot_chance',label:'Bounce Shot Chance'},
+    {key:'bounce_shot_targets',label:'Bounce Shot Targets'},{key:'bounce_shot_range',label:'Bounce Shot Range'},
+    {key:'super_crit_chance',label:'Super Crit Chance'},{key:'super_crit_multi',label:'Super Crit Multi'},
+    {key:'rend_armor_chance',label:'Rend Armor Chance'},{key:'rend_armor_multi',label:'Rend Armor Multi'},
+    {key:'max_rend_armor_multi',label:'Max Rend Armor Multi'}
+  ],
+  Generator:[
+    {key:'cash_bonus',label:'Cash Bonus'},{key:'cash_per_wave',label:'Cash / Wave'},
+    {key:'coins_kill_bonus',label:'Coins / Kill Bonus'},{key:'coins_per_wave',label:'Coins / Wave'},
+    {key:'free_attack_upgrade',label:'Free Attack Upgrade'},{key:'free_defense_upgrade',label:'Free Defense Upgrade'},
+    {key:'free_utility_upgrade',label:'Free Utility Upgrade'},{key:'interest_per_wave',label:'Interest / Wave'},
+    {key:'recovery_amount',label:'Recovery Amount'},{key:'max_recovery',label:'Max Recovery'},
+    {key:'package_chance',label:'Package Chance'},{key:'enemy_health_level_skip',label:'Enemy Health Level Skip'},
+    {key:'enemy_attack_level_skip',label:'Enemy Attack Level Skip'}
+  ],
+  Armor:[
+    {key:'health_regen',label:'Health Regen'},{key:'defense_pct',label:'Defense %'},
+    {key:'defense_absolute',label:'Defense Absolute'},{key:'thorns_damage',label:'Thorns Damage'},
+    {key:'lifesteal',label:'Lifesteal'},{key:'knockback_chance',label:'Knockback Chance'},
+    {key:'knockback_force',label:'Knockback Force'},{key:'orb_speed',label:'Orb Speed'},
+    {key:'orbs',label:'Orbs'},{key:'shockwave_size',label:'Shockwave Size'},
+    {key:'shockwave_frequency',label:'Shockwave Frequency'},{key:'land_mine_damage',label:'Land Mine Damage'},
+    {key:'land_mine_chance',label:'Land Mine Chance'},{key:'land_mine_radius',label:'Land Mine Radius'},
+    {key:'death_defy',label:'Death Defy'},{key:'wall_health',label:'Wall Health'},
+    {key:'wall_rebuild',label:'Wall Rebuild'}
+  ],
+  Core:[
+    {key:'chain_lightning_damage',label:'Chain Lightning - Damage'},{key:'chain_lightning_quantity',label:'Chain Lightning - Quantity'},
+    {key:'chain_lightning_chance',label:'Chain Lightning - Chance'},{key:'smart_missiles_damage',label:'Smart Missiles - Damage'},
+    {key:'smart_missiles_quantity',label:'Smart Missiles - Quantity'},{key:'smart_missiles_cooldown',label:'Smart Missiles - Cooldown'},
+    {key:'death_wave_damage',label:'Death Wave - Damage'},{key:'death_wave_quantity',label:'Death Wave - Quantity'},
+    {key:'death_wave_cooldown',label:'Death Wave - Cooldown'},{key:'chrono_field_duration',label:'Chrono Field - Duration'},
+    {key:'chrono_field_speed_reduction',label:'Chrono Field - Speed Reduction'},{key:'chrono_field_cooldown',label:'Chrono Field - Cooldown'},
+    {key:'inner_land_mines_damage',label:'Inner Land Mines - Damage'},{key:'inner_land_mines_quantity',label:'Inner Land Mines - Quantity'},
+    {key:'inner_land_mines_cooldown',label:'Inner Land Mines - Cooldown'},{key:'golden_tower_bonus',label:'Golden Tower - Bonus'},
+    {key:'golden_tower_duration',label:'Golden Tower - Duration'},{key:'golden_tower_cooldown',label:'Golden Tower - Cooldown'},
+    {key:'poison_swamp_damage',label:'Poison Swamp - Damage'},{key:'poison_swamp_duration',label:'Poison Swamp - Duration'},
+    {key:'poison_swamp_cooldown',label:'Poison Swamp - Cooldown'},{key:'black_hole_size',label:'Black Hole - Size'},
+    {key:'black_hole_duration',label:'Black Hole - Duration'},{key:'black_hole_cooldown',label:'Black Hole - Cooldown'},
+    {key:'spotlight_bonus',label:'Spotlight - Bonus'},{key:'spotlight_angle',label:'Spotlight - Angle'}
+  ]
+};
+
+function modSubstatLabel(type,key){
+  const list=MOD_SUBSTATS[type]||[];
+  return (list.find(s=>s.key===key)||{label:key}).label;
+}
+
+function abilityRarity(rarity){
+  if(rarity==='Ancestral'||rarity==='Mythic+'||rarity==='Mythic')return 'Mythic';
+  if(rarity==='Legendary+'||rarity==='Legendary')return 'Legendary';
+  return 'Epic';
+}
+function currentAbilityDisplay(mod){
+  const key=mod.rarity==='Ancestral'?'Ancestral'
+    :mod.rarity.startsWith('Mythic')?'Mythic'
+    :mod.rarity.startsWith('Legendary')?'Legendary':'Epic';
+  return mod.abilityValues[key]||'—';
+}
+
+async function renderModulesView(){
+  document.getElementById('mainContent').innerHTML=
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading modules…</div>';
+  try{
+    const res=await fetch(`${API}/modules`);
+    if(!res.ok)throw new Error(res.statusText);
+    const mods=await res.json();
+    const types=['Cannon','Generator','Armor','Core'];
+    const owned=mods.filter(m=>m.owned).length;
+    let html=`<div class="report-title" style="margin-bottom:1rem">Module Tracker</div>
+      <div class="uw-stones-total" style="margin-bottom:1.5rem">
+        <div class="uw-stones-chip"><div class="lbl">Natural Epics Owned</div><div class="val">${owned} / 24</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Equipped Primary</div><div class="val">${mods.filter(m=>m.equippedSlot==='primary').length} / 4</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Equipped Assist</div><div class="val">${mods.filter(m=>m.equippedSlot==='assist').length} / 4</div></div>
+      </div>`;
+    for(const type of types){
+      const group=mods.filter(m=>m.type===type);
+      const color=MOD_TYPE_COLOR[type];
+      html+=`<div class="mod-type-section">
+        <div class="mod-type-header"><span class="mod-type-badge ${type}">${type}</span></div>
+        <div class="mod-grid">${group.map(m=>renderModCard(m,mods)).join('')}</div>
+      </div>`;
+    }
+    document.getElementById('mainContent').innerHTML=html;
+  }catch(e){
+    document.getElementById('mainContent').innerHTML=
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+const MOD_PRESETS=['Farming','Tournament','Testing'];
+const MOD_SLOTS=['primary','assist'];
+
+function renderPresetChips(mod, allMods){
+  const myPresets=new Set((mod.presets||[]).map(p=>`${p.preset}:${p.slot}`));
+  // For each combo, check if another module of the same type already holds it
+  const takenCombos=new Set();
+  for(const other of allMods){
+    if(other.id===mod.id||other.type!==mod.type)continue;
+    for(const p of (other.presets||[])) takenCombos.add(`${p.preset}:${p.slot}`);
+  }
+  return MOD_PRESETS.flatMap(preset=>MOD_SLOTS.map(slot=>{
+    const key=`${preset}:${slot}`;
+    const active=myPresets.has(key);
+    const taken=!active&&takenCombos.has(key);
+    const label=`${preset} ${slot.charAt(0).toUpperCase()+slot.slice(1)}`;
+    return `<span class="mod-preset-chip${active?' active '+preset:''}${taken?' taken':''}"
+      title="${taken?'Already assigned to another '+mod.type+' module':''}"
+      onclick="${taken?'':`modTogglePreset(${mod.id},'${preset}','${slot}',${active})`}"
+    >${label}</span>`;
+  })).join('');
+}
+
+function renderModCard(mod, allMods){
+  const color=MOD_TYPE_COLOR[mod.type];
+  const equippedBadge=mod.equippedSlot
+    ?`<span class="mod-equipped-badge ${mod.equippedSlot}">${mod.equippedSlot}</span>`:'';
+
+  const rarityOpts=MOD_RARITIES.map(r=>`<option value="${r}"${r===mod.rarity?' selected':''}>${r}</option>`).join('');
+  const starsOpts=Array.from({length:6},(_,i)=>`<option value="${i}"${i===mod.stars?' selected':''}>${i}★</option>`).join('');
+  const slotOpts=['<option value="">—</option>',
+    `<option value="primary"${mod.equippedSlot==='primary'?' selected':''}>Primary</option>`,
+    `<option value="assist"${mod.equippedSlot==='assist'?' selected':''}>Assist</option>`].join('');
+
+  const abilityChips=Object.entries(mod.abilityValues).map(([r,v])=>{
+    const isCurrentTier=(mod.rarity.startsWith(r))||(r==='Ancestral'&&mod.rarity==='Ancestral');
+    return `<span class="mod-ability-chip${isCurrentTier?' current':''}" title="${r}">${r[0]}: ${v}</span>`;
+  }).join('');
+
+  // Sub-stats: 8 slots, unlocked at levels 1,1,41,101,141,161,201,241
+  const SLOT_UNLOCK=[1,1,41,101,141,161,201,241];
+  const typeSubstats=MOD_SUBSTATS[mod.type]||[];
+
+  let substatRows='';
+  for(let slot=0;slot<8;slot++){
+    const unlockLevel=SLOT_UNLOCK[slot];
+    const slotUnlocked=mod.level>=unlockLevel;
+    const ss=mod.substats.find(s=>s.slot===slot);
+    const keyVal=ss?ss.key:'';
+    const rar=ss?ss.rarity||'Common':'Common';
+    const locked=ss&&ss.locked;
+    const rarCss=rar.replace('+','');
+    const rarDisplay=ss
+      ?`<span class="mod-substat-rarity ${rarCss}">${rar}</span>`
+      :`<span class="mod-substat-rarity Common" style="opacity:0.3">—</span>`;
+    const lockedStyle=slotUnlocked?'':'opacity:0.35;pointer-events:none';
+    const unlockNote=!slotUnlocked?`<span style="font-size:10px;color:var(--muted)">Lvl ${unlockLevel}</span>`:'';
+    substatRows+=`<div class="mod-substat-row" style="${lockedStyle}">
+      <span class="mod-slot-num">${slot+1}</span>
+      ${rarDisplay}
+      <select class="mod-select" style="flex:1;font-size:11px" ${!slotUnlocked?'disabled':''}
+        onchange="modSetSubstatKey(${mod.id},${slot},this.value,'${rar}',${locked})">
+        ${typeSubstats.map(s=>`<option value="${s.key}"${s.key===keyVal?' selected':''}>${s.label}</option>`).join('')}
+        ${!keyVal?'<option value="" selected disabled>— empty —</option>':''}
+      </select>
+      <select class="mod-select" style="width:80px;font-size:11px" ${!slotUnlocked?'disabled':''}
+        onchange="modSetSubstatRarity(${mod.id},${slot},'${keyVal}',this.value,${locked})">
+        ${MOD_SUB_RARITIES.map(r=>`<option value="${r}"${r===rar?' selected':''}>${r}</option>`).join('')}
+      </select>
+      <button class="mod-lock-btn${locked?' locked':''}" title="${locked?'Unlock':'Lock'}"
+        onclick="modToggleLock(${mod.id},${slot},'${keyVal}','${rar}',${locked})">${locked?'🔒':'🔓'}</button>
+      ${ss?`<button class="mod-lock-btn" title="Clear" onclick="modClearSubstat(${mod.id},${slot})" style="color:var(--red)">✕</button>`:''}
+      ${unlockNote}
+    </div>`;
+  }
+
+  // Copies
+  const copies=mod.copies||[];
+  const copyChips=copies.map((r,i)=>
+    `<span class="mod-copy-chip ${r.replace('+','')}" title="Click to remove" onclick="modClearCopy(${mod.id},${i})">${r} ✕</span>`
+  ).join('');
+  const addCopyOpts=MOD_COPY_RARITIES.map(r=>`<option value="${r}">${r}</option>`).join('');
+  const addCopyBtn=copies.length<5
+    ?`<select class="mod-select" style="font-size:11px" onchange="modAddCopy(${mod.id},${copies.length},this.value);this.selectedIndex=0">
+        <option value="" disabled selected>+ Add copy</option>${addCopyOpts}</select>`:'';
+
+  return `<div class="mod-card${mod.owned?' owned':''}" style="border-top:3px solid ${color}">
+    <div class="mod-card-header">
+      <span class="mod-code" style="color:${color}">${mod.code}</span>
+      <span class="mod-name">${mod.name}</span>
+      ${equippedBadge}
+      <label class="uw-toggle" style="margin-left:auto">
+        <input type="checkbox" ${mod.owned?'checked':''} onchange="modSetOwned(${mod.id},this.checked)"> Owned
+      </label>
+    </div>
+    <div class="mod-body">
+      <div class="mod-effect">${mod.effectTemplate}</div>
+      <div class="mod-ability-row">${abilityChips}</div>
+      <div class="mod-controls">
+        <span class="mod-label">Rarity</span>
+        <select class="mod-select" onchange="modSaveState(${mod.id},${mod.owned},this.value,${mod.stars},${mod.level},'${mod.equippedSlot||''}')">
+          ${rarityOpts}
+        </select>
+        ${mod.rarity==='Ancestral'?`<select class="mod-select" onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',parseInt(this.value),${mod.level},'${mod.equippedSlot||''}')">
+          ${starsOpts}
+        </select>`:''}
+        <span class="mod-label">Lvl</span>
+        <input class="mod-input" type="number" min="0" max="200" value="${mod.level}"
+          onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',${mod.stars},parseInt(this.value),'${mod.equippedSlot||''}')">
+      </div>
+      <div class="mod-substats">
+        <div class="mod-substats-title">Sub-stats</div>
+        ${substatRows}
+      </div>
+      <div class="mod-copies">
+        <div class="mod-copies-title">Merge Copies &nbsp;<span style="color:var(--muted);font-size:10px">(click to remove)</span></div>
+        <div class="mod-copies-row">${copyChips}${addCopyBtn}</div>
+      </div>
+      <div class="mod-presets">
+        <div class="mod-presets-title">Presets</div>
+        <div class="mod-preset-chips">${renderPresetChips(mod,allMods)}</div>
+      </div>
+      <div class="mod-footer">
+        <span>Shattered epics:
+          <input class="mod-input" type="number" min="0" value="${mod.shatteredEpics}"
+            style="width:48px;display:inline-block"
+            onchange="modSetShattered(${mod.id},parseInt(this.value))">
+        </span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function modScrollKey(){return 'mod-scroll';}
+function saveModScroll(){sessionStorage.setItem(modScrollKey(),document.getElementById('mainContent').scrollTop);}
+function restoreModScroll(){
+  const top=parseInt(sessionStorage.getItem(modScrollKey())||'0',10);
+  requestAnimationFrame(()=>document.getElementById('mainContent').scrollTop=top);
+}
+async function refreshModulesView(){await renderModulesView();restoreModScroll();}
+
+async function modSaveState(id,owned,rarity,stars,level,equippedSlot){
+  saveModScroll();
+  await fetch(`${API}/modules/${id}/state`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({owned,rarity,stars,level,equippedSlot:equippedSlot||null})});
+  refreshModulesView();
+}
+async function modSetOwned(id,owned){
+  saveModScroll();
+  const mods=await(await fetch(`${API}/modules`)).json();
+  const m=mods.find(x=>x.id===id);
+  const level=owned&&m.level===0?1:m.level;
+  await fetch(`${API}/modules/${id}/state`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({owned,rarity:m.rarity,stars:m.stars,level,equippedSlot:m.equippedSlot||null})});
+  refreshModulesView();
+}
+async function modSetSubstatKey(id,slot,key,rar,locked){
+  saveModScroll();
+  if(!key){await fetch(`${API}/modules/${id}/substat/${slot}`,{method:'DELETE'});refreshModulesView();return;}
+  await fetch(`${API}/modules/${id}/substat/${slot}`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({key,rarity:rar,locked})});
+  refreshModulesView();
+}
+async function modSetSubstatRarity(id,slot,key,rarity,locked){
+  if(!key)return;
+  saveModScroll();
+  await fetch(`${API}/modules/${id}/substat/${slot}`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({key,rarity,locked})});
+  refreshModulesView();
+}
+async function modToggleLock(id,slot,key,rarity,locked){
+  if(!key)return;
+  saveModScroll();
+  await fetch(`${API}/modules/${id}/substat/${slot}`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({key,rarity,locked:!locked})});
+  refreshModulesView();
+}
+async function modClearSubstat(id,slot){
+  saveModScroll();
+  await fetch(`${API}/modules/${id}/substat/${slot}`,{method:'DELETE'});
+  refreshModulesView();
+}
+async function modAddCopy(id,copyIndex,rarity){
+  saveModScroll();
+  await fetch(`${API}/modules/${id}/copy/${copyIndex}`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({rarity})});
+  refreshModulesView();
+}
+async function modClearCopy(id,copyIndex){
+  saveModScroll();
+  await fetch(`${API}/modules/${id}/copy/${copyIndex}`,{method:'DELETE'});
+  refreshModulesView();
+}
+async function modTogglePreset(id,preset,slot,active){
+  saveModScroll();
+  if(active){
+    await fetch(`${API}/modules/${id}/preset/${preset}/${slot}`,{method:'DELETE'});
+  }else{
+    await fetch(`${API}/modules/${id}/preset/${preset}/${slot}`,{method:'PUT'});
+  }
+  refreshModulesView();
+}
+
+async function modSetShattered(id,count){
+  await fetch(`${API}/modules/${id}/shattered`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({count})});
 }
 
 init();

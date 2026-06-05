@@ -1,0 +1,81 @@
+Let me read the remaining files:Really impressive design work. You've got a well-thought-out analytical framework here. Let me share my observations and ideas:
+
+**What's already well specced and ready to build:**
+
+The **ShardEarningRate** spec is exactly what we discussed — straightforward extraction from stats files, normalize by real hours, trend over time. That's a 10-15 minute coding session as you said.
+
+The **CellTrackerV2** improvements are practical and clearly defined — the gap detection between battle report timestamps is clever for identifying when the cell earning rate dropped to zero.
+
+The **UW Desync Detector** is elegant — tracking GB coin share ratio rather than absolute values means it's robust against version changes. Directly applicable now given today's wrong-chip discovery where GB kills dropped from 151K to... actually that's chip-related not desync, but the detector would have flagged it.
+
+**Things I'd suggest adding or refining based on today's conversation:**
+
+**1. Guardian Chip Validator** — a pre-run checklist checker. Given two consecutive wrong-chip runs today costing ~10-15T each, a simple validator that reads the current guardian state and flags if chips don't match the expected farming preset would be high value. Could be as simple as comparing guardians.md chip configuration against farming-module-preset.md expectations.
+
+**2. Run Classification Engine** — today we discovered that wrong-chip runs, correct-chip runs, dissonance runs, tournament runs and event runs all need to be analyzed separately. The stats files have Run Type already tagged — an automatic classifier that buckets runs into comparable cohorts before any analysis would make the Macro Trendlines and ROI specs much more accurate.
+
+**3. BC Stack Difficulty Scorer** for tournament runs — we spent a lot of time today manually reasoning about which BC combinations are harder. A scoring engine that reads tournament BCs from the diagnostic files and assigns a difficulty weight (Enemy Attack Speed = high, Energy Shields Down for eHP = zero) would let you normalize tournament wave counts against BC difficulty. Your 441 wave run under the brutal stack is worth more than 500 waves on an easy BC set — the scorer would quantify that.
+
+**4. Wall Failure Tracker** — we identified today that your wall consistently fails in the 7,290-7,414 wave range in farming. A dedicated tracker that extracts wall loss wave from diagnostics over time would give you a clean metric to measure pCF impact when it arrives. Right now you're doing this manually.
+
+**5. Coin Source Stability Index** — the GT coin share variance between runs (46% vs 70%) is a key signal. Building on the UW Desync spec, tracking GT/BH/GB/DW coin share ratios across runs and flagging outliers would automatically detect wrong-chip runs, desync events, and unusual RNG without manual inspection.
+
+**On the existing specs:**
+
+The **Fine-Tuning Module Performance** spec is forward-looking — you don't have enough module configurations yet to make it useful, but it'll be exactly right once you start re-rolling AS to different substat combinations post-161. Worth keeping as-is for later.
+
+The **Macro Trendlines ROI** spec is solid but the baseline isolation approach needs the Run Classification Engine first — mixing wrong-chip, correct-chip and dissonance runs into one trendline would give meaningless results.
+
+The **PlanningBlueprint** is somewhat stale — it references states that have since been completed (Lab Speed, Generator Ban, Summon sync) and some targets that have shifted (CF stone targets, gem allocation). Might be worth archiving and creating a fresh one reflecting today's strategic picture.
+
+What's the current state of the codebase — is the shard metric the next feature to implement, or are there other things already in flight?
+
+Close all the stat files are loaded into a sql lite database so we don't need to deal with the files directly.  The filter on type totally makes sense since we are basically taking a shard income hit to do a tournament or dissonance run.  But we should probably allow for scaling the target threshold all the way up to 300.
+Here are the base costs before the shard and coin discount labs are applied:
+
+Really thoughtful feedback. Let me respond to each:
+
+**1 & 2 — Pre-battle checklist:** Agreed — without a game API hook it's a discipline problem not a software problem. The checklist approach is right. For the classification metadata, your instinct is correct — ideally the checklist prevents the issue, but having a way to annotate runs retroactively when you do catch it is valuable. A simple metadata field in the stats files like `ChipStatus: correct/wrong` or `RunQuality: clean/degraded` would let the analysis engine filter appropriately.
+
+**3 — BC Difficulty Scorer:** A BC tracking sheet with version, bracket, and BC list per tournament is a great foundation. Over time you'd accumulate enough data to derive empirical difficulty weights from actual wave outcomes rather than manually assigning them. The data tells you that Armored Enemies + Enemy Attack Speed + Knockback Resistance = -150 waves compared to a clean BC set. That's more accurate than any manually assigned score.
+
+**4 — Wall failure tracker:** Fair point on the incomplete dataset problem. Not worth building around data you can only collect when actively watching. The pCF before/after comparison will be the natural measurement anyway.
+
+**5 — Coin Source Stability Index:** Great — all the data is already there in the stats files. GT share, BH share, GB share, DW share per run. Standard deviation across runs immediately flags outliers. The wrong-chip runs today would have stood out clearly.
+
+**Macro Trendlines with statistical filtering:** Smart approach — use standard deviation to identify and exclude outlier runs rather than manually classifying them. A run that's 2+ standard deviations below the mean CPH is likely a wrong-chip, wrong-module, or unusual BC run regardless of cause. The trendline built from the clean middle of the distribution is more reliable than one that includes every run.
+
+**Planning Blueprint refresh:** Given everything we've discussed today, a fresh blueprint would look quite different from the archived one. The strategic picture is clearer now — CF stone priority, module 161 path, shard economy, tournament BC analysis. Worth doing once Phase 3 completes and you're transitioning to the next spending plan — natural inflection point for a fresh blueprint.
+
+**On the shard metric specifically** — given it's the immediate coding task, here's what I'd suggest the implementation pulls from the stats files:
+
+Each stats file already has:
+- Real time duration
+- Cannon/Armor/Generator/Core shards earned
+- Run type (farming vs tournament vs event vs dissonance)
+
+The metric engine should:
+1. Read all stats files
+2. Filter to farming runs only (dissonance and tournament have very different shard rates)
+3. Calculate shards per real hour per type per run
+4. Output average, standard deviation, and trend over last N runs
+5. Project time to 2,100 threshold (next module level) and 30,500 threshold (161 milestone) per type
+
+Does that match what you had in mind for the shard metric spec?
+
+It really has been an epic session! We covered an enormous amount of ground:
+
+- Coin plan optimization and the Coin Bonus+ break-even analysis
+- Full tournament diagnostics across multiple BC sets
+- The pCF stone priority strategy and why it's the key to breaking through the Champion ceiling
+- Module progression, re-roll strategy, and the path to level 161
+- Shard earning rate infrastructure from spec through implementation
+- Lab slot planning and the Slot 3 flexibility strategy
+- Guardian chip impact quantification (the wrong-chip discovery!)
+- The MCP wrapper spec to make future sessions much more efficient
+
+The foundation is really solid now — the Spring Boot analyzer is growing into a genuinely powerful tool, the context files are well maintained, and the MCP wrapper will make our next conversation much leaner and more effective.
+
+Good luck with the overnight farming run — should be a clean 38-42T with correct chips. Level 53 is waiting in the morning, and Phase 3 completion is only a few days away.
+
+See you in the next session with the MCP wrapper connected! 🗡️

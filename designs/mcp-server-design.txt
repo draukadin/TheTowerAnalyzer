@@ -1,0 +1,185 @@
+A few design decisions embedded here worth calling out:
+module_substats in workshop stats — each stat's contributor list includes which module slot and rarity provided it.
+This is what enables the "is this cap sub-stat-dependent?" check — I can see immediately that crit_chance has a cannon
+common substat contributing 2%, and if that gets rerolled away, the total drops.
+natural_epics inventory — just owned natural epics with rarity and star count, no fodders. The stars field enables the
+RNG calculation for how many more natural epic+ pulls are needed to reach a target star level.
+effect_bans — actual banned stat names per type, not just the lab level. Lab level tells me how many bans are possible;
+the actual banned list tells me what's already banned so I don't recommend banning something twice.
+cap field — only present on stats that have hard caps (defense_pct: 98%, death_defy: 40%, wall_rebuild: 150s,
+spotlight_angle: 90°, cf_speed_reduction: 90%). Omitted where there's no cap. This lets me flag "you're at 92% defense,
+ only 6% from cap — a Defense% sub-stat ban might be premature" automatically.
+
+Does this shape match what you'd naturally model in your Spring Boot entities, or are there structural mismatches with
+ how the data is already persisted?
+
+{
+  "version": "3.1.4",
+  "run_active": false,
+  "workshop": {
+    "attack": {
+      "crit_chance": {
+        "total": 48.2,
+        "workshop": 39.0,
+        "relics": [
+          { "name": "Relic of Precision", "value": 5.0 },
+          { "name": "Shard of Focus", "value": 4.2 }
+        ],
+        "module_substats": [
+          { "slot": "cannon", "rarity": "common", "value": 2.0 }
+        ],
+        "cap": 100.0
+      },
+      "damage": { "total": 1250000, "workshop": 1200000, "relics": [], "module_substats": [] },
+      "attack_speed": { "total": 4.2, "workshop": 3.8, "relics": [], "module_substats": [], "cap": null },
+      "crit_factor": { "total": 42.0, "workshop": 38.0, "relics": [], "module_substats": [] },
+      "range": { "total": 28.0, "workshop": 24.0, "relics": [], "module_substats": [] },
+      "damage_per_meter": { "total": 15.0, "workshop": 12.0, "relics": [], "module_substats": [] },
+      "multishot_chance": { "total": 35.0, "workshop": 30.0, "relics": [], "module_substats": [] },
+      "multishot_targets": { "total": 2, "workshop": 2, "relics": [], "module_substats": [] },
+      "rapid_fire_chance": { "total": 20.0, "workshop": 18.0, "relics": [], "module_substats": [] },
+      "rapid_fire_duration": { "total": 2.5, "workshop": 2.2, "relics": [], "module_substats": [] },
+      "bounce_shot_chance": { "total": 0.0, "workshop": 0.0, "relics": [], "module_substats": [] },
+      "bounce_shot_targets": { "total": 0, "workshop": 0, "relics": [], "module_substats": [] },
+      "bounce_shot_range": { "total": 0.0, "workshop": 0.0, "relics": [], "module_substats": [] },
+      "super_crit_chance": { "total": 22.0, "workshop": 18.0, "relics": [], "module_substats": [] },
+      "super_crit_multi": { "total": 8.0, "workshop": 6.0, "relics": [], "module_substats": [] },
+      "rend_armor_chance": { "total": 0.0, "workshop": 0.0, "relics": [], "module_substats": [] },
+      "rend_armor_multi": { "total": 0.0, "workshop": 0.0, "relics": [], "module_substats": [] },
+      "rend_armor_max": { "total": 0.0, "workshop": 0.0, "relics": [], "module_substats": [] }
+    },
+    "defense": {
+      "health": { "total": 50000, "workshop": 48000, "relics": [], "module_substats": [] },
+      "health_regen": { "total": 850.0, "workshop": 800.0, "relics": [], "module_substats": [] },
+      "defense_pct": { "total": 92.0, "workshop": 88.0, "relics": [], "module_substats": [], "cap": 98.0 },
+      "defense_absolute": { "total": 1200.0, "workshop": 1100.0, "relics": [], "module_substats": [] },
+      "thorn_damage": { "total": 5.0, "workshop": 4.0, "relics": [], "module_substats": [] },
+      "lifesteal": { "total": 0.8, "workshop": 0.5, "relics": [], "module_substats": [] },
+      "knockback_chance": { "total": 15.0, "workshop": 12.0, "relics": [], "module_substats": [] },
+      "knockback_force": { "total": 1.2, "workshop": 1.0, "relics": [], "module_substats": [] },
+      "orbs": { "total": 4, "workshop": 4, "relics": [], "module_substats": [] },
+      "orb_speed": { "total": 6.0, "workshop": 5.0, "relics": [], "module_substats": [] },
+      "shockwave_size": { "total": 3.2, "workshop": 3.0, "relics": [], "module_substats": [] },
+      "shockwave_frequency": { "total": 4.5, "workshop": 4.0, "relics": [], "module_substats": [] },
+      "land_mine_damage": { "total": 500.0, "workshop": 480.0, "relics": [], "module_substats": [] },
+      "land_mine_chance": { "total": 8.0, "workshop": 7.0, "relics": [], "module_substats": [] },
+      "land_mine_radius": { "total": 1.2, "workshop": 1.0, "relics": [], "module_substats": [] },
+      "death_defy": { "total": 18.5, "workshop": 15.0, "relics": [], "module_substats": [], "cap": 40.0 },
+      "wall_health": { "total": 12000, "workshop": 11000, "relics": [], "module_substats": [] },
+      "wall_rebuild": { "total": 95.0, "workshop": 90.0, "relics": [], "module_substats": [], "cap": 150.0 }
+    },
+    "utility": {
+      "cash_bonus": { "total": 8.5, "workshop": 8.0, "relics": [], "module_substats": [] },
+      "cash_per_wave": { "total": 250.0, "workshop": 240.0, "relics": [], "module_substats": [] },
+      "coins_per_kill": { "total": 3.2, "workshop": 3.0, "relics": [], "module_substats": [] },
+      "coins_per_wave": { "total": 180.0, "workshop": 170.0, "relics": [], "module_substats": [] },
+      "free_attack_upgrade": { "total": 22.0, "workshop": 20.0, "relics": [], "module_substats": [] },
+      "free_defense_upgrade": { "total": 18.0, "workshop": 16.0, "relics": [], "module_substats": [] },
+      "free_utility_upgrade": { "total": 20.0, "workshop": 18.0, "relics": [], "module_substats": [] },
+      "interest_per_wave": { "total": 6.0, "workshop": 5.0, "relics": [], "module_substats": [] },
+      "recovery_amount": { "total": 8.0, "workshop": 7.0, "relics": [], "module_substats": [] },
+      "max_recovery": { "total": 1.2, "workshop": 1.0, "relics": [], "module_substats": [] },
+      "package_chance": { "total": 12.0, "workshop": 10.0, "relics": [], "module_substats": [] },
+      "enemy_attack_level_skip": { "total": 8.0, "workshop": 6.0, "relics": [], "module_substats": [] },
+      "enemy_health_level_skip": { "total": 8.0, "workshop": 6.0, "relics": [], "module_substats": [] }
+    }
+  },
+  "modules": {
+    "equipped": {
+      "cannon": {
+        "name": "Amplifying Strike",
+        "abbrev": "AS",
+        "rarity": "Mythic",
+        "level": 72,
+        "unique_effect_value": 18,
+        "substats": [
+          { "stat": "Crit Chance", "rarity": "common", "value": 2.0, "locked": false },
+          { "stat": "Super Crit Chance", "rarity": "epic", "value": 3.0, "locked": true },
+          { "stat": "Crit Factor", "rarity": "rare", "value": 4.0, "locked": false }
+        ]
+      },
+      "armor": {
+        "name": "Orbital Augment",
+        "abbrev": "OA",
+        "rarity": "Epic",
+        "level": 45,
+        "unique_effect_value": 2,
+        "substats": [
+          { "stat": "Orb Speed", "rarity": "epic", "value": 1.0, "locked": true },
+          { "stat": "Shockwave Size", "rarity": "rare", "value": 0.1, "locked": false }
+        ]
+      },
+      "generator": {
+        "name": "Black Hole Digestor",
+        "abbrev": "BHD",
+        "rarity": "Legendary",
+        "level": 58,
+        "unique_effect_value": 5,
+        "substats": [
+          { "stat": "Coins / Kill Bonus", "rarity": "rare", "value": 0.2, "locked": true },
+          { "stat": "Coins / Wave", "rarity": "epic", "value": 60.0, "locked": false }
+        ]
+      },
+      "core": {
+        "name": "Dimension Core",
+        "abbrev": "DC",
+        "rarity": "Legendary",
+        "level": 61,
+        "unique_effect_value": 10,
+        "substats": [
+          { "stat": "Chain Lightning - Damage", "rarity": "legendary", "value": 50.0, "locked": true },
+          { "stat": "Chain Lightning - Quantity", "rarity": "epic", "value": 1.0, "locked": true },
+          { "stat": "Chain Lightning - Chance", "rarity": "rare", "value": 4.0, "locked": false }
+        ]
+      },
+      "assist": {
+        "name": "Death Penalty",
+        "abbrev": "DP",
+        "rarity": "Epic",
+        "level": 1,
+        "unique_effect_value": 5,
+        "substats": []
+      }
+    },
+    "natural_epics": {
+      "cannon": [
+        { "name": "Amplifying Strike", "abbrev": "AS", "rarity": "Mythic", "stars": 0 },
+        { "name": "Death Penalty", "abbrev": "DP", "rarity": "Epic", "stars": 0 }
+      ],
+      "armor": [
+        { "name": "Orbital Augment", "abbrev": "OA", "rarity": "Epic", "stars": 0 }
+      ],
+      "generator": [
+        { "name": "Black Hole Digestor", "abbrev": "BHD", "rarity": "Legendary", "stars": 0 }
+      ],
+      "core": [
+        { "name": "Dimension Core", "abbrev": "DC", "rarity": "Legendary", "stars": 0 },
+        { "name": "Primordial Collapse", "abbrev": "PC", "rarity": "Epic", "stars": 0 }
+      ]
+    },
+    "effect_bans": {
+      "cannon": ["Crit Chance"],
+      "armor": [],
+      "generator": [],
+      "core": []
+    }
+  },
+  "labs": {
+    "module_shard_cost_level": 8,
+    "module_coin_cost_level": 7,
+    "rare_drop_chance_level": 3,
+    "reroll_shards_level": 42,
+    "daily_mission_shards_level": 15,
+    "common_drop_chance_level": 6,
+    "shatter_shards_level": 0,
+    "effect_ban_levels": {
+      "cannon": 1,
+      "armor": 0,
+      "generator": 0,
+      "core": 2
+    }
+  },
+  "health_plus_level": 53,
+  "wall_health_plus_level": 53,
+  "cf_stones_remaining": 4271
+}

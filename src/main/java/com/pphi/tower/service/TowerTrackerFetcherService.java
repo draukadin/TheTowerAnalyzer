@@ -11,6 +11,7 @@ import com.pphi.tower.model.sheets.modules.Module;
 import com.pphi.tower.model.sheets.modules.Preset;
 import com.pphi.tower.repository.GoogleSheetsRepository;
 import com.pphi.tower.repository.ModulePresetRepository;
+import com.pphi.tower.repository.ModuleRepository;
 import com.pphi.tower.repository.UwRepository;
 import com.pphi.tower.util.CurrenciesLayout;
 import com.pphi.tower.util.ModuleUtils;
@@ -30,14 +31,17 @@ public class TowerTrackerFetcherService {
     private final GoogleSheetsRepository googleSheetsRepository;
     private final ModulePresetRepository modulePresetRepository;
     private final UwRepository uwRepository;
+    private final ModuleRepository moduleRepository;
 
     public TowerTrackerFetcherService(
             GoogleSheetsRepository googleSheetsRepository,
             ModulePresetRepository modulePresetRepository,
-            UwRepository uwRepository) {
+            UwRepository uwRepository,
+            ModuleRepository moduleRepository) {
         this.googleSheetsRepository = googleSheetsRepository;
         this.modulePresetRepository = modulePresetRepository;
         this.uwRepository = uwRepository;
+        this.moduleRepository = moduleRepository;
     }
 
     // -------------------------------------------------------------------------
@@ -116,8 +120,12 @@ public class TowerTrackerFetcherService {
         return uwRepository.getAllUwState();
     }
 
+    public List<ModuleRepository.ModulePlayerData> fetchModules() {
+        return moduleRepository.getAll();
+    }
+
     // -------------------------------------------------------------------------
-    // Modules
+    // Modules (Google Sheets legacy)
     // -------------------------------------------------------------------------
 
     public Map<String, EquippedModule> fetchModulePreset(Preset preset) {

@@ -1,0 +1,12 @@
+The Tower Era Versioning System
+    Major Version Bumps (X.0.0): Systemic Meta-Shifts.
+        When to use: When a change fundamentally alters the mathematical baseline of your entire tower (usually driving a massive, permanent jump in CPH or wave longevity).
+        Examples: Locking down that 3-level Summon Cooldown fix for a flat 90-second sync with Golden Bot; unlocking a massive new mechanic like ELS+; or executing a complete module overhaul once your Cannon and Core modules hit level 161.
+
+    Minor Version Bumps (4.X.0): Key Progression Milestones & Lab Finishes.
+        When to use: Significant, permanent structural updates that give you an immediate tactical edge but don't completely rewrite your baseline economy.
+        Examples: unlocking Death Wave Armor Stripping for tournaments; upgrading an enhancement level that costs tens of trillions (like Coin Bonus+ hitting 22).
+
+    Patch Bumps (4.0.X): Continuous Iterative Growth.
+        When to use: Small, incremental upgrades that happen continuously throughout the week but are still worth noting if you want to trace minor performance variances between consecutive runs.
+        Examples: Putting a few bits into minor utility stats; minor level-ups on your Modules before the big level 161 push; or bumping cheaper workshop enhancements like Rend Armor Mult+.

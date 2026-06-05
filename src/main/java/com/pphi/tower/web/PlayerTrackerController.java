@@ -5,6 +5,7 @@ import com.pphi.tower.service.TowerTrackerFetcherService;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/player-tracker")
@@ -20,5 +21,18 @@ public class PlayerTrackerController {
     @GetMapping("/currencies")
     public Currencies getCurrencies() throws IOException {
         return service.fetchCurrencies();
+    }
+
+    @GetMapping("/state")
+    public Map<String, Object> getTowerState() {
+        return Map.of(
+            "ultimateWeapons", service.fetchUltimateWeapons(),
+            "modules", service.fetchModules()
+        );
+    }
+
+    @GetMapping("/labs")
+    public Map<String, String> getLabPlan() throws IOException {
+        return Map.of("labPlanning", service.fetchLabPlanning());
     }
 }

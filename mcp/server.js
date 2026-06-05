@@ -4,14 +4,8 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 
 const BASE_URL = 'http://localhost:8080';
 
-// Module levels — update when modules level up
-const MODULE_LEVELS = {
-  cannonLevel: 151,
-  armorLevel: 149,
-  generatorLevel: 150,
-  coreLevel: 150,
-  shardCostDiscountLevel: 30,
-};
+// Module shard-cost discount level — update when the discount lab levels up
+const SHARD_COST_DISCOUNT_LEVEL = 30;
 
 const server = new Server(
   { name: 'tower-analyzer', version: '1.0.0' },
@@ -73,7 +67,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'get_tower_state',
-      description: 'Get current tower version, UW stats, workshop enhancements and planning context',
+      description: 'Get current tower version, UW stats, module inventory, workshop enhancements and planning context',
       inputSchema: { type: 'object', properties: {} },
     },
     {
@@ -96,11 +90,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const dataSource = args.dataSource ?? 'BATTLE_REPORTS';
         const targetLevel = args.targetLevel ?? 161;
         const days = args.windowDays ?? 30;
+        const stateData = await fetchApi('/api/player-tracker/state');
+        const modules = stateData.modules ?? [];
+        const moduleLevels = {
+          cannonLevel:    modules.find(m => m.type === 'Cannon'    && m.owned)?.level ?? 0,
+          armorLevel:     modules.find(m => m.type === 'Armor'     && m.owned)?.level ?? 0,
+          generatorLevel: modules.find(m => m.type === 'Generator' && m.owned)?.level ?? 0,
+          coreLevel:      modules.find(m => m.type === 'Core'      && m.owned)?.level ?? 0,
+          shardCostDiscountLevel: SHARD_COST_DISCOUNT_LEVEL,
+        };
         const params = new URLSearchParams({
           dataSource,
           targetLevel,
           days,
-          ...MODULE_LEVELS,
+          ...moduleLevels,
         });
         return distillShardRates(await fetchApi(`/api/analysis/shards?${params}`), dataSource);
       }
@@ -222,53 +225,79 @@ function distillRecentRuns(runs) {
 }
 
 function distillTowerState(d, labData) {
-  const version = parseVersion(d.versionHistory);
-  const labSlots = parseLabSlots(labData.labPlanning);
-
-  const cf = findUw(d.ultimateWeapons, 'Chrono Field');
-  const bh = findUw(d.ultimateWeapons, 'Black Hole');
-  const gt = findUw(d.ultimateWeapons, 'Golden Tower');
+  const version = d.versionHistory ? parseVersion(d.versionHistory) : null;
+  const labSlots = labData?.labPlanning ? parseLabSlots(labData.labPlanning) : [];
 
   const cfLabDuration = labSlots.find(s => s.slot === 1)?.fromLevel ?? null;
 
-  const healthPlus     = extractEnhancement(d.workshop, 'Health +');
-  const wallHealthPlus = extractEnhancement(d.workshop, 'Wall Health +');
+  const healthPlus     = d.workshop ? extractEnhancement(d.workshop, 'Health +') : null;
+  const wallHealthPlus = d.workshop ? extractEnhancement(d.workshop, 'Wall Health +') : null;
+
+  const ultimateWeapons = Object.fromEntries(
+    (d.ultimateWeapons ?? []).map(uw => {
+      if (!uw.unlocked) return [uw.name, { unlocked: false }];
+
+      const stats = Object.fromEntries(uw.stats.map(s => {
+        const entry = {
+          level:           s.currentLevel,
+          max_level:       s.maxLevel,
+          value:           s.currentValue,
+          stones_invested: s.stonesInvested,
+          stones_to_next:  s.stonesToNext ?? null,
+          stones_to_max:   s.stonesToMax,
+        };
+        if (s.targetLevel > 0) entry.target_level = s.targetLevel;
+        if (s.stonesToTarget > 0) entry.stones_to_target = s.stonesToTarget;
+        return [s.label, entry];
+      }));
+
+      const uwEntry = {
+        unlocked:         true,
+        uw_plus_unlocked: uw.uwPlusUnlocked,
+        stones_to_max:    uw.stats.reduce((sum, s) => sum + (s.stonesToMax ?? 0), 0),
+        stats,
+      };
+
+      // Attach CF-specific lab duration
+      if (uw.name === 'Chrono Field') uwEntry.lab_duration = cfLabDuration;
+
+      return [uw.name, uwEntry];
+    })
+  );
+
+  const modules = distillModules(d.modules ?? []);
 
   return result({
     version,
-    cf: cf ? {
-      duration:     uwStat(cf, 'Duration'),
-      cooldown:     uwStat(cf, 'Cooldown'),
-      lab_duration: cfLabDuration,
-    } : null,
-    bh: bh ? {
-      duration: uwStat(bh, 'Duration'),
-      cooldown: uwStat(bh, 'Cooldown'),
-    } : null,
-    gt: gt ? {
-      duration: uwStat(gt, 'Duration'),
-      cooldown: uwStat(gt, 'Cooldown'),
-    } : null,
+    ultimate_weapons: ultimateWeapons,
+    modules,
     health_plus_level:      healthPlus,
     wall_health_plus_level: wallHealthPlus,
-    cf_stones_remaining:    cf ? uwStonesPending(cf, 'Duration') + uwStonesPending(cf, 'Cooldown') : null,
   });
 }
 
-/** Find an unlocked UW by name from the DB-backed JSON array. */
-function findUw(uwArray, name) {
-  const uw = uwArray.find(w => w.name === name);
-  return (uw && uw.unlocked) ? uw : null;
-}
-
-/** Get the current value of a named stat from a UW object. */
-function uwStat(uw, label) {
-  return uw.stats.find(s => s.label === label)?.currentValue ?? null;
-}
-
-/** Get total stones remaining to max a named stat. */
-function uwStonesPending(uw, label) {
-  return uw.stats.find(s => s.label === label)?.stonesToMax ?? 0;
+function distillModules(moduleList) {
+  const byType = {};
+  for (const m of moduleList) {
+    if (!byType[m.type]) byType[m.type] = [];
+    const entry = {
+      id:              m.id,
+      code:            m.code,
+      name:            m.name,
+      owned:           m.owned,
+      rarity:          m.rarity,
+      stars:           m.stars,
+      level:           m.level,
+      equipped_slot:   m.equippedSlot ?? null,
+      ability_values:  m.abilityValues,
+      substats:        m.substats.map(s => ({ slot: s.slot, key: s.key, rarity: s.rarity, locked: s.locked })),
+      copies:          m.copies,
+      shattered_epics: m.shatteredEpics,
+      presets:         m.presets.map(p => ({ preset: p.preset, slot: p.slot })),
+    };
+    byType[m.type].push(entry);
+  }
+  return byType;
 }
 
 function distillLabPlan(d) {

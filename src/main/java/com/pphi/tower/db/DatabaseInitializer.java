@@ -191,5 +191,76 @@ public class DatabaseInitializer {
                     target_level INTEGER NOT NULL DEFAULT 0
                 )
                 """);
+
+        // ── Modules ───────────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_def (
+                    id              INTEGER PRIMARY KEY,
+                    code            TEXT    NOT NULL UNIQUE,
+                    name            TEXT    NOT NULL,
+                    type            TEXT    NOT NULL,
+                    effect_template TEXT    NOT NULL,
+                    sort_order      INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_ability_value (
+                    module_def_id INTEGER NOT NULL REFERENCES module_def(id),
+                    rarity        TEXT    NOT NULL,
+                    value         TEXT    NOT NULL,
+                    PRIMARY KEY (module_def_id, rarity)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_player_state (
+                    module_def_id INTEGER NOT NULL REFERENCES module_def(id) PRIMARY KEY,
+                    owned         INTEGER NOT NULL DEFAULT 0,
+                    rarity        TEXT    NOT NULL DEFAULT 'Epic',
+                    stars         INTEGER NOT NULL DEFAULT 0,
+                    level         INTEGER NOT NULL DEFAULT 0,
+                    equipped_slot TEXT
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_player_substat (
+                    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                    module_def_id INTEGER NOT NULL REFERENCES module_def(id),
+                    slot_index    INTEGER NOT NULL,
+                    substat_key   TEXT    NOT NULL,
+                    substat_rarity TEXT   NOT NULL DEFAULT 'Common',
+                    locked        INTEGER NOT NULL DEFAULT 0,
+                    UNIQUE (module_def_id, slot_index)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_player_copy (
+                    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                    module_def_id INTEGER NOT NULL REFERENCES module_def(id),
+                    copy_index    INTEGER NOT NULL,
+                    copy_rarity   TEXT    NOT NULL,
+                    UNIQUE (module_def_id, copy_index)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_player_meta (
+                    module_def_id   INTEGER NOT NULL REFERENCES module_def(id) PRIMARY KEY,
+                    shattered_epics INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_preset_assignment (
+                    preset        TEXT    NOT NULL,
+                    slot          TEXT    NOT NULL,
+                    module_def_id INTEGER NOT NULL REFERENCES module_def(id),
+                    PRIMARY KEY (preset, slot, module_def_id)
+                )
+                """);
     }
 }

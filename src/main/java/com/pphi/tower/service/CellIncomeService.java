@@ -176,7 +176,7 @@ public class CellIncomeService {
     private List<ReportSummaryDto> getRunsInWindow(int days) {
         LocalDate to   = LocalDate.now();
         LocalDate from = to.minusDays(days);
-        return repository.findByDateWindow(from, to);
+        return repository.findFarmingAndEventByDateWindow(from, to);
     }
 
     private List<SpeedOptionDto> buildSpeedOptions(double avgCph) {

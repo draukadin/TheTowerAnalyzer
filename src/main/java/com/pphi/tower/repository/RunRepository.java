@@ -88,6 +88,19 @@ public class RunRepository {
                 from.toString(), to.toString());
     }
 
+    public List<ReportSummaryDto> findFarmingAndEventByDateWindow(LocalDate from, LocalDate to) {
+        return jdbc.query(
+                """
+                SELECT * FROM runs
+                WHERE battle_date >= ? AND battle_date <= ?
+                  AND LOWER(run_type) IN ('farming', 'event')
+                  AND wave >= 200
+                ORDER BY battle_date ASC
+                """,
+                SUMMARY_MAPPER,
+                from.toString(), to.toString());
+    }
+
     public record ShardRunRow(
             String id, String battleDate, int tier, int wave,
             TowerEra towerEra, long realTimeSeconds, String payload) {}
@@ -97,7 +110,8 @@ public class RunRepository {
                 SELECT id, battle_date, tier, wave, tower_era, real_time_seconds, payload
                 FROM runs
                 WHERE battle_date >= ? AND battle_date <= ?
-                  AND LOWER(run_type) NOT IN ('tournament','dissonance','event')
+                  AND LOWER(run_type) IN ('farming', 'event')
+                  AND wave >= 200
                 ORDER BY battle_date ASC
                 """,
                 (rs, rn) -> new ShardRunRow(
