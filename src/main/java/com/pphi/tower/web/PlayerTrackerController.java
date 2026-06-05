@@ -1,11 +1,16 @@
 package com.pphi.tower.web;
 
 import com.pphi.tower.model.sheets.Currencies;
+import com.pphi.tower.repository.CurrencySnapshotRepository;
 import com.pphi.tower.repository.LabRepository.LabMultipliers;
 import com.pphi.tower.service.TowerTrackerFetcherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,15 +19,33 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class PlayerTrackerController {
 
-    private final TowerTrackerFetcherService service;
+    private static final Logger log = LoggerFactory.getLogger(PlayerTrackerController.class);
 
-    public PlayerTrackerController(TowerTrackerFetcherService service) {
+    private final TowerTrackerFetcherService service;
+    private final CurrencySnapshotRepository snapshotRepository;
+
+    public PlayerTrackerController(TowerTrackerFetcherService service,
+                                   CurrencySnapshotRepository snapshotRepository) {
         this.service = service;
+        this.snapshotRepository = snapshotRepository;
     }
 
     @GetMapping("/currencies")
     public Currencies getCurrencies() throws IOException {
-        return service.fetchCurrencies();
+        return snapshotRepository.findLatest().orElseGet(() -> {
+            try {
+                return service.fetchCurrencies();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @PostMapping("/currencies")
+    public ResponseEntity<Void> saveCurrencies(@RequestBody Currencies currencies) {
+        snapshotRepository.saveCurrencySnapshot(LocalDateTime.now(), currencies);
+        log.info("Manual currency snapshot saved");
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/state")

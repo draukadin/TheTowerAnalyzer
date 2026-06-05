@@ -447,6 +447,7 @@
     <button class="nav-btn" onclick="showView('relics')">Relics</button>
     <button class="nav-btn" onclick="showView('labs')">Labs</button>
     <button class="nav-btn" onclick="showView('cosmetics')">Cosmetics</button>
+    <button class="nav-btn" onclick="showView('currencies')">Currencies</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -588,7 +589,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -598,6 +599,7 @@ function showView(view){
   else if(view==='relics')renderRelicsView();
   else if(view==='labs')renderLabsView();
   else if(view==='cosmetics')renderCosmeticsView();
+  else if(view==='currencies')renderCurrenciesView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -2981,6 +2983,106 @@ async function saveNewCosmetic() {
     closeAddCosmeticModal();
     buildCosmeticsPage();
   } catch(e) { alert('Failed to save: ' + e.message); }
+}
+
+// ── Currencies view ───────────────────────────────────────────────────────────
+
+const CURRENCY_FIELDS = [
+  { key: 'coins',              label: 'Coins',               type: 'tower' },
+  { key: 'gems',               label: 'Gems',                type: 'int'   },
+  { key: 'stones',             label: 'Stones',              type: 'int'   },
+  { key: 'medals',             label: 'Medals',              type: 'int'   },
+  { key: 'eliteCells',         label: 'Elite Cells',         type: 'tower' },
+  { key: 'keys',               label: 'Keys',                type: 'int'   },
+  { key: 'tokens',             label: 'Tokens',              type: 'int'   },
+  { key: 'bits',               label: 'Bits',                type: 'int'   },
+  { key: 'tournamentTickets',  label: 'Tournament Tickets',  type: 'int'   },
+  { key: 'moduleTickets',      label: 'Module Tickets',      type: 'int'   },
+  { key: 'cannonShards',       label: 'Cannon Shards',       type: 'int'   },
+  { key: 'armorShards',        label: 'Armor Shards',        type: 'int'   },
+  { key: 'generatorShards',    label: 'Generator Shards',    type: 'int'   },
+  { key: 'coreShards',         label: 'Core Shards',         type: 'int'   },
+  { key: 'reRollShards',       label: 'Reroll Shards',       type: 'int'   },
+];
+
+function towerNumberToDisplay(tn) {
+  if (!tn) return '';
+  // Serializer produces { display, raw, suffix }
+  return tn.display ?? (tn.raw ?? '');
+}
+
+async function renderCurrenciesView() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = `<div class="report-title" style="margin-bottom:1rem">Currencies</div>
+    <div id="currLoadMsg" style="color:var(--muted);font-size:13px;margin-bottom:1rem">Loading…</div>
+    <div id="currForm" style="display:none">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:1.25rem">
+        ${CURRENCY_FIELDS.map(f => `
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${f.label}</label>
+            <input id="curr_${f.key}" type="text"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+                     color:var(--text);padding:6px 10px;font-size:13px;font-family:var(--mono)">
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn" onclick="saveCurrencies()">Save Snapshot</button>
+        <span id="currSaveStatus" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:0.75rem">
+        Saving creates a timestamped snapshot used by the Shard Rate velocity tracker.
+        Enter scaled values exactly as shown in-game (e.g. <em>21.33T</em>, <em>416.93K</em>).
+      </p>
+    </div>`;
+
+  try {
+    const data = await fetch(`${API}/player-tracker/currencies`).then(r => r.json());
+    document.getElementById('currLoadMsg').style.display = 'none';
+    document.getElementById('currForm').style.display = 'block';
+    for (const f of CURRENCY_FIELDS) {
+      const el = document.getElementById('curr_' + f.key);
+      if (!el) continue;
+      const v = data[f.key];
+      if (f.type === 'tower') el.value = towerNumberToDisplay(v);
+      else el.value = v ?? 0;
+    }
+  } catch(e) {
+    document.getElementById('currLoadMsg').textContent = 'Failed to load: ' + e.message;
+  }
+}
+
+async function saveCurrencies() {
+  const status = document.getElementById('currSaveStatus');
+  status.textContent = 'Saving…';
+  try {
+    const body = {};
+    for (const f of CURRENCY_FIELDS) {
+      const str = document.getElementById('curr_' + f.key)?.value ?? '';
+      if (f.type === 'tower') {
+        // Parse "21.33T" or "416.93K" → { raw: <flat>, suffix: "T" }
+        const m = str.trim().match(/^([\d.]+)\s*([A-Za-z]*)$/);
+        const coeff = m ? parseFloat(m[1]) : 0;
+        const suf = m?.[2] || '';
+        const scales = {K:1e3,M:1e6,B:1e9,T:1e12,Qa:1e15,Qi:1e18,Sx:1e21,Sp:1e24,Oc:1e27,No:1e30,Dc:1e33};
+        const rawVal = coeff * (scales[suf] ?? 1);
+        body[f.key] = { raw: rawVal, suffix: suf };
+      } else {
+        body[f.key] = parseInt(str.replace(/,/g, ''), 10) || 0;
+      }
+    }
+    const res = await fetch(`${API}/player-tracker/currencies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    status.style.color = 'var(--green)';
+    status.textContent = 'Saved ✓';
+    setTimeout(() => { status.textContent = ''; status.style.color = 'var(--muted)'; }, 3000);
+  } catch(e) {
+    status.style.color = 'var(--red)';
+    status.textContent = 'Save failed: ' + e.message;
+  }
 }
 
 init();

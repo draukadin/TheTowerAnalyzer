@@ -84,6 +84,18 @@ public class DatabaseInitializer {
                 ON currency_snapshots (snapshot_time)
                 """);
 
+        // Migrations: add currency columns introduced after initial table creation.
+        for (String col : new String[]{
+                "ADD COLUMN coins              REAL    DEFAULT 0",
+                "ADD COLUMN keys               INTEGER DEFAULT 0",
+                "ADD COLUMN tournament_tickets INTEGER DEFAULT 0",
+                "ADD COLUMN module_tickets     INTEGER DEFAULT 0"
+        }) {
+            try {
+                jdbc.execute("ALTER TABLE currency_snapshots " + col);
+            } catch (Exception ignored) {}
+        }
+
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS module_level_snapshots (
                     id            INTEGER PRIMARY KEY AUTOINCREMENT,
