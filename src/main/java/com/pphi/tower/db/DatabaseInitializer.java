@@ -289,5 +289,53 @@ public class DatabaseInitializer {
                     owned    INTEGER NOT NULL DEFAULT 0
                 )
                 """);
+
+        // ── Labs ──────────────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS lab (
+                    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name      TEXT    NOT NULL UNIQUE,
+                    category  TEXT    NOT NULL,
+                    max_level INTEGER NOT NULL
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS lab_player_state (
+                    lab_id        INTEGER NOT NULL REFERENCES lab(id) PRIMARY KEY,
+                    current_level INTEGER NOT NULL DEFAULT 0,
+                    target_level  INTEGER
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS lab_level_cost (
+                    lab_id           INTEGER NOT NULL REFERENCES lab(id),
+                    level            INTEGER NOT NULL,
+                    duration_seconds INTEGER,
+                    coin_cost        REAL,
+                    PRIMARY KEY (lab_id, level)
+                )
+                """);
+
+        // Migrate coin_cost INTEGER → REAL for values that overflow Long (e.g. Dissonant Echo)
+        try {
+            boolean isInteger = jdbc.queryForList("PRAGMA table_info(lab_level_cost)").stream()
+                    .filter(c -> "coin_cost".equals(c.get("name")))
+                    .anyMatch(c -> "INTEGER".equals(c.get("type")));
+            if (isInteger) {
+                jdbc.execute("DROP TABLE lab_level_cost");
+                jdbc.execute("""
+                        CREATE TABLE lab_level_cost (
+                            lab_id           INTEGER NOT NULL REFERENCES lab(id),
+                            level            INTEGER NOT NULL,
+                            duration_seconds INTEGER,
+                            coin_cost        REAL,
+                            PRIMARY KEY (lab_id, level)
+                        )
+                        """);
+            }
+        } catch (Exception ignored) {}
     }
 }

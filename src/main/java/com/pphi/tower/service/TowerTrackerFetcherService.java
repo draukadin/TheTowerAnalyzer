@@ -10,6 +10,9 @@ import com.pphi.tower.model.sheets.modules.EquippedModule;
 import com.pphi.tower.model.sheets.modules.Module;
 import com.pphi.tower.model.sheets.modules.Preset;
 import com.pphi.tower.repository.GoogleSheetsRepository;
+import com.pphi.tower.repository.LabRepository;
+import com.pphi.tower.repository.LabRepository.LabData;
+import com.pphi.tower.repository.LabRepository.LabMultipliers;
 import com.pphi.tower.repository.ModulePresetRepository;
 import com.pphi.tower.repository.ModuleRepository;
 import com.pphi.tower.repository.RelicRepository;
@@ -34,18 +37,21 @@ public class TowerTrackerFetcherService {
     private final UwRepository uwRepository;
     private final ModuleRepository moduleRepository;
     private final RelicRepository relicRepository;
+    private final LabRepository labRepository;
 
     public TowerTrackerFetcherService(
             GoogleSheetsRepository googleSheetsRepository,
             ModulePresetRepository modulePresetRepository,
             UwRepository uwRepository,
             ModuleRepository moduleRepository,
-            RelicRepository relicRepository) {
+            RelicRepository relicRepository,
+            LabRepository labRepository) {
         this.googleSheetsRepository = googleSheetsRepository;
         this.modulePresetRepository = modulePresetRepository;
         this.uwRepository = uwRepository;
         this.moduleRepository = moduleRepository;
         this.relicRepository = relicRepository;
+        this.labRepository = labRepository;
     }
 
     // -------------------------------------------------------------------------
@@ -77,20 +83,16 @@ public class TowerTrackerFetcherService {
     // Labs
     // -------------------------------------------------------------------------
 
-    public String fetchLabs() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        appendSection(sb, "Main Labs",             TowerTrackerRanges.MAIN_LABS);
-        appendSection(sb, "Attack Labs",           TowerTrackerRanges.ATTACK_LABS);
-        appendSection(sb, "Defense Labs",          TowerTrackerRanges.DEFENSE_LABS);
-        appendSection(sb, "Utility Labs",          TowerTrackerRanges.UTILITY_LABS);
-        appendSection(sb, "Ultimate Weapon Labs",  TowerTrackerRanges.ULTIMATE_WEAPON_LABS);
-        appendSection(sb, "Card Labs",             TowerTrackerRanges.CARD_LABS);
-        appendSection(sb, "Perk Labs",             TowerTrackerRanges.PERK_LABS);
-        appendSection(sb, "Bot Labs",              TowerTrackerRanges.BOT_LABS);
-        appendSection(sb, "Enemy Labs",            TowerTrackerRanges.ENEMY_LABS);
-        appendSection(sb, "Module Labs",           TowerTrackerRanges.MODULE_LABS);
-        appendSection(sb, "Battle Condition Labs", TowerTrackerRanges.BATTLE_CONDITION_LABS);
-        return sb.toString();
+    public String fetchLabs() {
+        return labRepository.toMarkdownContext();
+    }
+
+    public List<LabData> fetchLabState() {
+        return labRepository.getAll();
+    }
+
+    public LabMultipliers fetchLabMultipliers() {
+        return labRepository.getMultipliers();
     }
 
     public String fetchLabTierList() throws IOException {

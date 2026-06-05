@@ -335,6 +335,46 @@
   .type-badge.Guild{background:rgba(79,142,247,.12);color:var(--accent);}
   .owned-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
   .owned-toggle input{accent-color:var(--green);cursor:pointer;}
+
+  /* ── Labs ────────────────────────────────────── */
+  .labs-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center;}
+  .labs-search{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border2);
+    border-radius:6px;color:var(--text);font-size:12px;padding:5px 10px;font-family:var(--font);}
+  .labs-search:focus{outline:none;border-color:var(--accent);}
+  .labs-filter-btn{padding:4px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .labs-filter-btn:hover,.labs-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.08);}
+  .labs-category{margin-bottom:1.8rem;}
+  .labs-category-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    margin-bottom:.5rem;padding:6px 0;border-bottom:1px solid var(--border);}
+  .labs-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);
+    border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);}
+  .labs-table th{background:var(--surface2);padding:7px 12px;text-align:left;
+    font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  .labs-table td{padding:6px 12px;border-top:1px solid var(--border);}
+  .labs-table tr:hover td{background:var(--surface2);}
+  .labs-table tr.lab-complete td{opacity:.5;}
+  .labs-level-input{width:64px;background:var(--surface2);border:1px solid var(--border2);
+    border-radius:4px;color:var(--text);font-size:12px;padding:3px 6px;font-family:var(--mono);text-align:center;}
+  .labs-level-input:focus{outline:none;border-color:var(--accent);}
+  .labs-progress{height:6px;border-radius:3px;background:var(--border);overflow:hidden;min-width:80px;}
+  .labs-progress-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s;}
+  .labs-progress-fill.complete{background:var(--green);}
+  .lab-cat-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--mono);}
+  .lab-cat-badge.Main{background:rgba(79,142,247,.12);color:var(--accent);}
+  .lab-cat-badge.Attack{background:rgba(242,107,107,.12);color:var(--red);}
+  .lab-cat-badge.Defense{background:rgba(61,214,140,.12);color:var(--green);}
+  .lab-cat-badge.Utility{background:rgba(245,200,66,.15);color:var(--gold);}
+  .lab-cat-badge.Cards{background:rgba(124,92,252,.15);color:var(--accent2);}
+  .lab-cat-badge.Perks{background:rgba(245,158,66,.15);color:var(--orange);}
+  .lab-cat-badge.Bots{background:rgba(79,142,247,.12);color:var(--accent);}
+  .lab-cat-badge.Enemies{background:rgba(242,107,107,.12);color:var(--red);}
+  .lab-cat-badge.Modules{background:rgba(61,214,140,.12);color:var(--green);}
+  .labs-summary-bar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:1.2rem;}
+  .labs-summary-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:10px 16px;min-width:130px;}
+  .labs-summary-stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+  .labs-summary-stat .val{font-size:1.1rem;font-weight:700;font-family:var(--mono);}
 </style>
 </head>
 <body>
@@ -351,6 +391,7 @@
     <button class="nav-btn" onclick="showView('uw')">UW Tracker</button>
     <button class="nav-btn" onclick="showView('modules')">Modules</button>
     <button class="nav-btn" onclick="showView('relics')">Relics</button>
+    <button class="nav-btn" onclick="showView('labs')">Labs</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -492,7 +533,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -500,6 +541,7 @@ function showView(view){
   else if(view==='uw')renderUwView();
   else if(view==='modules')renderModulesView();
   else if(view==='relics')renderRelicsView();
+  else if(view==='labs')renderLabsView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -1538,11 +1580,24 @@ function fmtRaw(n){
   return Number.isInteger(n)?n.toString():n.toFixed(2);
 }
 function fmtDuration(s){
-  if(!s)return '0s';
-  const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60),sec=s%60;
-  if(d>0)return`${d}d ${h}h ${m}m`;
-  if(h>0)return`${h}h ${m}m`;
-  return`${m}m ${sec}s`;
+  if(s==null) return '—';
+  s = Math.round(s);
+  const d=Math.floor(s/86400), h=Math.floor((s%86400)/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  if(d>0) return `${d}d ${h}h ${m}m`;
+  if(h>0) return `${h}h ${m}m`;
+  if(m>0) return `${m}m ${sec}s`;
+  return `${sec}s`;
+}
+function fmtCoins(n){
+  if(n==null) return '—';
+  if(n>=1e21) return (n/1e21).toFixed(2)+'Sx';
+  if(n>=1e18) return (n/1e18).toFixed(2)+'Qi';
+  if(n>=1e15) return (n/1e15).toFixed(2)+'Qa';
+  if(n>=1e12) return (n/1e12).toFixed(2)+'T';
+  if(n>=1e9)  return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6)  return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3)  return (n/1e3).toFixed(1)+'K';
+  return n.toLocaleString();
 }
 function fmtPct(v){return v!=null?(v*100).toFixed(1)+'%':'—';}
 function pct(v,total){return total?Math.round((v/total)*100):0;}
@@ -2208,6 +2263,226 @@ function openAddRelicModal(){
 }
 function closeAddRelicModal(){
   document.getElementById('addRelicModal').style.display='none';
+}
+
+// ── Labs ─────────────────────────────────────────────────────────────────────
+let labData = [];
+let labCategoryFilter = 'All';
+let labHideComplete = false;
+let labSearch = '';
+
+const LAB_CATEGORIES = ['Main','Attack','Defense','Utility','Ultimate Weapons','Cards','Perks','Bots','Enemies','Modules','Battle Condition'];
+
+async function renderLabsView(){
+  document.getElementById('mainContent').innerHTML=
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading labs…</div>';
+  try{
+    const res = await fetch(`${API}/labs`);
+    if(!res.ok) throw new Error(res.statusText);
+    labData = await res.json();
+    buildLabsPage();
+  }catch(e){
+    document.getElementById('mainContent').innerHTML=
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function buildLabsPage(){
+  const total = labData.length;
+  const complete = labData.filter(l => l.currentLevel >= l.maxLevel).length;
+  const atTarget = labData.filter(l => l.targetLevel != null && l.currentLevel >= l.targetLevel).length;
+  const withTarget = labData.filter(l => l.targetLevel != null).length;
+
+  const summaryHtml = `
+    <div class="labs-summary-bar">
+      <div class="labs-summary-stat"><div class="lbl">Total Labs</div><div class="val">${total}</div></div>
+      <div class="labs-summary-stat"><div class="lbl">Maxed Out</div><div class="val" style="color:var(--green)">${complete}</div></div>
+      <div class="labs-summary-stat"><div class="lbl">At Target</div><div class="val" style="color:var(--accent)">${atTarget} / ${withTarget}</div></div>
+    </div>`;
+
+  const filterBtns = ['All',...LAB_CATEGORIES].map(c=>
+    `<button class="labs-filter-btn${labCategoryFilter===c?' active':''}" onclick="labCategoryFilter='${c}';document.querySelectorAll('.labs-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');renderLabTables()">${c}</button>`
+  ).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="report-title" style="margin-bottom:1rem">Labs</div>
+    ${summaryHtml}
+    <div class="labs-controls">
+      <input class="labs-search" type="text" placeholder="Search labs…" value="${escHtml(labSearch)}"
+        oninput="labSearch=this.value;renderLabTables()">
+      ${filterBtns}
+      <button class="labs-filter-btn${labHideComplete?' active':''}" onclick="labHideComplete=!labHideComplete;this.classList.toggle('active');renderLabTables()">Hide Maxed</button>
+    </div>
+    <div id="labTablesWrap"></div>`;
+
+  renderLabTables();
+}
+
+function renderLabTables(){
+  let rows = labData.slice();
+  if(labCategoryFilter !== 'All') rows = rows.filter(l => l.category === labCategoryFilter);
+  if(labHideComplete) rows = rows.filter(l => l.currentLevel < l.maxLevel);
+  if(labSearch){
+    const q = labSearch.toLowerCase();
+    rows = rows.filter(l => l.name.toLowerCase().includes(q));
+  }
+
+  const byCategory = {};
+  for(const lab of rows){
+    if(!byCategory[lab.category]) byCategory[lab.category] = [];
+    byCategory[lab.category].push(lab);
+  }
+
+  let html = '';
+  for(const cat of LAB_CATEGORIES){
+    const labs = byCategory[cat];
+    if(!labs || !labs.length) continue;
+    html += `<div class="labs-category">
+      <div class="labs-category-title">${cat}</div>
+      <table class="labs-table">
+        <thead><tr>
+          <th style="width:40%">Lab</th>
+          <th>Level</th>
+          <th>Target</th>
+          <th>Max</th>
+          <th style="min-width:100px">Progress</th>
+        </tr></thead>
+        <tbody>${labs.map(lab => {
+          const isComplete = lab.currentLevel >= lab.maxLevel;
+          const targetVal = lab.targetLevel != null ? lab.targetLevel : lab.maxLevel;
+          const pct = Math.min(100, Math.round((lab.currentLevel / lab.maxLevel) * 100));
+          const fillClass = isComplete ? 'complete' : '';
+          return `<tr class="${isComplete?'lab-complete':''}">
+            <td style="font-weight:500;cursor:pointer;color:var(--accent)"
+              onclick="showLabCosts(${lab.id})"
+              title="Click to view cost breakdown">${escHtml(lab.name)}</td>
+            <td>
+              <input class="labs-level-input" type="number" min="0" max="${lab.maxLevel}"
+                value="${lab.currentLevel}"
+                onchange="labUpdateLevel(${lab.id},+this.value,${lab.targetLevel != null ? lab.targetLevel : 'null'})">
+            </td>
+            <td>
+              <input class="labs-level-input" type="number" min="0" max="${lab.maxLevel}"
+                value="${lab.targetLevel != null ? lab.targetLevel : ''}"
+                placeholder="—"
+                onchange="labUpdateTarget(${lab.id},${lab.currentLevel},this.value)">
+            </td>
+            <td style="font-family:var(--mono);color:var(--muted)">${lab.maxLevel}</td>
+            <td>
+              <div class="labs-progress" title="${pct}%">
+                <div class="labs-progress-fill ${fillClass}" style="width:${pct}%"></div>
+              </div>
+            </td>
+          </tr>
+          <tr id="lab-cost-${lab.id}" style="display:none">
+            <td colspan="5" style="padding:8px 16px 12px 24px;background:var(--surface2)">
+              <span style="color:var(--muted);font-size:12px">Loading…</span>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+
+  if(!html) html = '<div style="color:var(--muted);padding:2rem;text-align:center">No labs match the current filter.</div>';
+  document.getElementById('labTablesWrap').innerHTML = html;
+}
+
+async function labUpdateLevel(id, currentLevel, targetLevel){
+  const lab = labData.find(l => l.id === id);
+  if(!lab) return;
+  lab.currentLevel = currentLevel;
+  if(lab.name === 'Labs Speed' || lab.name === 'Labs Coin Discount') labMultipliers = null;
+  await fetch(`${API}/labs/${id}/state`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({currentLevel, targetLevel})});
+  renderLabTables();
+}
+
+async function labUpdateTarget(id, currentLevel, rawTarget){
+  const lab = labData.find(l => l.id === id);
+  if(!lab) return;
+  const targetLevel = rawTarget === '' ? null : +rawTarget;
+  lab.targetLevel = targetLevel;
+  await fetch(`${API}/labs/${id}/state`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({currentLevel, targetLevel})});
+  renderLabTables();
+}
+
+
+let labCostCache = {};
+
+async function showLabCosts(id){
+  const el = document.getElementById(`lab-cost-${id}`);
+  if(el.style.display !== 'none'){el.style.display='none';return;}
+  el.style.display='table-row';
+  const lab = labData.find(l => l.id === id);
+  if(labCostCache[id]){renderLabCostTable(id, lab, labCostCache[id]);return;}
+  el.querySelector('td').innerHTML = '<span style="color:var(--muted);font-size:12px">Loading…</span>';
+  const res = await fetch(`${API}/labs/${id}/costs`);
+  const costs = await res.json();
+  labCostCache[id] = costs;
+  renderLabCostTable(id, lab, costs);
+}
+
+let labMultipliers = null;
+async function getLabMultipliers(){
+  if(!labMultipliers){
+    const res = await fetch(`${API}/labs/multipliers`);
+    labMultipliers = await res.json();
+  }
+  return labMultipliers;
+}
+
+async function renderLabCostTable(id, lab, costs){
+  const {currentLevel, targetLevel, maxLevel} = lab;
+  const el = document.getElementById(`lab-cost-${id}`);
+  if(!costs.length){el.querySelector('td').innerHTML='<span style="color:var(--muted);font-size:12px">No cost data available.</span>';return;}
+
+  const {speedMult, costMult, labsSpeedLevel, coinDiscountLevel, relicLabSpeedBonus} = await getLabMultipliers();
+  const effective_target = targetLevel != null ? targetLevel : maxLevel;
+  const remaining = costs.filter(c => c.level > currentLevel && c.level <= effective_target);
+  const totalRemainingDur = remaining.reduce((a,c)=>(c.durationSeconds||0)+a, 0);
+  const totalRemainingCost = remaining.reduce((a,c)=>(c.coinCost||0)+a, 0);
+  const adjRemainingDur = totalRemainingDur / speedMult;
+  const adjRemainingCost = totalRemainingCost * costMult;
+  const allDur = costs.reduce((a,c)=>(c.durationSeconds||0)+a, 0);
+  const allCost = costs.reduce((a,c)=>(c.coinCost||0)+a, 0);
+
+  const relicNote = relicLabSpeedBonus > 0 ? ` + ${(relicLabSpeedBonus*100).toFixed(1)}% relics` : '';
+  const multiplierNote = `<span style="color:var(--muted);font-size:11px">Labs Speed L${labsSpeedLevel} (${speedMult.toFixed(2)}x total${relicNote}) &nbsp;·&nbsp; Coin Discount L${coinDiscountLevel} (${(coinDiscountLevel*0.3).toFixed(1)}% off)</span>`;
+
+  el.querySelector('td').innerHTML = `
+    <div style="padding:8px 0 2px;display:flex;gap:24px;font-size:12px;margin-bottom:4px;flex-wrap:wrap">
+      <span style="color:var(--muted)">To target (adjusted): <b style="color:var(--accent)">${fmtDuration(adjRemainingDur)}</b> &nbsp;/&nbsp; <b style="color:var(--gold)">${fmtCoins(adjRemainingCost)} coins</b></span>
+      <span style="color:var(--muted)">To target (raw): <b style="color:var(--muted)">${fmtDuration(totalRemainingDur)}</b> &nbsp;/&nbsp; <b style="color:var(--muted)">${fmtCoins(totalRemainingCost)} coins</b></span>
+      <span style="color:var(--muted)">Total all levels (raw): <b style="color:var(--muted)">${fmtDuration(allDur)}</b> &nbsp;/&nbsp; <b style="color:var(--muted)">${fmtCoins(allCost)} coins</b></span>
+    </div>
+    <div style="margin-bottom:8px">${multiplierNote}</div>
+    <table style="border-collapse:collapse;font-size:12px;font-family:var(--mono);width:auto">
+      <thead><tr>
+        <th style="padding:3px 10px 3px 0;color:var(--muted);font-size:10px;text-align:right">Lvl</th>
+        <th style="padding:3px 10px;color:var(--muted);font-size:10px">Duration (adj)</th>
+        <th style="padding:3px 10px;color:var(--muted);font-size:10px;text-align:right">Coins (adj)</th>
+        <th style="padding:3px 10px;color:var(--muted);font-size:10px">Duration (raw)</th>
+        <th style="padding:3px 10px;color:var(--muted);font-size:10px;text-align:right">Coins (raw)</th>
+      </tr></thead>
+      <tbody>${costs.map(c=>{
+        const done = c.level <= currentLevel;
+        const inRange = c.level > currentLevel && c.level <= effective_target;
+        const style = done ? 'opacity:.4' : inRange ? 'color:var(--text)' : 'color:var(--muted)';
+        const adjDur = c.durationSeconds != null ? c.durationSeconds / speedMult : null;
+        const adjCost = c.coinCost != null ? c.coinCost * costMult : null;
+        return `<tr style="${style}">
+          <td style="padding:2px 10px 2px 0;text-align:right">${c.level}</td>
+          <td style="padding:2px 10px">${fmtDuration(adjDur)}</td>
+          <td style="padding:2px 10px;text-align:right">${fmtCoins(adjCost)}</td>
+          <td style="padding:2px 10px;color:var(--muted)">${fmtDuration(c.durationSeconds)}</td>
+          <td style="padding:2px 10px;text-align:right;color:var(--muted)">${fmtCoins(c.coinCost)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
 }
 
 async function saveNewRelic(){

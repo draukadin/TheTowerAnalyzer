@@ -75,6 +75,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description: 'Get current lab slot status and upcoming transitions',
       inputSchema: { type: 'object', properties: {} },
     },
+    {
+      name: 'get_lab_state',
+      description: 'Get all lab levels, targets, and effective speed/cost multipliers (Labs Speed lab + owned relics)',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          hideMaxed: {
+            type: 'boolean',
+            description: 'Exclude labs already at max level (default: true)',
+          },
+          category: {
+            type: 'string',
+            description: 'Filter to a specific category (e.g. "Main", "Attack", "Defense")',
+          },
+        },
+      },
+    },
   ],
 }));
 
@@ -129,6 +146,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get_lab_plan':
         return distillLabPlan(await fetchApi('/api/player-tracker/labs'));
+
+      case 'get_lab_state': {
+        const hideMaxed = args.hideMaxed !== false;
+        const category = args.category ?? null;
+        return distillLabState(await fetchApi('/api/player-tracker/lab-state'), hideMaxed, category);
+      }
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -343,6 +366,28 @@ function distillLabPlan(d) {
   } : null;
 
   return result({ slots: leanSlots, next_transition });
+}
+
+function distillLabState(d, hideMaxed, category) {
+  const m = d.multipliers;
+  let labs = d.labs ?? [];
+
+  if (hideMaxed) labs = labs.filter(l => l.currentLevel < l.maxLevel);
+  if (category)  labs = labs.filter(l => l.category === category);
+
+  const byCategory = {};
+  for (const l of labs) {
+    if (!byCategory[l.category]) byCategory[l.category] = [];
+    const entry = { name: l.name, level: l.currentLevel, max: l.maxLevel };
+    if (l.targetLevel != null) entry.target = l.targetLevel;
+    byCategory[l.category].push(entry);
+  }
+
+  return result({
+    speed_multiplier: round(m.speedMult, 3),
+    coin_discount:    round(1 - m.costMult, 3),
+    labs: byCategory,
+  });
 }
 
 // -------------------------------------------------------------------------

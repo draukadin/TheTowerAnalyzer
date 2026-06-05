@@ -1,0 +1,106 @@
+package com.pphi.tower.repository;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public class LabRepository {
+
+    private final JdbcTemplate jdbc;
+
+    public LabRepository(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    public record LabData(long id, String name, String category, int maxLevel,
+                          int currentLevel, Integer targetLevel) {}
+
+    public record LabLevelCost(int level, Integer durationSeconds, Double coinCost) {}
+
+    public record LabMultipliers(double speedMult, double costMult,
+                                  int labsSpeedLevel, int coinDiscountLevel,
+                                  double relicLabSpeedBonus) {}
+
+    public List<LabData> getAll() {
+        return jdbc.query("""
+                SELECT l.id, l.name, l.category, l.max_level,
+                       COALESCE(ps.current_level, 0)  AS current_level,
+                       ps.target_level
+                FROM lab l
+                LEFT JOIN lab_player_state ps ON ps.lab_id = l.id
+                ORDER BY l.id
+                """,
+                (rs, i) -> new LabData(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getString("category"),
+                        rs.getInt("max_level"),
+                        rs.getInt("current_level"),
+                        rs.getObject("target_level") != null ? rs.getInt("target_level") : null
+                ));
+    }
+
+    public void updateState(long id, int currentLevel, Integer targetLevel) {
+        jdbc.update("""
+                INSERT INTO lab_player_state (lab_id, current_level, target_level) VALUES (?,?,?)
+                ON CONFLICT(lab_id) DO UPDATE SET
+                    current_level = excluded.current_level,
+                    target_level  = excluded.target_level
+                """, id, currentLevel, targetLevel);
+    }
+
+    public List<LabLevelCost> getCosts(long labId) {
+        return jdbc.query("""
+                SELECT level, duration_seconds, coin_cost
+                FROM lab_level_cost
+                WHERE lab_id = ?
+                ORDER BY level
+                """,
+                (rs, i) -> new LabLevelCost(
+                        rs.getInt("level"),
+                        rs.getObject("duration_seconds") != null ? rs.getInt("duration_seconds") : null,
+                        rs.getObject("coin_cost") != null ? rs.getDouble("coin_cost") : null
+                ), labId);
+    }
+
+    public LabMultipliers getMultipliers() {
+        Integer speedLevel = jdbc.queryForObject(
+                "SELECT COALESCE(ps.current_level,0) FROM lab l LEFT JOIN lab_player_state ps ON ps.lab_id=l.id WHERE l.name='Labs Speed'",
+                Integer.class);
+        Integer discountLevel = jdbc.queryForObject(
+                "SELECT COALESCE(ps.current_level,0) FROM lab l LEFT JOIN lab_player_state ps ON ps.lab_id=l.id WHERE l.name='Labs Coin Discount'",
+                Integer.class);
+        Double relicBonus = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(r.bonus_value),0) FROM relic r JOIN relic_player_state rps ON rps.relic_id=r.id WHERE r.bonus_stat='Lab Speed' AND rps.owned=1",
+                Double.class);
+        int sl = speedLevel != null ? speedLevel : 0;
+        int dl = discountLevel != null ? discountLevel : 0;
+        double rb = relicBonus != null ? relicBonus : 0.0;
+        double speedMult = (1.0 + sl * 0.02) * (1.0 + rb);
+        double costMult  = 1.0 - dl * 0.003;
+        return new LabMultipliers(speedMult, costMult, sl, dl, rb);
+    }
+
+    public String toMarkdownContext() {
+        List<LabData> labs = getAll();
+        StringBuilder sb = new StringBuilder();
+        sb.append("## Labs\n\n");
+        String currentCategory = null;
+        for (LabData lab : labs) {
+            if (!lab.category().equals(currentCategory)) {
+                currentCategory = lab.category();
+                sb.append("### ").append(currentCategory).append("\n\n");
+                sb.append("| Lab | Level | Target | Max |\n");
+                sb.append("|-----|-------|--------|-----|\n");
+            }
+            sb.append("| ").append(lab.name())
+              .append(" | ").append(lab.currentLevel())
+              .append(" | ").append(lab.targetLevel() != null ? lab.targetLevel() : "—")
+              .append(" | ").append(lab.maxLevel())
+              .append(" |\n");
+        }
+        return sb.toString();
+    }
+}
