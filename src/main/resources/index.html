@@ -241,9 +241,6 @@
   .mod-card-header{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--border);}
   .mod-code{font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.07);}
   .mod-name{font-size:13px;font-weight:700;flex:1;}
-  .mod-equipped-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
-  .mod-equipped-badge.primary{background:rgba(61,214,140,0.15);color:var(--green);}
-  .mod-equipped-badge.assist{background:rgba(79,142,247,0.15);color:var(--accent);}
   .mod-body{padding:11px 13px;display:flex;flex-direction:column;gap:10px;}
   .mod-effect{font-size:12px;color:var(--muted);line-height:1.55;font-style:italic;}
   .mod-ability-row{display:flex;gap:6px;flex-wrap:wrap;}
@@ -1745,8 +1742,10 @@ async function renderModulesView(){
     let html=`<div class="report-title" style="margin-bottom:1rem">Module Tracker</div>
       <div class="uw-stones-total" style="margin-bottom:1.5rem">
         <div class="uw-stones-chip"><div class="lbl">Natural Epics Owned</div><div class="val">${owned} / 24</div></div>
-        <div class="uw-stones-chip"><div class="lbl">Equipped Primary</div><div class="val">${mods.filter(m=>m.equippedSlot==='primary').length} / 4</div></div>
-        <div class="uw-stones-chip"><div class="lbl">Equipped Assist</div><div class="val">${mods.filter(m=>m.equippedSlot==='assist').length} / 4</div></div>
+        ${MOD_PRESETS.flatMap(p=>MOD_SLOTS.map(s=>{
+          const count=mods.filter(m=>(m.presets||[]).some(a=>a.preset===p&&a.slot===s)).length;
+          return `<div class="uw-stones-chip"><div class="lbl">${p} ${s.charAt(0).toUpperCase()+s.slice(1)}</div><div class="val">${count} / 4</div></div>`;
+        })).join('')}
       </div>`;
     for(const type of types){
       const group=mods.filter(m=>m.type===type);
@@ -1788,15 +1787,9 @@ function renderPresetChips(mod, allMods){
 
 function renderModCard(mod, allMods){
   const color=MOD_TYPE_COLOR[mod.type];
-  const equippedBadge=mod.equippedSlot
-    ?`<span class="mod-equipped-badge ${mod.equippedSlot}">${mod.equippedSlot}</span>`:'';
 
   const rarityOpts=MOD_RARITIES.map(r=>`<option value="${r}"${r===mod.rarity?' selected':''}>${r}</option>`).join('');
   const starsOpts=Array.from({length:6},(_,i)=>`<option value="${i}"${i===mod.stars?' selected':''}>${i}★</option>`).join('');
-  const slotOpts=['<option value="">—</option>',
-    `<option value="primary"${mod.equippedSlot==='primary'?' selected':''}>Primary</option>`,
-    `<option value="assist"${mod.equippedSlot==='assist'?' selected':''}>Assist</option>`].join('');
-
   const abilityChips=Object.entries(mod.abilityValues).map(([r,v])=>{
     const isCurrentTier=(mod.rarity.startsWith(r))||(r==='Ancestral'&&mod.rarity==='Ancestral');
     return `<span class="mod-ability-chip${isCurrentTier?' current':''}" title="${r}">${r[0]}: ${v}</span>`;
@@ -1853,7 +1846,6 @@ function renderModCard(mod, allMods){
     <div class="mod-card-header">
       <span class="mod-code" style="color:${color}">${mod.code}</span>
       <span class="mod-name">${mod.name}</span>
-      ${equippedBadge}
       <label class="uw-toggle" style="margin-left:auto">
         <input type="checkbox" ${mod.owned?'checked':''} onchange="modSetOwned(${mod.id},this.checked)"> Owned
       </label>
@@ -1863,15 +1855,15 @@ function renderModCard(mod, allMods){
       <div class="mod-ability-row">${abilityChips}</div>
       <div class="mod-controls">
         <span class="mod-label">Rarity</span>
-        <select class="mod-select" onchange="modSaveState(${mod.id},${mod.owned},this.value,${mod.stars},${mod.level},'${mod.equippedSlot||''}')">
+        <select class="mod-select" onchange="modSaveState(${mod.id},${mod.owned},this.value,${mod.stars},${mod.level})">
           ${rarityOpts}
         </select>
-        ${mod.rarity==='Ancestral'?`<select class="mod-select" onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',parseInt(this.value),${mod.level},'${mod.equippedSlot||''}')">
+        ${mod.rarity==='Ancestral'?`<select class="mod-select" onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',parseInt(this.value),${mod.level})">
           ${starsOpts}
         </select>`:''}
         <span class="mod-label">Lvl</span>
         <input class="mod-input" type="number" min="0" max="200" value="${mod.level}"
-          onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',${mod.stars},parseInt(this.value),'${mod.equippedSlot||''}')">
+          onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',${mod.stars},parseInt(this.value))">
       </div>
       <div class="mod-substats">
         <div class="mod-substats-title">Sub-stats</div>
@@ -1904,11 +1896,11 @@ function restoreModScroll(){
 }
 async function refreshModulesView(){await renderModulesView();restoreModScroll();}
 
-async function modSaveState(id,owned,rarity,stars,level,equippedSlot){
+async function modSaveState(id,owned,rarity,stars,level){
   saveModScroll();
   await fetch(`${API}/modules/${id}/state`,{method:'PUT',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({owned,rarity,stars,level,equippedSlot:equippedSlot||null})});
+    body:JSON.stringify({owned,rarity,stars,level})});
   refreshModulesView();
 }
 async function modSetOwned(id,owned){
@@ -1918,7 +1910,7 @@ async function modSetOwned(id,owned){
   const level=owned&&m.level===0?1:m.level;
   await fetch(`${API}/modules/${id}/state`,{method:'PUT',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({owned,rarity:m.rarity,stars:m.stars,level,equippedSlot:m.equippedSlot||null})});
+    body:JSON.stringify({owned,rarity:m.rarity,stars:m.stars,level})});
   refreshModulesView();
 }
 async function modSetSubstatKey(id,slot,key,rar,locked){

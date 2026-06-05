@@ -288,7 +288,6 @@ function distillModules(moduleList) {
       rarity:          m.rarity,
       stars:           m.stars,
       level:           m.level,
-      equipped_slot:   m.equippedSlot ?? null,
       ability_values:  m.abilityValues,
       substats:        m.substats.map(s => ({ slot: s.slot, key: s.key, rarity: s.rarity, locked: s.locked })),
       copies:          m.copies,

@@ -6,6 +6,7 @@ target/
 .claude/
 credentials.json
 Runner.java
+mcp/node_modules
 
 ### Eclipse ###
 .apt_generated

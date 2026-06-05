@@ -131,10 +131,10 @@ public class ModuleSeeder {
     private void seedPlayerState() {
         // AS is id=6
         jdbc.update("""
-                INSERT OR IGNORE INTO module_player_state (module_def_id, owned, rarity, stars, level, equipped_slot)
-                VALUES (6, 1, 'Ancestral', 3, 151, 'primary')
+                INSERT OR IGNORE INTO module_player_state (module_def_id, owned, rarity, stars, level)
+                VALUES (6, 1, 'Ancestral', 3, 151)
                 ON CONFLICT(module_def_id) DO UPDATE SET
-                    owned=1, rarity='Ancestral', stars=3, level=151, equipped_slot='primary'
+                    owned=1, rarity='Ancestral', stars=3, level=151
                 """);
 
         substat(6, 0, "super_crit_multi",  "Epic");

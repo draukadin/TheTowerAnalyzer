@@ -17,7 +17,7 @@ public class ModuleController {
         this.repo = repo;
     }
 
-    record StateRequest(boolean owned, String rarity, int stars, int level, String equippedSlot) {}
+    record StateRequest(boolean owned, String rarity, int stars, int level) {}
     record SubstatRequest(String key, String rarity, boolean locked) {}
     record CopyRequest(String rarity) {}
     record ShatteredRequest(int count) {}
@@ -29,7 +29,7 @@ public class ModuleController {
 
     @PutMapping("/{id}/state")
     public void updateState(@PathVariable int id, @RequestBody StateRequest req) {
-        repo.updateState(id, req.owned(), req.rarity(), req.stars(), req.level(), req.equippedSlot());
+        repo.updateState(id, req.owned(), req.rarity(), req.stars(), req.level());
     }
 
     @PutMapping("/{id}/substat/{slot}")

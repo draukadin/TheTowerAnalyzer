@@ -209,7 +209,7 @@ Late (T16+): Effect Bans all types → Continue Reroll Shards → Shatter Shards
 
 Once run type is established, only discuss modules relevant to that context. A tier list comment about farming value is noise if the player is asking about tournaments, and vice versa.
 
-**Always check `get_tower_state` before assuming anything about equipped modules.** The `modules` section now returns the full inventory including `equipped_slot`. Fetch the live data — do not ask the player unless the tool call fails. If knowing the current loadout matters for advice (e.g., "what should I swap?"), retrieve it from the tool response first.
+**Always check `get_tower_state` before assuming anything about equipped modules.** The `modules` section returns the full inventory including `presets` assignments per module. Fetch the live data — do not ask the player unless the tool call fails. If knowing the current loadout matters for advice (e.g., "what should I swap?"), retrieve it from the tool response first.
 
 > "What modules are you currently running in each slot?"
 
@@ -300,7 +300,7 @@ Always call the relevant tools before making personalized recommendations. Gener
 **`get_tower_state`** — Call this for context on UW stats, module inventory, and workshop state. Returns:
 - `version` — current tower era
 - `ultimate_weapons` — full UW state (all 9 UWs with per-stat level, value, stones invested/to-max/to-target)
-- `modules` — module inventory grouped by type (`Cannon`, `Armor`, `Generator`, `Core`). Each entry includes: `id`, `code`, `name`, `owned`, `rarity`, `stars`, `level`, `equipped_slot`, `ability_values` (map of rarity → effect value), `substats` (array with `slot`, `key`, `rarity`, `locked`), `copies` (array of copy rarities), `shattered_epics`, `presets` (preset assignments)
+- `modules` — module inventory grouped by type (`Cannon`, `Armor`, `Generator`, `Core`). Each entry includes: `id`, `code`, `name`, `owned`, `rarity`, `stars`, `level`, `ability_values` (map of rarity → effect value), `substats` (array with `slot`, `key`, `rarity`, `locked`), `copies` (array of copy rarities), `shattered_epics`, `presets` (array of `{ preset, slot }` assignments — use this to determine which preset a module is equipped in)
 - `health_plus_level`, `wall_health_plus_level` — workshop enhancement levels
 
 Call this whenever you need to know the player's module loadout, owned natural epics, rarity/star counts, sub-stats, or copies. Workshop stats, relic data, and lab levels are not yet present — see the API Improvement Backlog section.
@@ -346,7 +346,7 @@ This section tracks data that would improve personalized recommendations but is 
 - `labs.*` — current levels of all module-relevant labs
 
 **Resolved gaps** (now available via `modules` in `get_tower_state`):
-- `modules.equipped` ✅ — `equipped_slot` field on each module entry
+- `modules.equipped` ✅ — use `presets` array on each module entry (each element: `{ preset, slot }`)
 - `modules.natural_epics` ✅ — full inventory with `rarity`, `stars`, `owned` per module
 
 ### Known Gaps in Other Tools

@@ -220,8 +220,7 @@ public class DatabaseInitializer {
                     owned         INTEGER NOT NULL DEFAULT 0,
                     rarity        TEXT    NOT NULL DEFAULT 'Epic',
                     stars         INTEGER NOT NULL DEFAULT 0,
-                    level         INTEGER NOT NULL DEFAULT 0,
-                    equipped_slot TEXT
+                    level         INTEGER NOT NULL DEFAULT 0
                 )
                 """);
 
@@ -262,5 +261,12 @@ public class DatabaseInitializer {
                     PRIMARY KEY (preset, slot, module_def_id)
                 )
                 """);
+
+        // Migration: drop legacy equipped_slot column — superseded by module_preset_assignment.
+        try {
+            jdbc.execute("ALTER TABLE module_player_state DROP COLUMN equipped_slot");
+        } catch (Exception ignored) {
+            // Column already gone — safe to continue.
+        }
     }
 }

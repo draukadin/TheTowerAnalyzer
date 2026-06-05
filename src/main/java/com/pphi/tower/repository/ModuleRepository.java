@@ -31,7 +31,6 @@ public class ModuleRepository {
             String rarity,
             int stars,
             int level,
-            String equippedSlot,
             List<SubstatData> substats,
             List<String> copies,
             int shatteredEpics,
@@ -43,7 +42,7 @@ public class ModuleRepository {
     public List<ModulePlayerData> getAll() {
         List<Map<String, Object>> defRows = jdbc.queryForList("""
                 SELECT d.id, d.code, d.name, d.type, d.effect_template, d.sort_order,
-                       s.owned, s.rarity, s.stars, s.level, s.equipped_slot,
+                       s.owned, s.rarity, s.stars, s.level,
                        COALESCE(m.shattered_epics, 0) AS shattered_epics
                 FROM module_def d
                 LEFT JOIN module_player_state s ON s.module_def_id = d.id
@@ -112,7 +111,6 @@ public class ModuleRepository {
                     getString(row, "rarity", "Epic"),
                     getInt(row, "stars", 0),
                     getInt(row, "level", 0),
-                    (String) row.get("equipped_slot"),
                     substatsByModuleId.getOrDefault(id, List.of()),
                     copiesByModuleId.getOrDefault(id, List.of()),
                     getInt(row, "shattered_epics", 0),
@@ -124,14 +122,14 @@ public class ModuleRepository {
 
     // ── Writes ────────────────────────────────────────────────────────────────
 
-    public void updateState(int moduleDefId, boolean owned, String rarity, int stars, int level, String equippedSlot) {
+    public void updateState(int moduleDefId, boolean owned, String rarity, int stars, int level) {
         jdbc.update("""
-                INSERT INTO module_player_state (module_def_id, owned, rarity, stars, level, equipped_slot)
-                VALUES (?,?,?,?,?,?)
+                INSERT INTO module_player_state (module_def_id, owned, rarity, stars, level)
+                VALUES (?,?,?,?,?)
                 ON CONFLICT(module_def_id) DO UPDATE SET
                     owned=excluded.owned, rarity=excluded.rarity, stars=excluded.stars,
-                    level=excluded.level, equipped_slot=excluded.equipped_slot
-                """, moduleDefId, owned ? 1 : 0, rarity, stars, level, equippedSlot);
+                    level=excluded.level
+                """, moduleDefId, owned ? 1 : 0, rarity, stars, level);
     }
 
     public void setSubstat(int moduleDefId, int slot, String key, String rarity, boolean locked) {
