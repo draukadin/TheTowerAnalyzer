@@ -12,6 +12,7 @@ import com.pphi.tower.model.sheets.modules.Preset;
 import com.pphi.tower.repository.GoogleSheetsRepository;
 import com.pphi.tower.repository.ModulePresetRepository;
 import com.pphi.tower.repository.ModuleRepository;
+import com.pphi.tower.repository.RelicRepository;
 import com.pphi.tower.repository.UwRepository;
 import com.pphi.tower.util.CurrenciesLayout;
 import com.pphi.tower.util.ModuleUtils;
@@ -32,16 +33,19 @@ public class TowerTrackerFetcherService {
     private final ModulePresetRepository modulePresetRepository;
     private final UwRepository uwRepository;
     private final ModuleRepository moduleRepository;
+    private final RelicRepository relicRepository;
 
     public TowerTrackerFetcherService(
             GoogleSheetsRepository googleSheetsRepository,
             ModulePresetRepository modulePresetRepository,
             UwRepository uwRepository,
-            ModuleRepository moduleRepository) {
+            ModuleRepository moduleRepository,
+            RelicRepository relicRepository) {
         this.googleSheetsRepository = googleSheetsRepository;
         this.modulePresetRepository = modulePresetRepository;
         this.uwRepository = uwRepository;
         this.moduleRepository = moduleRepository;
+        this.relicRepository = relicRepository;
     }
 
     // -------------------------------------------------------------------------
@@ -221,8 +225,8 @@ public class TowerTrackerFetcherService {
     // Relics
     // -------------------------------------------------------------------------
 
-    public String fetchRelics() throws IOException {
-        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.RELICS));
+    public List<RelicRepository.RelicData> fetchRelics() {
+        return relicRepository.getAll();
     }
 
     // -------------------------------------------------------------------------

@@ -27,7 +27,8 @@ public class PlayerTrackerController {
     public Map<String, Object> getTowerState() {
         return Map.of(
             "ultimateWeapons", service.fetchUltimateWeapons(),
-            "modules", service.fetchModules()
+            "modules", service.fetchModules(),
+            "relics", service.fetchRelics()
         );
     }
 

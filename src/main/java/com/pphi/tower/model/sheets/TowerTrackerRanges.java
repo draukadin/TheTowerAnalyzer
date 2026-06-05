@@ -49,9 +49,6 @@ public enum TowerTrackerRanges implements GoogleSheet {
     CARD_PRESET_FARMING("Card Preset", List.of("D5:D32"), "cards"),
     CARD_PRESET_TOURNAMENT("Card Preset", List.of("H5:H32"), "cards"),
 
-    // Relic Trackers
-    RELICS("Relics", List.of("M2:N42", "P2:P42"), "relics"),
-
     // Lab Tier List
     LAB_TIER_LIST("The Tier List v28.2", List.of("B:F"), "lab-tier-list");
 

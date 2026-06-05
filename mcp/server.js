@@ -67,7 +67,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'get_tower_state',
-      description: 'Get current tower version, UW stats, module inventory, workshop enhancements and planning context',
+      description: 'Get current tower version, UW stats, module inventory, relic ownership and planning context',
       inputSchema: { type: 'object', properties: {} },
     },
     {
@@ -266,11 +266,13 @@ function distillTowerState(d, labData) {
   );
 
   const modules = distillModules(d.modules ?? []);
+  const relics = distillRelics(d.relics ?? []);
 
   return result({
     version,
     ultimate_weapons: ultimateWeapons,
     modules,
+    relics,
     health_plus_level:      healthPlus,
     wall_health_plus_level: wallHealthPlus,
   });
@@ -297,6 +299,30 @@ function distillModules(moduleList) {
     byType[m.type].push(entry);
   }
   return byType;
+}
+
+function distillRelics(relicList) {
+  const owned = relicList.filter(r => r.owned);
+  const totalByType = {};
+  const ownedByType = {};
+  for (const r of relicList) {
+    totalByType[r.type] = (totalByType[r.type] ?? 0) + 1;
+  }
+  for (const r of owned) {
+    if (!ownedByType[r.type]) ownedByType[r.type] = [];
+    ownedByType[r.type].push({
+      name:       r.name,
+      rarity:     r.rarity,
+      bonus_stat: r.bonusStat,
+      bonus_value: r.bonusValue,
+    });
+  }
+  const summary = Object.keys(totalByType).sort().map(type => ({
+    type,
+    owned: ownedByType[type]?.length ?? 0,
+    total: totalByType[type],
+  }));
+  return { summary, owned: ownedByType };
 }
 
 function distillLabPlan(d) {
