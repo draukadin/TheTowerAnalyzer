@@ -397,5 +397,32 @@ public class DatabaseInitializer {
                 CREATE INDEX IF NOT EXISTS idx_cosmetic_item_category
                 ON cosmetic_item (category_id)
                 """);
+
+        // ── Version History ───────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS tower_version (
+                    version TEXT PRIMARY KEY,
+                    type    TEXT NOT NULL,
+                    summary TEXT NOT NULL DEFAULT ''
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS tower_version_change (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    version     TEXT    NOT NULL REFERENCES tower_version(version),
+                    category    TEXT    NOT NULL,
+                    entity_name TEXT    NOT NULL,
+                    old_value   TEXT,
+                    new_value   TEXT    NOT NULL,
+                    notes       TEXT
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE INDEX IF NOT EXISTS idx_tower_version_change_version
+                ON tower_version_change (version)
+                """);
     }
 }

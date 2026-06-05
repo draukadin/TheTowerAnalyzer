@@ -17,6 +17,7 @@ import com.pphi.tower.repository.ModulePresetRepository;
 import com.pphi.tower.repository.ModuleRepository;
 import com.pphi.tower.repository.RelicRepository;
 import com.pphi.tower.repository.UwRepository;
+import com.pphi.tower.repository.VersionHistoryRepository;
 import com.pphi.tower.util.CurrenciesLayout;
 import com.pphi.tower.util.ModuleUtils;
 import com.pphi.tower.util.ValueRangeConcatenation;
@@ -38,6 +39,7 @@ public class TowerTrackerFetcherService {
     private final ModuleRepository moduleRepository;
     private final RelicRepository relicRepository;
     private final LabRepository labRepository;
+    private final VersionHistoryRepository versionHistoryRepository;
 
     public TowerTrackerFetcherService(
             GoogleSheetsRepository googleSheetsRepository,
@@ -45,13 +47,15 @@ public class TowerTrackerFetcherService {
             UwRepository uwRepository,
             ModuleRepository moduleRepository,
             RelicRepository relicRepository,
-            LabRepository labRepository) {
+            LabRepository labRepository,
+            VersionHistoryRepository versionHistoryRepository) {
         this.googleSheetsRepository = googleSheetsRepository;
         this.modulePresetRepository = modulePresetRepository;
         this.uwRepository = uwRepository;
         this.moduleRepository = moduleRepository;
         this.relicRepository = relicRepository;
         this.labRepository = labRepository;
+        this.versionHistoryRepository = versionHistoryRepository;
     }
 
     // -------------------------------------------------------------------------
@@ -219,8 +223,8 @@ public class TowerTrackerFetcherService {
     // Version History
     // -------------------------------------------------------------------------
 
-    public String fetchVersionHistory() throws IOException {
-        return ValueRangeConcatenation.toMarkdownTable(googleSheetsRepository.readRanges(TowerTrackerRanges.VERSION_HISTORY));
+    public String fetchVersionHistory() {
+        return versionHistoryRepository.toMarkdownContext();
     }
 
     // -------------------------------------------------------------------------
