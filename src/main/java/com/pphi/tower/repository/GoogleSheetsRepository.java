@@ -4,6 +4,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+
 import com.pphi.tower.config.SheetProperties;
 import com.pphi.tower.model.sheets.GoogleSheet;
 import org.slf4j.Logger;
@@ -41,6 +42,15 @@ public class GoogleSheetsRepository {
     public List<ValueRange> readRanges(GoogleSheet googleSheet) throws IOException {
         String actualSheetId = sheetProperties.resolve(googleSheet.sheetId());
         return readRangesInternal(actualSheetId, googleSheet.sheetName(), googleSheet.ranges());
+    }
+
+    public void writeCell(String sheetKey, String sheetName, String a1, String value) throws IOException {
+        String spreadsheetId = sheetProperties.resolve(sheetKey);
+        ValueRange body = new ValueRange().setValues(List.of(List.of(value)));
+        sheets.spreadsheets().values()
+                .update(spreadsheetId, sheetName + "!" + a1, body)
+                .setValueInputOption("RAW")
+                .execute();
     }
 
     private List<ValueRange> readRangesInternal(String spreadsheetId, String sheetName, List<String> ranges)

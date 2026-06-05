@@ -48,6 +48,29 @@ public class VersionHistoryRepository {
                 version);
     }
 
+    public record NewChange(String category, String entityName,
+                            String oldValue, String newValue, String notes) {}
+
+    public void create(String version, String type, List<NewChange> changes) {
+        jdbc.update("INSERT INTO tower_version (version, type, summary) VALUES (?,?,?)",
+                version, type, buildSummary(changes));
+        for (NewChange c : changes) {
+            jdbc.update("""
+                    INSERT INTO tower_version_change (version, category, entity_name, old_value, new_value, notes)
+                    VALUES (?,?,?,?,?,?)
+                    """, version, c.category(), c.entityName(), c.oldValue(), c.newValue(), c.notes());
+        }
+    }
+
+    private String buildSummary(List<NewChange> changes) {
+        return changes.stream()
+                .map(c -> c.oldValue() != null
+                        ? c.entityName() + " " + c.oldValue() + " → " + c.newValue()
+                        : c.entityName() + " " + c.newValue())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("");
+    }
+
     public String toMarkdownContext() {
         List<VersionEntry> versions = getAllVersions();
         StringBuilder sb = new StringBuilder();

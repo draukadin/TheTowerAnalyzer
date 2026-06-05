@@ -429,6 +429,32 @@
   /* dynamic field visibility in add modal */
   #addCosmeticModal .field-event,
   #addCosmeticModal .field-milestone{display:none;}
+  /* Version Tracker */
+  .ver-row{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+  .ver-row:hover{background:rgba(79,142,247,.05);}
+  .ver-row td{padding:9px 12px;font-size:13px;vertical-align:middle;}
+  .ver-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;
+    font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+  .ver-badge.major{background:rgba(245,200,66,.15);color:var(--gold);}
+  .ver-badge.minor{background:rgba(79,142,247,.15);color:var(--accent);}
+  .ver-badge.patch{background:rgba(255,255,255,.06);color:var(--muted);}
+  .ver-changes{display:none;background:var(--surface2);}
+  .ver-changes.open{display:table-row;}
+  .ver-changes td{padding:8px 16px 12px 32px;}
+  .ver-change-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  .ver-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;
+    font-size:11px;border:1px solid var(--border);}
+  .ver-chip .cat{font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:.5px;}
+  .ver-chip.cat-lab{border-color:rgba(61,214,140,.25);background:rgba(61,214,140,.07);}
+  .ver-chip.cat-lab .cat{color:var(--green);}
+  .ver-chip.cat-uw{border-color:rgba(79,142,247,.25);background:rgba(79,142,247,.07);}
+  .ver-chip.cat-uw .cat{color:var(--accent);}
+  .ver-chip.cat-module{border-color:rgba(245,200,66,.25);background:rgba(245,200,66,.07);}
+  .ver-chip.cat-module .cat{color:var(--gold);}
+  .ver-chip.cat-relic{border-color:rgba(200,120,240,.25);background:rgba(200,120,240,.07);}
+  .ver-chip.cat-relic .cat{color:#c878f0;}
+  .ver-chip.cat-other{border-color:var(--border);background:transparent;}
+  .ver-chip.cat-other .cat{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -448,6 +474,7 @@
     <button class="nav-btn" onclick="showView('labs')">Labs</button>
     <button class="nav-btn" onclick="showView('cosmetics')">Cosmetics</button>
     <button class="nav-btn" onclick="showView('currencies')">Currencies</button>
+    <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -589,7 +616,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','versions'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -600,6 +627,7 @@ function showView(view){
   else if(view==='labs')renderLabsView();
   else if(view==='cosmetics')renderCosmeticsView();
   else if(view==='currencies')renderCurrenciesView();
+  else if(view==='versions')renderVersionTrackerView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -3085,6 +3113,151 @@ async function saveCurrencies() {
   }
 }
 
+let verChangeRows = [];
+
+function openAddVersionModal() {
+  verChangeRows = [];
+  document.getElementById('newVerVersion').value = '';
+  document.getElementById('newVerType').value = 'Patch';
+  document.getElementById('verChangeRowsEl').innerHTML = '';
+  document.getElementById('addVersionModal').style.display = 'flex';
+  addVerChangeRow();
+}
+function closeAddVersionModal() {
+  document.getElementById('addVersionModal').style.display = 'none';
+}
+function addVerChangeRow() {
+  const id = Date.now();
+  verChangeRows.push(id);
+  document.getElementById('verChangeRowsEl').insertAdjacentHTML('beforeend', `
+    <div id="vcr-${id}" style="display:grid;grid-template-columns:90px 1fr 80px 80px 1fr auto;gap:6px;align-items:center;margin-bottom:6px">
+      <select class="form-input" id="vcr-cat-${id}" style="font-size:12px;padding:5px 6px">
+        <option>LAB</option><option>UW</option><option>MODULE</option><option>RELIC</option><option>OTHER</option>
+      </select>
+      <input class="form-input" id="vcr-name-${id}" type="text" placeholder="Entity name" style="font-size:12px;padding:5px 8px">
+      <input class="form-input" id="vcr-old-${id}"  type="text" placeholder="Old" style="font-size:12px;padding:5px 8px">
+      <input class="form-input" id="vcr-new-${id}"  type="text" placeholder="New" style="font-size:12px;padding:5px 8px">
+      <input class="form-input" id="vcr-notes-${id}" type="text" placeholder="Notes (optional)" style="font-size:12px;padding:5px 8px">
+      <button class="btn" style="padding:4px 8px;font-size:12px;color:var(--red)" onclick="removeVerChangeRow(${id})">✕</button>
+    </div>`);
+}
+function removeVerChangeRow(id) {
+  document.getElementById('vcr-' + id)?.remove();
+  verChangeRows = verChangeRows.filter(r => r !== id);
+}
+async function saveNewVersion() {
+  const version = document.getElementById('newVerVersion').value.trim();
+  const type    = document.getElementById('newVerType').value;
+  if (!version) { alert('Version is required.'); return; }
+  const changes = verChangeRows
+    .filter(id => document.getElementById('vcr-' + id))
+    .map(id => ({
+      category:   document.getElementById('vcr-cat-' + id).value,
+      entityName: document.getElementById('vcr-name-' + id).value.trim(),
+      oldValue:   document.getElementById('vcr-old-' + id).value.trim() || null,
+      newValue:   document.getElementById('vcr-new-' + id).value.trim(),
+      notes:      document.getElementById('vcr-notes-' + id).value.trim() || null
+    }))
+    .filter(c => c.entityName && c.newValue);
+  const btn = document.querySelector('#addVersionModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const res = await fetch(`${API}/versions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ version, type, changes })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    closeAddVersionModal();
+    await renderVersionTrackerView();
+    if (!data.syncedToSheet) showVerSyncBanner(data.version);
+  } catch(e) {
+    alert('Save failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add Version';
+  }
+}
+function showVerSyncBanner(version) {
+  const existing = document.getElementById('verSyncBanner');
+  if (existing) existing.remove();
+  const el = document.getElementById('verContent');
+  if (!el) return;
+  el.insertAdjacentHTML('afterbegin', `
+    <div id="verSyncBanner" style="display:flex;align-items:center;gap:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:13px">
+      <span style="color:var(--red)">⚠</span>
+      <span style="flex:1;color:var(--text)">Version <strong>${version}</strong> saved to database but failed to sync to Google Sheet (cell B2). Battle reports won't auto-associate until synced.</span>
+      <button id="verSyncRetryBtn" class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="retrySyncVersion('${version}')">Retry Sync</button>
+    </div>`);
+}
+async function retrySyncVersion(version) {
+  const btn = document.getElementById('verSyncRetryBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  try {
+    const res = await fetch(`${API}/versions/${encodeURIComponent(version)}/sync-sheet`, { method: 'POST' });
+    if (!res.ok) throw new Error(await res.text());
+    document.getElementById('verSyncBanner')?.remove();
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Retry Sync'; }
+    alert('Sync retry failed: ' + e.message);
+  }
+}
+
+async function renderVersionTrackerView() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = `<div class="report-title" style="margin-bottom:1rem">Version Tracker</div>
+    <div id="verMsg" style="color:var(--muted);font-size:13px">Loading…</div>
+    <div id="verContent" style="display:none"></div>`;
+  try {
+    const versions = await fetch(`${API}/versions`).then(r => r.json());
+    document.getElementById('verMsg').style.display = 'none';
+    const el = document.getElementById('verContent');
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <p style="font-size:12px;color:var(--muted);margin:0">${versions.length} versions · click a row to expand changes</p>
+        <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openAddVersionModal()">+ Add Version</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:9px 12px;font-size:11px;color:var(--muted);text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.5px;width:90px">Version</th>
+            <th style="padding:9px 12px;font-size:11px;color:var(--muted);text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.5px;width:80px">Type</th>
+            <th style="padding:9px 12px;font-size:11px;color:var(--muted);text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Summary</th>
+          </tr>
+        </thead>
+        <tbody id="verTbody"></tbody>
+      </table>`;
+    const tbody = document.getElementById('verTbody');
+    versions.forEach((v, idx) => {
+      const catClass = c => 'cat-' + c.toLowerCase();
+      const changeChips = v.changes.map(ch => {
+        const arrow = ch.oldValue != null ? `${ch.oldValue} → ${ch.newValue}` : ch.newValue;
+        const notes = ch.notes ? ` <span style="color:var(--muted);font-size:10px">(${ch.notes})</span>` : '';
+        return `<span class="ver-chip ${catClass(ch.category)}">
+          <span class="cat">${ch.category}</span>
+          <span>${ch.entityName}: ${arrow}${notes}</span>
+        </span>`;
+      }).join('');
+      const typeKey = v.type.toLowerCase();
+      const rowId = `ver-changes-${idx}`;
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr class="ver-row" onclick="document.getElementById('${rowId}').classList.toggle('open')">
+          <td style="font-family:var(--mono);font-weight:600">${v.version}</td>
+          <td><span class="ver-badge ${typeKey}">${v.type}</span></td>
+          <td style="color:var(--muted)">${v.summary}</td>
+        </tr>
+        <tr class="ver-changes" id="${rowId}">
+          <td colspan="3">
+            <div class="ver-change-list">${changeChips || '<span style="color:var(--muted);font-size:12px">No structured changes recorded.</span>'}</div>
+          </td>
+        </tr>`);
+    });
+  } catch(e) {
+    document.getElementById('verMsg').textContent = 'Failed to load: ' + e.message;
+  }
+}
+
 init();
 </script>
 
@@ -3130,6 +3303,35 @@ init();
     <div class="modal-actions">
       <button class="btn" onclick="closeProfileModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+<div id="addVersionModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddVersionModal()">
+  <div class="modal" style="max-width:700px;width:95vw">
+    <div class="modal-title">Add New Version</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Version</label>
+        <input class="form-input" id="newVerVersion" type="text" placeholder="e.g. 3.2.0">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Type</label>
+        <select class="form-input" id="newVerType">
+          <option>Patch</option><option>Minor</option><option>Major</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <label class="form-label" style="margin:0">Changes</label>
+      <button class="btn" style="font-size:11px;padding:3px 10px" onclick="addVerChangeRow()">+ Add Row</button>
+    </div>
+    <div style="font-size:10px;color:var(--muted);display:grid;grid-template-columns:90px 1fr 80px 80px 1fr auto;gap:6px;padding:0 0 4px 0;letter-spacing:.5px;text-transform:uppercase">
+      <span>Category</span><span>Entity Name</span><span>Old</span><span>New</span><span>Notes</span><span></span>
+    </div>
+    <div id="verChangeRowsEl" style="max-height:300px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddVersionModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewVersion()">Add Version</button>
     </div>
   </div>
 </div>

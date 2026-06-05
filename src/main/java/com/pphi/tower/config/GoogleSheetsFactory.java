@@ -23,7 +23,7 @@ public class GoogleSheetsFactory {
 
         GoogleCredentials credentials = GoogleCredentials
                 .fromStream(new FileInputStream(props.getCredentialsFile()))
-                .createScoped(List.of(SheetsScopes.SPREADSHEETS_READONLY));
+                .createScoped(List.of(SheetsScopes.SPREADSHEETS));
 
         return new Sheets.Builder(transport, jsonFactory, new HttpCredentialsAdapter(credentials))
                 .setApplicationName(props.getApplicationName())
