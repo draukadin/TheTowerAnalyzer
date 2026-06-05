@@ -67,8 +67,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'get_tower_state',
-      description: 'Get current tower version, UW stats, module inventory, relic ownership and planning context',
-      inputSchema: { type: 'object', properties: {} },
+      description: 'Get current tower version, UW stats, module inventory and relic summary. Set includeRelicDetails=true to get full relic list.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          includeRelicDetails: { type: 'boolean', default: false },
+        },
+      },
     },
     {
       name: 'get_lab_plan',
@@ -137,11 +142,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'get_tower_state': {
+        const includeRelicDetails = args.includeRelicDetails ?? false;
         const [stateData, labData] = await Promise.all([
-          fetchApi('/api/player-tracker/state'),
+          fetchApi(`/api/player-tracker/state?includeRelicDetails=${includeRelicDetails}`),
           fetchApi('/api/player-tracker/labs'),
         ]);
-        return distillTowerState(stateData, labData);
+        return distillTowerState(stateData, labData, includeRelicDetails);
       }
 
       case 'get_lab_plan':
@@ -247,7 +253,7 @@ function distillRecentRuns(runs) {
   }));
 }
 
-function distillTowerState(d, labData) {
+function distillTowerState(d, labData, includeRelicDetails = false) {
   const version = d.versionHistory ? parseVersion(d.versionHistory) : null;
   const labSlots = labData?.labPlanning ? parseLabSlots(labData.labPlanning) : [];
 
@@ -289,16 +295,20 @@ function distillTowerState(d, labData) {
   );
 
   const modules = distillModules(d.modules ?? []);
-  const relics = distillRelics(d.relics ?? []);
+  const { summary: relicSummary, owned: relicOwned } = distillRelics(d.relics ?? []);
 
-  return result({
+  const out = {
     version,
     ultimate_weapons: ultimateWeapons,
     modules,
-    relics,
-    health_plus_level:      healthPlus,
-    wall_health_plus_level: wallHealthPlus,
-  });
+    relic_summary: relicSummary,
+  };
+
+  if (d.includeRelicDetails) {
+    out.relics_owned = relicOwned;
+  }
+
+  return result(out);
 }
 
 function distillModules(moduleList) {

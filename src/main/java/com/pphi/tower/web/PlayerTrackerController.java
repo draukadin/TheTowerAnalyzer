@@ -6,6 +6,7 @@ import com.pphi.tower.service.TowerTrackerFetcherService;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -25,20 +26,22 @@ public class PlayerTrackerController {
     }
 
     @GetMapping("/state")
-    public Map<String, Object> getTowerState() {
+    public Map<String, Object> getTowerState(
+            @RequestParam(defaultValue = "false") boolean includeRelicDetails) {
         LabMultipliers m = service.fetchLabMultipliers();
-        return Map.of(
-            "ultimateWeapons", service.fetchUltimateWeapons(),
-            "modules", service.fetchModules(),
-            "relics", service.fetchRelics(),
-            "labMultipliers", Map.of(
-                "speedMultiplier",      m.speedMult(),
-                "coinCostMultiplier",   m.costMult(),
-                "labsSpeedLevel",       m.labsSpeedLevel(),
-                "coinDiscountLevel",    m.coinDiscountLevel(),
-                "relicLabSpeedBonus",   m.relicLabSpeedBonus()
-            )
-        );
+        var builder = new HashMap<String, Object>();
+        builder.put("ultimateWeapons", service.fetchUltimateWeapons());
+        builder.put("modules", service.fetchModules());
+        builder.put("relics", service.fetchRelics());
+        builder.put("includeRelicDetails", includeRelicDetails);
+        builder.put("labMultipliers", Map.of(
+            "speedMultiplier",      m.speedMult(),
+            "coinCostMultiplier",   m.costMult(),
+            "labsSpeedLevel",       m.labsSpeedLevel(),
+            "coinDiscountLevel",    m.coinDiscountLevel(),
+            "relicLabSpeedBonus",   m.relicLabSpeedBonus()
+        ));
+        return builder;
     }
 
     @GetMapping("/labs")

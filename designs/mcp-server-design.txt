@@ -179,7 +179,5 @@ Does this shape match what you'd naturally model in your Spring Boot entities, o
       "core": 2
     }
   },
-  "health_plus_level": 53,
-  "wall_health_plus_level": 53,
   "cf_stones_remaining": 4271
 }
