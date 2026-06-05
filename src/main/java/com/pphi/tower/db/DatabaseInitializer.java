@@ -290,6 +290,17 @@ public class DatabaseInitializer {
                 )
                 """);
 
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS gem_store_relic_rotation (
+                    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                    start_date TEXT    NOT NULL,
+                    slot       TEXT    NOT NULL,
+                    relic_id   INTEGER NOT NULL REFERENCES relic(id),
+                    variant    TEXT    NOT NULL DEFAULT '',
+                    UNIQUE(start_date, slot, variant)
+                )
+                """);
+
         // ── Labs ──────────────────────────────────────────────────────────────
 
         jdbc.execute("""

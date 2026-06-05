@@ -336,6 +336,23 @@
   .owned-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
   .owned-toggle input{accent-color:var(--green);cursor:pointer;}
 
+  /* ── Gem Store ──────────────────────────────── */
+  .gs-current-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
+  .gs-slot-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+  .gs-slot-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+  .gs-slot-label.premium{color:var(--orange);}
+  .gs-relic-name{font-size:1.1rem;font-weight:700;margin-bottom:6px;}
+  .gs-relic-stat{font-size:12px;color:var(--muted);}
+  .gs-history-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);
+    border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);}
+  .gs-history-table th{background:var(--surface2);padding:8px 12px;text-align:left;
+    font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  .gs-history-table td{padding:8px 12px;border-top:1px solid var(--border);}
+  .gs-history-table tr:hover td{background:var(--surface2);}
+  .gs-current-row td{background:rgba(79,142,247,0.06)!important;}
+  .gs-variant-badge{font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(242,107,107,.15);
+    color:var(--red);border:1px solid rgba(242,107,107,.3);margin-left:4px;vertical-align:middle;}
+
   /* ── Labs ────────────────────────────────────── */
   .labs-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center;}
   .labs-search{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border2);
@@ -2083,6 +2100,7 @@ const RELIC_STAT_CATEGORIES = {
 const RELIC_STAT_UNITS = {'Bot Range':'m','Wall Rebuild':'s'};
 
 let relicData=[], relicTypeFilter='All', relicOwnedFilter='All', relicSearch='', relicSortCol='type', relicSortDir=1;
+let gemStoreData=[], relicsTab='collection';
 
 function relicStatCategory(stat){
   for(const [cat,stats] of Object.entries(RELIC_STAT_CATEGORIES))
@@ -2100,9 +2118,13 @@ async function renderRelicsView(){
   document.getElementById('mainContent').innerHTML=
     '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading relics…</div>';
   try{
-    const res = await fetch(`${API}/relics`);
-    if(!res.ok) throw new Error(res.statusText);
-    relicData = await res.json();
+    const [r1, r2] = await Promise.all([
+      fetch(`${API}/relics`),
+      fetch(`${API}/gem-store/rotation`)
+    ]);
+    if(!r1.ok) throw new Error(r1.statusText);
+    relicData = await r1.json();
+    gemStoreData = r2.ok ? await r2.json() : [];
     buildRelicsPage();
   }catch(e){
     document.getElementById('mainContent').innerHTML=
@@ -2159,38 +2181,50 @@ function buildRelicsPage(){
   }
 
   document.getElementById('mainContent').innerHTML = `
-    <div class="report-title" style="margin-bottom:1rem">Relics
-      <button class="btn btn-primary" style="float:right;font-size:12px;padding:5px 14px" onclick="openAddRelicModal()">+ Add Relic</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+      <div class="report-title">Relics</div>
+      <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openAddRelicModal()">+ Add Relic</button>
+    </div>
+    <div class="tab-bar">
+      <div class="tab${relicsTab==='collection'?' active':''}" onclick="showRelicsTab('collection')">Collection</div>
+      <div class="tab${relicsTab==='gemstore'?' active':''}" onclick="showRelicsTab('gemstore')">Gem Store</div>
     </div>
 
-    <div class="section-title">Owned by Type</div>
-    <div class="relic-dashboard">
-      <div class="relic-dash-card" style="border-color:rgba(79,142,247,.3)">
-        <div class="lbl">Total</div>
-        <div class="val" style="color:var(--accent)">${owned}<span style="font-size:.9rem;color:var(--muted)"> / ${total}</span></div>
+    <div id="relicCollectionTab"${relicsTab!=='collection'?' style="display:none"':''}>
+      <div class="section-title">Owned by Type</div>
+      <div class="relic-dashboard">
+        <div class="relic-dash-card" style="border-color:rgba(79,142,247,.3)">
+          <div class="lbl">Total</div>
+          <div class="val" style="color:var(--accent)">${owned}<span style="font-size:.9rem;color:var(--muted)"> / ${total}</span></div>
+        </div>
+        ${dashHtml}
       </div>
-      ${dashHtml}
+
+      <div class="section-title">Stat Summary</div>
+      <table class="relic-stat-table">
+        <thead><tr><th>Stat</th><th>Owned</th><th>Total Available</th><th>Missing</th></tr></thead>
+        <tbody>${statHtml}</tbody>
+      </table>
+
+      <div class="section-title">All Relics</div>
+      <div class="relic-filters">
+        <input class="relic-search" type="text" placeholder="Search…" value="${escHtml(relicSearch)}"
+          oninput="relicSearch=this.value;renderRelicTable()">
+        ${['All','Standard','Premium','Milestone','Tournament','Anniversary','Guild'].map(t=>
+          `<button class="relic-filter-btn${relicTypeFilter===t?' active':''}" onclick="relicTypeFilter='${t}';document.querySelectorAll('.relic-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');renderRelicTable()">${t}</button>`
+        ).join('')}
+        <button class="relic-filter-btn${relicOwnedFilter==='Owned'?' active':''}" onclick="relicOwnedFilter=relicOwnedFilter==='Owned'?'All':'Owned';this.classList.toggle('active');renderRelicTable()">Owned only</button>
+        <button class="relic-filter-btn${relicOwnedFilter==='Missing'?' active':''}" onclick="relicOwnedFilter=relicOwnedFilter==='Missing'?'All':'Missing';this.classList.toggle('active');renderRelicTable()">Missing only</button>
+      </div>
+      <div id="relicTableWrap"></div>
     </div>
 
-    <div class="section-title">Stat Summary</div>
-    <table class="relic-stat-table">
-      <thead><tr><th>Stat</th><th>Owned</th><th>Total Available</th><th>Missing</th></tr></thead>
-      <tbody>${statHtml}</tbody>
-    </table>
+    <div id="relicGemStoreTab"${relicsTab!=='gemstore'?' style="display:none"':''}>
+      <div id="gemStoreContent"></div>
+    </div>`;
 
-    <div class="section-title">All Relics</div>
-    <div class="relic-filters">
-      <input class="relic-search" type="text" placeholder="Search…" value="${escHtml(relicSearch)}"
-        oninput="relicSearch=this.value;renderRelicTable()">
-      ${['All','Standard','Premium','Milestone','Tournament','Anniversary','Guild'].map(t=>
-        `<button class="relic-filter-btn${relicTypeFilter===t?' active':''}" onclick="relicTypeFilter='${t}';document.querySelectorAll('.relic-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');renderRelicTable()">${t}</button>`
-      ).join('')}
-      <button class="relic-filter-btn${relicOwnedFilter==='Owned'?' active':''}" onclick="relicOwnedFilter=relicOwnedFilter==='Owned'?'All':'Owned';this.classList.toggle('active');renderRelicTable()">Owned only</button>
-      <button class="relic-filter-btn${relicOwnedFilter==='Missing'?' active':''}" onclick="relicOwnedFilter=relicOwnedFilter==='Missing'?'All':'Missing';this.classList.toggle('active');renderRelicTable()">Missing only</button>
-    </div>
-    <div id="relicTableWrap"></div>`;
-
-  renderRelicTable();
+  if(relicsTab==='collection') renderRelicTable();
+  else buildGemStoreTab();
 }
 
 function renderRelicTable(){
@@ -2263,6 +2297,151 @@ function openAddRelicModal(){
 }
 function closeAddRelicModal(){
   document.getElementById('addRelicModal').style.display='none';
+}
+
+function showRelicsTab(tab){
+  relicsTab=tab;
+  document.querySelectorAll('#mainContent .tab').forEach(t=>
+    t.classList.toggle('active', t.textContent.toLowerCase().replace(' ','')===tab));
+  document.getElementById('relicCollectionTab').style.display = tab==='collection' ? '' : 'none';
+  document.getElementById('relicGemStoreTab').style.display  = tab==='gemstore'    ? '' : 'none';
+  if(tab==='collection') renderRelicTable();
+  else buildGemStoreTab();
+}
+
+function buildGemStoreTab(){
+  const el = document.getElementById('gemStoreContent');
+  if(!el) return;
+
+  // Group entries by (startDate, variant)
+  const weekMap = {};
+  for(const e of gemStoreData){
+    const key = e.startDate + '|' + (e.variant||'');
+    if(!weekMap[key]) weekMap[key] = {startDate:e.startDate, variant:e.variant||'', slots:{}};
+    weekMap[key].slots[e.slot] = e;
+  }
+  const weeks = Object.values(weekMap).sort((a,b) =>
+    b.startDate.localeCompare(a.startDate) || a.variant.localeCompare(b.variant));
+
+  if(!weeks.length){
+    el.innerHTML='<div class="loading-placeholder">No rotation data yet.</div>';
+    return;
+  }
+
+  // Find latest start date
+  const latestDate = weeks[0].startDate;
+
+  function slotCard(entry, label, isPremium){
+    if(!entry) return `<div class="gs-slot-card"><div class="gs-slot-label${isPremium?' premium':''}">${label}</div><div style="color:var(--muted);font-size:13px">—</div></div>`;
+    return `<div class="gs-slot-card">
+      <div class="gs-slot-label${isPremium?' premium':''}">${label}</div>
+      <div class="gs-relic-name">${escHtml(entry.relicName)}</div>
+      <div style="margin-bottom:4px"><span class="rarity-badge ${entry.rarity}">${entry.rarity}</span></div>
+      <div class="gs-relic-stat">${escHtml(entry.bonusStat)} · ${fmtRelicVal(entry.bonusStat, entry.bonusValue)}</div>
+    </div>`;
+  }
+
+  // Current rotation(s)
+  const currentWeeks = weeks.filter(w => w.startDate === latestDate);
+  let currentHtml = '';
+  for(const w of currentWeeks){
+    const variantLabel = w.variant ? `<span class="gs-variant-badge">Variant ${w.variant}</span>` : '';
+    currentHtml += `
+      <div style="margin-bottom:6px;font-size:13px;color:var(--muted)">Week of ${w.startDate}${variantLabel}</div>
+      <div class="gs-current-grid">
+        ${slotCard(w.slots['STANDARD_1'], 'Standard 1', false)}
+        ${slotCard(w.slots['STANDARD_2'], 'Standard 2', false)}
+        ${slotCard(w.slots['PREMIUM_1'],  'Premium 1',  true)}
+        ${slotCard(w.slots['PREMIUM_2'],  'Premium 2',  true)}
+      </div>`;
+  }
+
+  // History table (all weeks)
+  function cellHtml(entry){
+    if(!entry) return '<td style="color:var(--muted)">—</td>';
+    return `<td><span style="font-weight:600">${escHtml(entry.relicName)}</span><br>
+      <span style="font-size:11px;color:var(--muted)">${escHtml(entry.bonusStat)} · ${fmtRelicVal(entry.bonusStat, entry.bonusValue)}</span></td>`;
+  }
+
+  const historyRows = weeks.map(w => {
+    const isCurrent = w.startDate === latestDate;
+    const variantBadge = w.variant ? `<span class="gs-variant-badge">${w.variant}</span>` : '';
+    return `<tr class="${isCurrent?'gs-current-row':''}">
+      <td style="white-space:nowrap;font-family:var(--mono);font-size:12px">${w.startDate}${variantBadge}</td>
+      ${cellHtml(w.slots['STANDARD_1'])}
+      ${cellHtml(w.slots['STANDARD_2'])}
+      ${cellHtml(w.slots['PREMIUM_1'])}
+      ${cellHtml(w.slots['PREMIUM_2'])}
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div class="section-title" style="margin:0;border:none">Current Rotation</div>
+      <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openAddRotationModal()">+ Add Rotation</button>
+    </div>
+    ${currentHtml}
+    <div class="section-title">History</div>
+    <table class="gs-history-table">
+      <thead><tr>
+        <th>Week of</th>
+        <th>Standard 1</th>
+        <th>Standard 2</th>
+        <th>Premium 1</th>
+        <th>Premium 2</th>
+      </tr></thead>
+      <tbody>${historyRows}</tbody>
+    </table>
+    <div style="height:2rem"></div>`;
+}
+
+function openAddRotationModal(){
+  // Populate datalists from relicData
+  const names = relicData.map(r=>r.name).sort();
+  const opts = names.map(n=>`<option value="${escHtml(n)}">`).join('');
+  ['gsS1','gsS2','gsP1','gsP2'].forEach(id=>{
+    const dl = document.getElementById(id+'List');
+    if(dl) dl.innerHTML = opts;
+  });
+  // Default start date to next Monday from latest rotation
+  const latestDate = gemStoreData.length
+    ? gemStoreData.reduce((max,e)=>e.startDate>max?e.startDate:max,'')
+    : '';
+  if(latestDate){
+    const d = new Date(latestDate+'T12:00:00');
+    d.setDate(d.getDate()+7);
+    document.getElementById('gsStartDate').value = d.toISOString().slice(0,10);
+  }
+  document.getElementById('gsVariant').value='';
+  ['gsS1','gsS2','gsP1','gsP2'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('addRotationModal').style.display='flex';
+}
+function closeAddRotationModal(){
+  document.getElementById('addRotationModal').style.display='none';
+}
+
+async function saveRotation(){
+  const startDate = document.getElementById('gsStartDate').value.trim();
+  const s1 = document.getElementById('gsS1').value.trim();
+  const s2 = document.getElementById('gsS2').value.trim();
+  const p1 = document.getElementById('gsP1').value.trim();
+  const p2 = document.getElementById('gsP2').value.trim();
+  const variant = document.getElementById('gsVariant').value.trim();
+  if(!startDate||!s1||!s2||!p1||!p2){alert('All four relic slots are required.');return;}
+  try{
+    const res = await fetch(`${API}/gem-store/rotation`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({startDate,standard1:s1,standard2:s2,premium1:p1,premium2:p2,variant})
+    });
+    if(!res.ok){const t=await res.text();throw new Error(t||res.statusText);}
+    closeAddRotationModal();
+    const r2 = await fetch(`${API}/gem-store/rotation`);
+    gemStoreData = await r2.json();
+    buildGemStoreTab();
+  }catch(e){
+    alert('Failed to save rotation: '+e.message);
+  }
 }
 
 // ── Labs ─────────────────────────────────────────────────────────────────────
@@ -2599,6 +2778,43 @@ init();
     <div class="modal-actions">
       <button class="btn" onclick="closeAddRelicModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveNewRelic()">Add Relic</button>
+    </div>
+  </div>
+</div>
+<div id="addRotationModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddRotationModal()">
+  <div class="modal">
+    <div class="modal-title">Add Gem Store Rotation</div>
+    <div class="form-group">
+      <label class="form-label">Start Date</label>
+      <input class="form-input" id="gsStartDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Standard 1</label>
+      <input class="form-input" id="gsS1" list="gsS1List" type="text" placeholder="Relic name" autocomplete="off">
+      <datalist id="gsS1List"></datalist>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Standard 2</label>
+      <input class="form-input" id="gsS2" list="gsS2List" type="text" placeholder="Relic name" autocomplete="off">
+      <datalist id="gsS2List"></datalist>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Premium 1</label>
+      <input class="form-input" id="gsP1" list="gsP1List" type="text" placeholder="Relic name" autocomplete="off">
+      <datalist id="gsP1List"></datalist>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Premium 2</label>
+      <input class="form-input" id="gsP2" list="gsP2List" type="text" placeholder="Relic name" autocomplete="off">
+      <datalist id="gsP2List"></datalist>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Variant <span style="color:var(--muted);font-size:10px">(leave blank for normal weeks · use A or B for split weeks)</span></label>
+      <input class="form-input" id="gsVariant" type="text" placeholder="A / B / blank">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddRotationModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRotation()">Save</button>
     </div>
   </div>
 </div>
