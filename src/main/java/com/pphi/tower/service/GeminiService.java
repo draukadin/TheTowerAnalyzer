@@ -4,6 +4,7 @@ import com.pphi.tower.config.GeminiProperties;
 import com.pphi.tower.model.sheets.cards.CardPresetType;
 import com.pphi.tower.model.sheets.modules.Preset;
 import com.pphi.tower.repository.GeminiRepository;
+import com.pphi.tower.repository.RelicRepository;
 import com.pphi.tower.repository.UserProfileRepository;
 import com.pphi.tower.service.context.*;
 import com.pphi.tower.web.dto.ChatRequest;
@@ -35,19 +36,22 @@ public class GeminiService {
     private final DiagnosticService diagnosticService;
     private final UserProfileRepository userProfileRepository;
     private final TowerTrackerFetcherService towerTrackerFetcherService;
+    private final RelicRepository relicRepository;
 
     public GeminiService(GeminiRepository geminiRepository,
                          GeminiProperties geminiProperties,
                          ComparisonService comparisonService,
                          DiagnosticService diagnosticService,
                          UserProfileRepository userProfileRepository,
-                         TowerTrackerFetcherService towerTrackerFetcherService) {
+                         TowerTrackerFetcherService towerTrackerFetcherService,
+                         RelicRepository relicRepository) {
         this.geminiRepository = geminiRepository;
         this.geminiProperties = geminiProperties;
         this.comparisonService = comparisonService;
         this.diagnosticService = diagnosticService;
         this.userProfileRepository = userProfileRepository;
         this.towerTrackerFetcherService = towerTrackerFetcherService;
+        this.relicRepository = relicRepository;
     }
 
     public ChatResponse chat(ChatRequest request) {
@@ -123,7 +127,7 @@ public class GeminiService {
                 case "workshop"          -> contexts.add(new WorkshopContext(towerTrackerFetcherService.fetchWorkshop()));
                 case "guardians"         -> contexts.add(new GuardiansContext(towerTrackerFetcherService.fetchGuardians()));
                 case "bots"              -> contexts.add(new BotsContext(towerTrackerFetcherService.fetchBots()));
-                case "relics"            -> contexts.add(new RelicsContext(towerTrackerFetcherService.fetchRelics()));
+                case "relics"            -> contexts.add(new RelicsContext(relicRepository.toMarkdownContext()));
                 case "tier_wave"         -> contexts.add(new TierWaveContext(towerTrackerFetcherService.fetchTierWave()));
                 case "version_history"   -> contexts.add(new VersionHistoryContext(towerTrackerFetcherService.fetchVersionHistory()));
             }

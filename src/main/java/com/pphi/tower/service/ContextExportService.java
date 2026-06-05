@@ -7,6 +7,7 @@ import com.pphi.tower.model.battlehistory.*;
 import com.pphi.tower.model.sheets.cards.CardPresetType;
 import com.pphi.tower.model.TowerNumber;
 import com.pphi.tower.repository.CurrencySnapshotRepository;
+import com.pphi.tower.repository.RelicRepository;
 import com.pphi.tower.repository.RunRepository;
 import com.pphi.tower.service.context.ComparisonReportContext;
 import com.pphi.tower.model.sheets.modules.Preset;
@@ -34,15 +35,18 @@ public class ContextExportService {
     private final RunRepository runRepository;
     private final CurrencySnapshotRepository snapshotRepository;
     private final ObjectMapper objectMapper;
+    private final RelicRepository relicRepository;
 
     public ContextExportService(TowerTrackerFetcherService fetcherService,
                                 RunRepository runRepository,
                                 CurrencySnapshotRepository snapshotRepository,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                RelicRepository relicRepository) {
         this.fetcherService = fetcherService;
         this.runRepository = runRepository;
         this.snapshotRepository = snapshotRepository;
         this.objectMapper = objectMapper;
+        this.relicRepository = relicRepository;
     }
 
     public Path exportDiagnosisToDocuments(DiagnosisResult result, String reportName) throws IOException {
@@ -463,7 +467,7 @@ public class ContextExportService {
         contexts.add(new BotsContext(fetcherService.fetchBots()));
 
         log.info("Fetching relics...");
-        contexts.add(new RelicsContext(fetcherService.fetchRelics()));
+        contexts.add(new RelicsContext(relicRepository.toMarkdownContext()));
 
         log.info("Fetching tier/wave info...");
         contexts.add(new TierWaveContext(fetcherService.fetchTierWave()));

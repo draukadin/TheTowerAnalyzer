@@ -289,6 +289,52 @@
   .mod-preset-chip.active.Tournament{background:rgba(79,142,247,0.15);border-color:rgba(79,142,247,0.5);color:var(--accent);}
   .mod-preset-chip.active.Testing{background:rgba(245,158,66,0.15);border-color:rgba(245,158,66,0.5);color:var(--orange);}
   .mod-preset-chip.taken{opacity:0.3;cursor:not-allowed;}
+
+  /* ── Relics ──────────────────────────────── */
+  .relic-dashboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:1.5rem;}
+  .relic-dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;}
+  .relic-dash-card .lbl{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .relic-dash-card .val{font-size:1.3rem;font-weight:700;font-family:var(--mono);}
+  .relic-stat-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);
+    border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);margin-bottom:1.5rem;}
+  .relic-stat-table th{background:var(--surface2);padding:8px 13px;text-align:left;
+    font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  .relic-stat-table td{padding:7px 13px;border-top:1px solid var(--border);}
+  .relic-stat-table tr:hover td{background:var(--surface2);}
+  .relic-stat-table .cat-row td{background:var(--surface2);font-size:11px;text-transform:uppercase;
+    letter-spacing:.8px;color:var(--muted);padding:6px 13px;}
+  .relic-owned-val{font-family:var(--mono);color:var(--green);font-weight:600;}
+  .relic-total-val{font-family:var(--mono);color:var(--muted);}
+  .relic-missing{font-family:var(--mono);color:var(--orange);font-size:12px;}
+  .relic-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
+  .relic-filter-btn{padding:4px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .relic-filter-btn:hover,.relic-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.08);}
+  .relic-search{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border2);
+    border-radius:6px;color:var(--text);font-size:12px;padding:5px 10px;font-family:var(--font);}
+  .relic-search:focus{outline:none;border-color:var(--accent);}
+  .relic-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);
+    border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);}
+  .relic-table th{background:var(--surface2);padding:8px 13px;text-align:left;
+    font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer;user-select:none;}
+  .relic-table th:hover{color:var(--text);}
+  .relic-table td{padding:8px 13px;border-top:1px solid var(--border);}
+  .relic-table tr:hover td{background:var(--surface2);}
+  .relic-table tr.owned-row td{opacity:1;}
+  .relic-table tr.not-owned-row td{opacity:.55;}
+  .rarity-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;font-family:var(--mono);}
+  .rarity-badge.Rare{background:rgba(79,142,247,.15);color:var(--accent);}
+  .rarity-badge.Epic{background:rgba(124,92,252,.15);color:var(--accent2);}
+  .rarity-badge.Legendary{background:rgba(245,200,66,.2);color:var(--gold);}
+  .type-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--mono);}
+  .type-badge.Milestone{background:rgba(61,214,140,.12);color:var(--green);}
+  .type-badge.Tournament{background:rgba(242,107,107,.12);color:var(--red);}
+  .type-badge.Anniversary{background:rgba(245,200,66,.15);color:var(--gold);}
+  .type-badge.Standard{background:rgba(122,128,153,.12);color:var(--muted);}
+  .type-badge.Premium{background:rgba(245,158,66,.15);color:var(--orange);}
+  .type-badge.Guild{background:rgba(79,142,247,.12);color:var(--accent);}
+  .owned-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
+  .owned-toggle input{accent-color:var(--green);cursor:pointer;}
 </style>
 </head>
 <body>
@@ -304,6 +350,7 @@
     <button class="nav-btn" onclick="showView('shards')">Shard Rate</button>
     <button class="nav-btn" onclick="showView('uw')">UW Tracker</button>
     <button class="nav-btn" onclick="showView('modules')">Modules</button>
+    <button class="nav-btn" onclick="showView('relics')">Relics</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
@@ -445,13 +492,14 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
   else if(view==='shards')renderShardsView();
   else if(view==='uw')renderUwView();
   else if(view==='modules')renderModulesView();
+  else if(view==='relics')renderRelicsView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -1965,6 +2013,222 @@ async function modSetShattered(id,count){
     headers:{'Content-Type':'application/json'},body:JSON.stringify({count})});
 }
 
+// ── Relics ─────────────────────────────────────────────────────────────────
+
+const RELIC_STAT_CATEGORIES = {
+  'Misc':    ['Lab Speed','Bot Range'],
+  'Damage':  ['Damage','Ultimate Damage','Attack Speed','Crit Chance','Crit Factor',
+               'Damage / Meter','Super Critical Chance','Super Critical Mult','Rend Armor Mult'],
+  'Defense': ['Health','Health Regen','Defense %','Defense Absolute','Thorns',
+               'Knockback Force','Orb Speed','Wall Rebuild'],
+  'Utility': ['Cash','Coins','Free Attack Upgrade','Free Defense Upgrade','Free Utility Upgrade',
+               'Recovery Amount','Enemy Attack Level Skip','Enemy Health Level Skip']
+};
+
+const RELIC_STAT_UNITS = {'Bot Range':'m','Wall Rebuild':'s'};
+
+let relicData=[], relicTypeFilter='All', relicOwnedFilter='All', relicSearch='', relicSortCol='type', relicSortDir=1;
+
+function relicStatCategory(stat){
+  for(const [cat,stats] of Object.entries(RELIC_STAT_CATEGORIES))
+    if(stats.includes(stat)) return cat;
+  return 'Utility';
+}
+
+function fmtRelicVal(stat, val){
+  const unit = RELIC_STAT_UNITS[stat];
+  if(unit) return val + unit;
+  return Math.round(val * 100) + '%';
+}
+
+async function renderRelicsView(){
+  document.getElementById('mainContent').innerHTML=
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading relics…</div>';
+  try{
+    const res = await fetch(`${API}/relics`);
+    if(!res.ok) throw new Error(res.statusText);
+    relicData = await res.json();
+    buildRelicsPage();
+  }catch(e){
+    document.getElementById('mainContent').innerHTML=
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function buildRelicsPage(){
+  const owned = relicData.filter(r=>r.owned).length;
+  const total = relicData.length;
+
+  // Type counts: Guild, Anniversary, Milestone, Tournament, Event (Standard+Premium)
+  const typeCounts = {Guild:0, Anniversary:0, Milestone:0, Tournament:0, Event:0};
+  const typeOwnedCounts = {Guild:0, Anniversary:0, Milestone:0, Tournament:0, Event:0};
+  for(const r of relicData){
+    const bucket = (r.type==='Standard'||r.type==='Premium') ? 'Event' : r.type;
+    typeCounts[bucket]++;
+    if(r.owned) typeOwnedCounts[bucket]++;
+  }
+
+  // Stat summary
+  const statOwned = {}, statTotal = {};
+  for(const r of relicData){
+    statTotal[r.bonusStat] = (statTotal[r.bonusStat]||0) + r.bonusValue;
+    if(r.owned) statOwned[r.bonusStat] = (statOwned[r.bonusStat]||0) + r.bonusValue;
+  }
+
+  // Dashboard cards
+  const dashHtml = Object.entries(typeCounts).map(([type, tot])=>{
+    const own = typeOwnedCounts[type];
+    return `<div class="relic-dash-card">
+      <div class="lbl">${type}</div>
+      <div class="val" style="color:var(--green)">${own}<span style="font-size:.9rem;color:var(--muted)"> / ${tot}</span></div>
+    </div>`;
+  }).join('');
+
+  // Stat summary table
+  let statHtml = '';
+  for(const [cat, stats] of Object.entries(RELIC_STAT_CATEGORIES)){
+    const rows = stats.filter(s => statTotal[s]!=null).map(s=>{
+      const own = statOwned[s]||0;
+      const tot = statTotal[s]||0;
+      const missing = tot - own;
+      const missingStr = missing > 0 ? `<span class="relic-missing">−${fmtRelicVal(s,missing)}</span>` : '<span style="color:var(--green);font-size:11px">Complete</span>';
+      return `<tr>
+        <td>${s}</td>
+        <td class="relic-owned-val">${fmtRelicVal(s,own)}</td>
+        <td class="relic-total-val">${fmtRelicVal(s,tot)}</td>
+        <td>${missingStr}</td>
+      </tr>`;
+    }).join('');
+    if(!rows) continue;
+    statHtml += `<tr class="cat-row"><td colspan="4">${cat}</td></tr>${rows}`;
+  }
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="report-title" style="margin-bottom:1rem">Relics
+      <button class="btn btn-primary" style="float:right;font-size:12px;padding:5px 14px" onclick="openAddRelicModal()">+ Add Relic</button>
+    </div>
+
+    <div class="section-title">Owned by Type</div>
+    <div class="relic-dashboard">
+      <div class="relic-dash-card" style="border-color:rgba(79,142,247,.3)">
+        <div class="lbl">Total</div>
+        <div class="val" style="color:var(--accent)">${owned}<span style="font-size:.9rem;color:var(--muted)"> / ${total}</span></div>
+      </div>
+      ${dashHtml}
+    </div>
+
+    <div class="section-title">Stat Summary</div>
+    <table class="relic-stat-table">
+      <thead><tr><th>Stat</th><th>Owned</th><th>Total Available</th><th>Missing</th></tr></thead>
+      <tbody>${statHtml}</tbody>
+    </table>
+
+    <div class="section-title">All Relics</div>
+    <div class="relic-filters">
+      <input class="relic-search" type="text" placeholder="Search…" value="${escHtml(relicSearch)}"
+        oninput="relicSearch=this.value;renderRelicTable()">
+      ${['All','Standard','Premium','Milestone','Tournament','Anniversary','Guild'].map(t=>
+        `<button class="relic-filter-btn${relicTypeFilter===t?' active':''}" onclick="relicTypeFilter='${t}';document.querySelectorAll('.relic-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');renderRelicTable()">${t}</button>`
+      ).join('')}
+      <button class="relic-filter-btn${relicOwnedFilter==='Owned'?' active':''}" onclick="relicOwnedFilter=relicOwnedFilter==='Owned'?'All':'Owned';this.classList.toggle('active');renderRelicTable()">Owned only</button>
+      <button class="relic-filter-btn${relicOwnedFilter==='Missing'?' active':''}" onclick="relicOwnedFilter=relicOwnedFilter==='Missing'?'All':'Missing';this.classList.toggle('active');renderRelicTable()">Missing only</button>
+    </div>
+    <div id="relicTableWrap"></div>`;
+
+  renderRelicTable();
+}
+
+function renderRelicTable(){
+  let rows = relicData.slice();
+  if(relicTypeFilter!=='All') rows=rows.filter(r=>r.type===relicTypeFilter);
+  if(relicOwnedFilter==='Owned') rows=rows.filter(r=>r.owned);
+  if(relicOwnedFilter==='Missing') rows=rows.filter(r=>!r.owned);
+  if(relicSearch){
+    const q=relicSearch.toLowerCase();
+    rows=rows.filter(r=>r.name.toLowerCase().includes(q)||r.bonusStat.toLowerCase().includes(q)||r.obtainCondition.toLowerCase().includes(q));
+  }
+  rows.sort((a,b)=>{
+    let av=a[relicSortCol]??'', bv=b[relicSortCol]??'';
+    if(typeof av==='boolean') av=av?0:1, bv=bv?0:1;
+    return av<bv?-relicSortDir:av>bv?relicSortDir:0;
+  });
+
+  const thSort = col => `onclick="relicSortCol='${col}';relicSortDir=relicSortCol==='${col}'?-relicSortDir:1;renderRelicTable()"`;
+  document.getElementById('relicTableWrap').innerHTML = `
+    <table class="relic-table">
+      <thead><tr>
+        <th ${thSort('name')}>Name</th>
+        <th ${thSort('rarity')}>Rarity</th>
+        <th ${thSort('type')}>Type</th>
+        <th ${thSort('bonusStat')}>Stat</th>
+        <th ${thSort('bonusValue')} style="text-align:right">Value</th>
+        <th>How to Obtain</th>
+        <th style="text-align:center">Owned</th>
+      </tr></thead>
+      <tbody>${rows.map(r=>`
+        <tr class="${r.owned?'owned-row':'not-owned-row'}">
+          <td style="font-weight:600">${escHtml(r.name)}</td>
+          <td><span class="rarity-badge ${r.rarity}">${r.rarity}</span></td>
+          <td><span class="type-badge ${r.type}">${r.type}</span></td>
+          <td style="color:var(--muted)">${escHtml(r.bonusStat)}</td>
+          <td style="text-align:right;font-family:var(--mono);color:var(--accent)">${fmtRelicVal(r.bonusStat,r.bonusValue)}</td>
+          <td style="font-size:12px;color:var(--muted)">${escHtml(r.obtainCondition)}</td>
+          <td style="text-align:center">
+            <label class="owned-toggle" title="${r.owned?'Mark not owned':'Mark owned'}">
+              <input type="checkbox" ${r.owned?'checked':''} onchange="relicSetOwned(${r.id},this.checked)">
+            </label>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="height:2rem"></div>`;
+}
+
+async function relicSetOwned(id, owned){
+  const r = relicData.find(x=>x.id===id);
+  if(r) r.owned = owned;
+  await fetch(`${API}/relics/${id}/owned`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({owned})});
+  buildRelicsPage();
+  // Restore scroll
+  const el = document.getElementById('relicTableWrap');
+  if(el) requestAnimationFrame(()=>el.scrollIntoView({behavior:'instant',block:'nearest'}));
+}
+
+const RELIC_STATS = [
+  'Lab Speed','Bot Range','Damage','Ultimate Damage','Attack Speed','Crit Chance','Crit Factor',
+  'Damage / Meter','Super Critical Chance','Super Critical Mult','Rend Armor Mult',
+  'Health','Health Regen','Defense %','Defense Absolute','Thorns','Knockback Force',
+  'Orb Speed','Wall Rebuild','Cash','Coins','Free Attack Upgrade','Free Defense Upgrade',
+  'Free Utility Upgrade','Recovery Amount','Enemy Attack Level Skip','Enemy Health Level Skip'
+];
+
+function openAddRelicModal(){
+  document.getElementById('addRelicModal').style.display='flex';
+}
+function closeAddRelicModal(){
+  document.getElementById('addRelicModal').style.display='none';
+}
+
+async function saveNewRelic(){
+  const name = document.getElementById('newRelicName').value.trim();
+  const rarity = document.getElementById('newRelicRarity').value;
+  const type = document.getElementById('newRelicType').value;
+  const bonusStat = document.getElementById('newRelicStat').value;
+  const bonusValue = parseFloat(document.getElementById('newRelicValue').value);
+  const obtainCondition = document.getElementById('newRelicCondition').value.trim();
+  if(!name||!bonusStat||isNaN(bonusValue)){alert('Name, stat and value are required.');return;}
+  try{
+    await fetch(`${API}/relics`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,rarity,type,bonusStat,bonusValue,obtainCondition})});
+    closeAddRelicModal();
+    const res=await fetch(`${API}/relics`);
+    relicData=await res.json();
+    buildRelicsPage();
+  }catch(e){alert('Failed to save: '+e.message);}
+}
+
 init();
 </script>
 
@@ -2010,6 +2274,56 @@ init();
     <div class="modal-actions">
       <button class="btn" onclick="closeProfileModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+<div id="addRelicModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddRelicModal()">
+  <div class="modal">
+    <div class="modal-title">Add New Relic</div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="newRelicName" type="text" placeholder="Relic name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rarity</label>
+      <select class="form-input" id="newRelicRarity">
+        <option>Rare</option><option>Epic</option><option>Legendary</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-input" id="newRelicType">
+        <option>Standard</option><option>Premium</option><option>Milestone</option>
+        <option>Tournament</option><option>Anniversary</option><option>Guild</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bonus Stat</label>
+      <select class="form-input" id="newRelicStat">
+        <option value="" disabled selected>— select stat —</option>
+        <option>Lab Speed</option><option>Bot Range</option><option>Damage</option>
+        <option>Ultimate Damage</option><option>Attack Speed</option><option>Crit Chance</option>
+        <option>Crit Factor</option><option>Damage / Meter</option><option>Super Critical Chance</option>
+        <option>Super Critical Mult</option><option>Rend Armor Mult</option><option>Health</option>
+        <option>Health Regen</option><option>Defense %</option><option>Defense Absolute</option>
+        <option>Thorns</option><option>Knockback Force</option><option>Orb Speed</option>
+        <option>Wall Rebuild</option><option>Cash</option><option>Coins</option>
+        <option>Free Attack Upgrade</option><option>Free Defense Upgrade</option>
+        <option>Free Utility Upgrade</option><option>Recovery Amount</option>
+        <option>Enemy Attack Level Skip</option><option>Enemy Health Level Skip</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bonus Value <span style="color:var(--muted);font-size:10px">(decimals for %: 0.05 = 5% · meters/seconds as whole number: 2)</span></label>
+      <input class="form-input" id="newRelicValue" type="number" step="0.001" placeholder="e.g. 0.05">
+    </div>
+    <div class="form-group">
+      <label class="form-label">How to Obtain</label>
+      <input class="form-input" id="newRelicCondition" type="text" placeholder="e.g. Earn 700 medals SomeEvent event">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddRelicModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewRelic()">Add Relic</button>
     </div>
   </div>
 </div>

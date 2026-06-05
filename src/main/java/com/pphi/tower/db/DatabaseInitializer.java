@@ -268,5 +268,26 @@ public class DatabaseInitializer {
         } catch (Exception ignored) {
             // Column already gone — safe to continue.
         }
+
+        // ── Relics ────────────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS relic (
+                    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name             TEXT    NOT NULL UNIQUE,
+                    rarity           TEXT    NOT NULL,
+                    type             TEXT    NOT NULL,
+                    bonus_stat       TEXT    NOT NULL,
+                    bonus_value      REAL    NOT NULL,
+                    obtain_condition TEXT    NOT NULL
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS relic_player_state (
+                    relic_id INTEGER NOT NULL REFERENCES relic(id) PRIMARY KEY,
+                    owned    INTEGER NOT NULL DEFAULT 0
+                )
+                """);
     }
 }
