@@ -437,5 +437,103 @@ public class DatabaseInitializer {
                     uw_waves       INTEGER NOT NULL DEFAULT 0
                 )
                 """);
+
+        // ── Workshop & Workshop+ ──────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_category (
+                    id   INTEGER PRIMARY KEY,
+                    name TEXT    NOT NULL UNIQUE
+                )
+                """);
+
+        // Seed categories if not yet present.
+        jdbc.execute("""
+                INSERT OR IGNORE INTO workshop_category (id, name) VALUES
+                    (1, 'ATTACK'),
+                    (2, 'DEFENSE'),
+                    (3, 'UTILITY')
+                """);
+
+        // One-time flat-fee groups that unlock one or more Workshop (non-plus) items together.
+        // Items with unlock_cost = 0 are available immediately.
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_unlock_group (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    category_id INTEGER NOT NULL REFERENCES workshop_category(id),
+                    unlock_cost REAL    NOT NULL DEFAULT 0,
+                    UNIQUE (category_id, unlock_cost)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_item (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name        TEXT    NOT NULL,
+                    category_id INTEGER NOT NULL REFERENCES workshop_category(id),
+                    is_plus     INTEGER NOT NULL DEFAULT 0 CHECK (is_plus IN (0, 1)),
+                    sort_order  INTEGER NOT NULL,
+                    max_level   INTEGER NOT NULL,
+                    unlock_group_id              INTEGER REFERENCES workshop_unlock_group(id),
+                    plus_unlock_lab_name         TEXT,
+                    plus_unlock_cumulative_spend REAL,
+                    UNIQUE (name, is_plus)
+                )
+                """);
+
+        // REAL because Workshop+ costs reach ~3e20, exceeding INTEGER max (~9.2e18).
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_item_level_cost (
+                    workshop_item_id INTEGER NOT NULL REFERENCES workshop_item(id),
+                    level            INTEGER NOT NULL CHECK (level >= 1),
+                    base_cost        REAL    NOT NULL,
+                    PRIMARY KEY (workshop_item_id, level)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_unlock_group_state (
+                    unlock_group_id INTEGER NOT NULL REFERENCES workshop_unlock_group(id) PRIMARY KEY,
+                    is_purchased    INTEGER NOT NULL DEFAULT 0 CHECK (is_purchased IN (0, 1))
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_item_state (
+                    workshop_item_id INTEGER NOT NULL REFERENCES workshop_item(id) PRIMARY KEY,
+                    current_level    INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_preset_unlock (
+                    is_plus     INTEGER NOT NULL CHECK (is_plus IN (0, 1)) PRIMARY KEY,
+                    is_unlocked INTEGER NOT NULL DEFAULT 0 CHECK (is_unlocked IN (0, 1))
+                )
+                """);
+
+        jdbc.execute("""
+                INSERT OR IGNORE INTO workshop_preset_unlock (is_plus, is_unlocked) VALUES (0, 0), (1, 0)
+                """);
+
+        // Up to 5 named preset slots per type (Workshop / Workshop+).
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_preset (
+                    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+                    is_plus INTEGER NOT NULL CHECK (is_plus IN (0, 1)),
+                    slot    INTEGER NOT NULL CHECK (slot BETWEEN 1 AND 5),
+                    name    TEXT    NOT NULL DEFAULT '',
+                    UNIQUE (is_plus, slot)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_preset_item (
+                    preset_id        INTEGER NOT NULL REFERENCES workshop_preset(id) ON DELETE CASCADE,
+                    workshop_item_id INTEGER NOT NULL REFERENCES workshop_item(id),
+                    target_level     INTEGER NOT NULL,
+                    PRIMARY KEY (preset_id, workshop_item_id)
+                )
+                """);
     }
 }
