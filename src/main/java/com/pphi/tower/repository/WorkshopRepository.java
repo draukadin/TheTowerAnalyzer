@@ -164,9 +164,9 @@ public class WorkshopRepository {
     }
 
     /**
-     * For every locked Workshop+ item that has a cumulative-spend threshold,
-     * returns how much has been spent vs what is needed, and whether the prerequisite
-     * lab has been completed (phase 1 gate).
+     * For every locked Workshop+ item (lab-gated first items and spend-threshold items),
+     * returns lock status, spend progress, and whether the prerequisite lab is done.
+     * Lab-only items (first per category) have threshold/spent/remaining = 0.
      */
     public List<PlusUnlockProgress> getPlusUnlockProgress() {
         return jdbc.query("""
@@ -175,9 +175,9 @@ public class WorkshopRepository {
                     wi.name AS item_name,
                     wc.name AS category,
                     wi.sort_order,
-                    wi.plus_unlock_cumulative_spend AS threshold,
+                    COALESCE(wi.plus_unlock_cumulative_spend, 0) AS threshold,
                     COALESCE(cat_spend.total_spent, 0) AS spent,
-                    MAX(0.0, wi.plus_unlock_cumulative_spend - COALESCE(cat_spend.total_spent, 0)) AS remaining,
+                    MAX(0.0, COALESCE(wi.plus_unlock_cumulative_spend, 0) - COALESCE(cat_spend.total_spent, 0)) AS remaining,
                     CASE WHEN wi.plus_unlock_lab_name IS NULL THEN 1
                          WHEN lab_state.current_level > 0    THEN 1
                          ELSE 0 END AS lab_completed
@@ -201,7 +201,7 @@ public class WorkshopRepository {
                     LEFT JOIN lab_player_state ps ON ps.lab_id = l.id
                 ) lab_state ON lab_state.name = wi.plus_unlock_lab_name
                 WHERE wi.is_plus = 1
-                  AND wi.plus_unlock_cumulative_spend IS NOT NULL
+                  AND (wi.plus_unlock_lab_name IS NOT NULL OR wi.plus_unlock_cumulative_spend IS NOT NULL)
                   AND COALESCE((SELECT wis3.current_level FROM workshop_item_state wis3
                                 WHERE wis3.workshop_item_id = wi.id), 0) = 0
                 ORDER BY wc.id, wi.sort_order
