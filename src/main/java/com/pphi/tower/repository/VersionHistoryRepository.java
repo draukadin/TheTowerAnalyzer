@@ -62,6 +62,18 @@ public class VersionHistoryRepository {
         }
     }
 
+    public void update(String version, String type, List<NewChange> changes) {
+        jdbc.update("UPDATE tower_version SET type=?, summary=? WHERE version=?",
+                type, buildSummary(changes), version);
+        jdbc.update("DELETE FROM tower_version_change WHERE version=?", version);
+        for (NewChange c : changes) {
+            jdbc.update("""
+                    INSERT INTO tower_version_change (version, category, entity_name, old_value, new_value, notes)
+                    VALUES (?,?,?,?,?,?)
+                    """, version, c.category(), c.entityName(), c.oldValue(), c.newValue(), c.notes());
+        }
+    }
+
     private String buildSummary(List<NewChange> changes) {
         return changes.stream()
                 .map(c -> c.oldValue() != null

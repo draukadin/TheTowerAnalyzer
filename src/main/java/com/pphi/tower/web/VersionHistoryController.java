@@ -33,6 +33,7 @@ public class VersionHistoryController {
                                      List<VersionChange> changes, boolean syncedToSheet) {}
     public record CreateRequest(String version, String type,
                                 List<VersionHistoryRepository.NewChange> changes) {}
+    public record UpdateRequest(String type, List<VersionHistoryRepository.NewChange> changes) {}
     public record SyncResult(boolean synced) {}
 
     @GetMapping
@@ -53,6 +54,16 @@ public class VersionHistoryController {
         boolean synced = syncVersionCell(req.version());
         return new VersionWithChanges(req.version(), req.type(), summary,
                 repo.getChangesForVersion(req.version()), synced);
+    }
+
+    @PutMapping("/{version}")
+    public VersionWithChanges update(@PathVariable String version, @RequestBody UpdateRequest req) {
+        repo.update(version, req.type(), req.changes());
+        String summary = repo.getAllVersions().stream()
+                .filter(v -> v.version().equals(version))
+                .map(VersionEntry::summary).findFirst().orElse("");
+        return new VersionWithChanges(version, req.type(), summary,
+                repo.getChangesForVersion(version), true);
     }
 
     @PostMapping("/{version}/sync-sheet")
