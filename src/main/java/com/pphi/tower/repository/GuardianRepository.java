@@ -51,6 +51,9 @@ public class GuardianRepository {
 
     public record PresetStatLevel(long chipStatId, int targetLevel) {}
 
+    public record LevelInput(double value, Integer bitsToNext) {}
+    public record StatInput(String statKey, String label, String valueUnit, int sortOrder, List<LevelInput> levels) {}
+
     // ── Queries ───────────────────────────────────────────────────────────────
 
     public boolean isGuardianUnlocked() {
@@ -219,6 +222,33 @@ public class GuardianRepository {
                 chips.stream()
                         .map(c -> new Object[]{presetId, c.chipId(), c.active() ? 1 : 0})
                         .toList());
+    }
+
+    public long createChip(String code, String name, String source,
+                           Integer unlockSeason, Integer unlockCostTokens,
+                           List<StatInput> stats) {
+        Long chipId = jdbc.queryForObject("""
+                INSERT INTO guardian_chip (code, name, source, unlock_season, unlock_cost_tokens)
+                VALUES (?,?,?,?,?) RETURNING id
+                """, Long.class, code, name, source, unlockSeason, unlockCostTokens);
+        jdbc.update("INSERT INTO guardian_chip_player_state (chip_id, acquired) VALUES (?,0)", chipId);
+
+        for (StatInput stat : stats) {
+            int maxLevel = stat.levels().size() - 1;
+            Long statId = jdbc.queryForObject("""
+                    INSERT INTO guardian_chip_stat (chip_id, stat_key, label, value_unit, max_level, sort_order)
+                    VALUES (?,?,?,?,?,?) RETURNING id
+                    """, Long.class,
+                    chipId, stat.statKey(), stat.label(), stat.valueUnit(), maxLevel, stat.sortOrder());
+            for (int i = 0; i < stat.levels().size(); i++) {
+                LevelInput lv = stat.levels().get(i);
+                jdbc.update(
+                        "INSERT INTO guardian_chip_stat_level_value (chip_stat_id, level, value, bits_to_next) VALUES (?,?,?,?)",
+                        statId, i, lv.value(), lv.bitsToNext());
+            }
+            jdbc.update("INSERT INTO guardian_chip_stat_player_level (chip_stat_id, current_level) VALUES (?,0)", statId);
+        }
+        return chipId;
     }
 
     public void setPresetStatLevels(int presetId, List<PresetStatLevel> levels) {

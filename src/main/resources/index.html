@@ -669,6 +669,27 @@
   .guardian-preset-bits-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11px;}
   .guardian-preset-bits-chip .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
   .guardian-preset-bits-chip .val{font-family:var(--mono);font-weight:700;color:var(--accent);}
+  .gn-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem;}
+  .gn-form-row.cols3{grid-template-columns:1fr 1fr 1fr;}
+  .gn-form-row.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .gn-stat-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;}
+  .gn-stat-block-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .gn-stat-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;flex:1;}
+  .gn-levels-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+  .gn-levels-table th{background:var(--surface);padding:4px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  .gn-levels-table td{padding:3px 4px;border-top:1px solid var(--border);}
+  .gn-levels-table .lvl{font-family:var(--mono);font-size:11px;color:var(--muted);padding:0 8px;width:36px;text-align:center;}
+  .gn-num-input{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:12px;padding:3px 6px;font-family:var(--mono);}
+  .gn-num-input:focus{outline:none;border-color:var(--accent);}
+  .gn-num-input:disabled{opacity:.35;cursor:not-allowed;}
+  .gn-rm-row{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px 6px;}
+  .gn-rm-row:hover{color:var(--red,#f87171);}
+  .gn-add-level-btn{margin-top:6px;font-size:11px;padding:4px 10px;border-radius:5px;border:1px dashed var(--border2);background:transparent;color:var(--muted);cursor:pointer;}
+  .gn-add-level-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .gn-add-stat-btn{font-size:12px;padding:6px 14px;border-radius:6px;border:1px dashed var(--border2);background:transparent;color:var(--muted);cursor:pointer;margin-bottom:1rem;width:100%;}
+  .gn-add-stat-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .gn-select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;padding:9px 12px;font-family:var(--font);}
+  .gn-select:focus{outline:none;border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -3453,6 +3474,39 @@ init();
     </div>
   </div>
 </div>
+<div id="guardianAddChipModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)guardianCloseAddChip()">
+  <div class="modal" style="max-width:700px;width:95vw">
+    <div class="modal-title">Add New Chip</div>
+    <div class="gn-form-row cols4">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="gnName" placeholder="e.g. Shield">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Source</label>
+        <select class="gn-select" id="gnSource">
+          <option value="BASE">Base</option>
+          <option value="GUILD_SHOP" selected>Guild Shop</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Token Cost</label>
+        <input class="form-input" id="gnTokens" type="number" min="0" placeholder="e.g. 200">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Unlock Season</label>
+        <input class="form-input" id="gnSeason" type="number" min="1" placeholder="optional">
+      </div>
+    </div>
+    <div id="gnStatBlocks"></div>
+    <button class="gn-add-stat-btn" onclick="gnAddStat()" id="gnAddStatBtn">+ Add Stat</button>
+    <div class="modal-actions">
+      <button class="btn" onclick="guardianCloseAddChip()">Cancel</button>
+      <button class="btn btn-primary" onclick="guardianSubmitNewChip()">Save Chip</button>
+    </div>
+  </div>
+</div>
+
 <div id="addRotationModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddRotationModal()">
   <div class="modal">
     <div class="modal-title">Add Gem Store Rotation</div>
@@ -4815,8 +4869,11 @@ function renderGuardianTracker() {
     </div>`;
 
   const cards = guardianChips.map(chip => guardianChipCardHtml(chip)).join('');
+  const addBtn = `<div style="margin-bottom:1rem">
+    <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="guardianOpenAddChip()">+ Add Chip</button>
+  </div>`;
   document.getElementById('guardianBody').innerHTML =
-    `${unlockToggle}${slotsHtml}<div class="guardian-chips-grid">${cards}</div>`;
+    `${unlockToggle}${slotsHtml}${addBtn}<div class="guardian-chips-grid">${cards}</div>`;
 }
 
 function guardianChipBitsSpent(chip) {
@@ -4975,7 +5032,7 @@ function renderGuardianPresetsTab() {
     <div class="guardian-preset-header">
       <input class="guardian-preset-name-input" value="${escHtml(preset.name)}"
         onchange="guardianRenamePreset(${preset.id},this.value)" placeholder="Preset name">
-      <button class="danger-btn" onclick="guardianDeletePreset(${preset.id})">Delete</button>
+      <button class="btn" style="font-size:12px;padding:5px 12px;color:var(--red,#f87171);border-color:var(--red,#f87171)" onclick="guardianDeletePreset(${preset.id})">Delete</button>
     </div>
     <div class="guardian-preset-bits">
       <div class="guardian-preset-bits-chip">
@@ -5082,6 +5139,168 @@ async function guardianPresetSetStatLevel(presetId, chipStatId, targetLevel) {
     body: JSON.stringify({levels})
   });
   renderGuardianPresetsTab();
+}
+
+// ── Add Chip modal ─────────────────────────────────────────────────────────────
+
+let gnStatCount = 0;
+
+function guardianOpenAddChip() {
+  gnStatCount = 0;
+  document.getElementById('gnName').value    = '';
+  document.getElementById('gnTokens').value  = '';
+  document.getElementById('gnSeason').value  = '';
+  document.getElementById('gnSource').value  = 'GUILD_SHOP';
+  document.getElementById('gnStatBlocks').innerHTML = '';
+  gnAddStat();
+  document.getElementById('guardianAddChipModal').style.display = 'flex';
+}
+
+function guardianCloseAddChip() {
+  document.getElementById('guardianAddChipModal').style.display = 'none';
+}
+
+function gnAddStat() {
+  if (gnStatCount >= 3) return;
+  const idx = gnStatCount++;
+  const div = document.createElement('div');
+  div.className = 'gn-stat-block';
+  div.dataset.statIdx = idx;
+  div.innerHTML = `
+    <div class="gn-stat-block-header">
+      <span class="gn-stat-title">Stat ${idx + 1}</span>
+      <button class="gn-rm-row" title="Remove stat" onclick="gnRemoveStat(this)">✕</button>
+    </div>
+    <div class="gn-form-row cols3" style="margin-bottom:8px">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Label</label>
+        <input class="form-input gn-stat-label" placeholder="e.g. Cooldown" oninput="gnAutoKey(this)">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Stat Key</label>
+        <input class="form-input gn-stat-key" placeholder="e.g. cooldown">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Unit</label>
+        <select class="gn-select gn-stat-unit">
+          <option value="PERCENT">Percent</option>
+          <option value="SECONDS">Seconds</option>
+          <option value="COUNT">Count</option>
+          <option value="MULTIPLIER">Multiplier</option>
+        </select>
+      </div>
+    </div>
+    <table class="gn-levels-table">
+      <thead><tr>
+        <th style="width:44px;text-align:center">Level</th>
+        <th>Value</th>
+        <th>Bits to Next</th>
+        <th style="width:30px"></th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <button class="gn-add-level-btn" onclick="gnAddRow(this)">+ Add Level</button>`;
+  document.getElementById('gnStatBlocks').appendChild(div);
+  gnAddRow(div.querySelector('.gn-add-level-btn'));
+  document.getElementById('gnAddStatBtn').style.display = gnStatCount >= 3 ? 'none' : '';
+}
+
+function gnRemoveStat(btn) {
+  btn.closest('.gn-stat-block').remove();
+  gnStatCount--;
+  document.getElementById('gnStatBlocks').querySelectorAll('.gn-stat-block').forEach((el, i) => {
+    el.querySelector('.gn-stat-title').textContent = `Stat ${i + 1}`;
+  });
+  document.getElementById('gnAddStatBtn').style.display = gnStatCount >= 3 ? 'none' : '';
+}
+
+function gnAutoKey(labelInput) {
+  const keyInput = labelInput.closest('.gn-form-row').querySelector('.gn-stat-key');
+  keyInput.value = labelInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function gnAddRow(addBtn) {
+  const tbody = addBtn.closest('.gn-stat-block').querySelector('tbody');
+  const level = tbody.rows.length;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="lvl">${level}</td>
+    <td><input type="number" class="gn-num-input gn-val" step="any" placeholder="0"></td>
+    <td><input type="number" class="gn-num-input gn-bits" step="1" min="0" placeholder="—"></td>
+    <td><button class="gn-rm-row" onclick="gnRemoveRow(this)">✕</button></td>`;
+  tbody.appendChild(tr);
+  gnRefreshLastRow(tbody);
+}
+
+function gnRemoveRow(btn) {
+  const tbody = btn.closest('tbody');
+  if (tbody.rows.length <= 1) return;
+  btn.closest('tr').remove();
+  gnRenumberRows(tbody);
+  gnRefreshLastRow(tbody);
+}
+
+function gnRenumberRows(tbody) {
+  Array.from(tbody.rows).forEach((tr, i) => { tr.cells[0].textContent = i; });
+}
+
+function gnRefreshLastRow(tbody) {
+  Array.from(tbody.rows).forEach((tr, i) => {
+    const bitsInput = tr.querySelector('.gn-bits');
+    const isLast = i === tbody.rows.length - 1;
+    bitsInput.disabled = isLast;
+    if (isLast) bitsInput.value = '';
+  });
+}
+
+async function guardianSubmitNewChip() {
+  const name   = document.getElementById('gnName').value.trim();
+  const source = document.getElementById('gnSource').value;
+  const tokens = document.getElementById('gnTokens').value;
+  const season = document.getElementById('gnSeason').value;
+
+  if (!name) { alert('Chip name is required.'); return; }
+
+  const statBlocks = document.getElementById('gnStatBlocks').querySelectorAll('.gn-stat-block');
+  if (!statBlocks.length) { alert('At least one stat is required.'); return; }
+
+  const stats = [];
+  for (let i = 0; i < statBlocks.length; i++) {
+    const block = statBlocks[i];
+    const label   = block.querySelector('.gn-stat-label').value.trim();
+    const statKey = block.querySelector('.gn-stat-key').value.trim();
+    const unit    = block.querySelector('.gn-stat-unit').value;
+    if (!label || !statKey) { alert(`Stat ${i + 1}: label and key are required.`); return; }
+
+    const rows = block.querySelectorAll('tbody tr');
+    if (rows.length < 2) { alert(`Stat ${i + 1}: at least 2 levels (level 0 and max) are required.`); return; }
+
+    const levels = [];
+    for (let r = 0; r < rows.length; r++) {
+      const valStr  = rows[r].querySelector('.gn-val').value;
+      const bitsStr = rows[r].querySelector('.gn-bits').value;
+      if (valStr === '') { alert(`Stat ${i + 1}, level ${r}: value is required.`); return; }
+      const isLast = r === rows.length - 1;
+      levels.push({ value: parseFloat(valStr), bitsToNext: isLast ? null : (bitsStr ? parseInt(bitsStr) : null) });
+    }
+    stats.push({ statKey, label, valueUnit: unit, sortOrder: i + 1, levels });
+  }
+
+  const body = {
+    name, source,
+    unlockCostTokens: tokens ? parseInt(tokens) : null,
+    unlockSeason:     season ? parseInt(season) : null,
+    stats
+  };
+
+  const res = await fetch(`${API}/guardian/chips`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { alert('Failed to save chip.'); return; }
+
+  guardianCloseAddChip();
+  await renderGuardianView();
 }
 </script>
 </body>

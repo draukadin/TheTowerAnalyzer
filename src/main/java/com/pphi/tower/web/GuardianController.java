@@ -56,6 +56,16 @@ public class GuardianController {
         repo.setChipAcquired(chipId, req.acquired());
     }
 
+    record CreateChipRequest(String name, String source, Integer unlockCostTokens,
+                             Integer unlockSeason, List<StatInput> stats) {}
+
+    @PostMapping("/chips")
+    public long createChip(@RequestBody CreateChipRequest req) {
+        String code = req.name().toUpperCase().replaceAll("[^A-Z0-9]+", "_");
+        return repo.createChip(code, req.name(), req.source(),
+                req.unlockSeason(), req.unlockCostTokens(), req.stats());
+    }
+
     record StatLevelRequest(int level) {}
 
     @PutMapping("/stats/{statId}/level")
