@@ -21,11 +21,48 @@ public class WorkshopCostSeeder {
     }
 
     private void seed() {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM workshop_item_level_cost", Integer.class);
-        if (count != null && count > 0) return;
+        Integer regularCount = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM workshop_item_level_cost wlc" +
+                " JOIN workshop_item wi ON wi.id = wlc.workshop_item_id WHERE wi.is_plus = 0",
+                Integer.class);
+        if (regularCount == null || regularCount == 0) seedCosts();
 
-        seedPlusCosts();
+        Integer plusCount = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM workshop_item_level_cost wlc" +
+                " JOIN workshop_item wi ON wi.id = wlc.workshop_item_id WHERE wi.is_plus = 1",
+                Integer.class);
+        if (plusCount == null || plusCount == 0) seedPlusCosts();
+    }
+
+    private void seedCosts() {
+        try {
+            var resource = new ClassPathResource("workshop_costs.json");
+            var mapper = new ObjectMapper();
+            // Structure: { "Item Name": { "1": 10, "2": 12, ... }, ... }
+            Map<String, Map<String, Number>> data =
+                    mapper.readValue(resource.getInputStream(), new TypeReference<>() {});
+
+            List<Object[]> batch = new ArrayList<>();
+            for (var itemEntry : data.entrySet()) {
+                String itemName = itemEntry.getKey();
+                Long itemId = jdbc.queryForObject(
+                        "SELECT id FROM workshop_item WHERE name = ? AND is_plus = 0",
+                        Long.class, itemName);
+                if (itemId == null) continue;
+
+                for (var levelEntry : itemEntry.getValue().entrySet()) {
+                    int level = Integer.parseInt(levelEntry.getKey());
+                    double cost = levelEntry.getValue().doubleValue();
+                    batch.add(new Object[]{itemId, level, cost});
+                }
+            }
+
+            jdbc.batchUpdate(
+                    "INSERT OR IGNORE INTO workshop_item_level_cost (workshop_item_id, level, base_cost) VALUES (?,?,?)",
+                    batch);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to seed Workshop costs", e);
+        }
     }
 
     private void seedPlusCosts() {
