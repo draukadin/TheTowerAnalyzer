@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,14 +30,10 @@ public class PlayerTrackerController {
     }
 
     @GetMapping("/currencies")
-    public Currencies getCurrencies() throws IOException {
-        return snapshotRepository.findLatest().orElseGet(() -> {
-            try {
-                return service.fetchCurrencies();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+    public ResponseEntity<Currencies> getCurrencies() {
+        return snapshotRepository.findLatest()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @PostMapping("/currencies")
@@ -65,11 +60,6 @@ public class PlayerTrackerController {
             "relicLabSpeedBonus",   m.relicLabSpeedBonus()
         ));
         return builder;
-    }
-
-    @GetMapping("/labs")
-    public Map<String, String> getLabPlan() throws IOException {
-        return Map.of("labPlanning", service.fetchLabPlanning());
     }
 
     @GetMapping("/lab-state")

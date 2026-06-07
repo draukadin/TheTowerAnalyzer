@@ -4,17 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
 import com.pphi.tower.model.battlediagnostics.Observation;
 import com.pphi.tower.model.battlehistory.*;
-import com.pphi.tower.model.sheets.cards.CardPresetType;
 import com.pphi.tower.model.TowerNumber;
-import com.pphi.tower.repository.CurrencySnapshotRepository;
-import com.pphi.tower.repository.RelicRepository;
 import com.pphi.tower.repository.RunRepository;
-import com.pphi.tower.service.context.ComparisonReportContext;
-import com.pphi.tower.model.sheets.modules.Preset;
-import com.pphi.tower.service.context.*;
 import com.pphi.tower.web.dto.ReportSummaryDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -22,31 +14,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ContextExportService {
 
-    private static final Logger log = LoggerFactory.getLogger(ContextExportService.class);
     private static final DateTimeFormatter TIMESTAMP_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final TowerTrackerFetcherService fetcherService;
     private final RunRepository runRepository;
-    private final CurrencySnapshotRepository snapshotRepository;
     private final ObjectMapper objectMapper;
-    private final RelicRepository relicRepository;
 
-    public ContextExportService(TowerTrackerFetcherService fetcherService,
-                                RunRepository runRepository,
-                                CurrencySnapshotRepository snapshotRepository,
-                                ObjectMapper objectMapper,
-                                RelicRepository relicRepository) {
-        this.fetcherService = fetcherService;
+    public ContextExportService(RunRepository runRepository, ObjectMapper objectMapper) {
         this.runRepository = runRepository;
-        this.snapshotRepository = snapshotRepository;
         this.objectMapper = objectMapper;
-        this.relicRepository = relicRepository;
     }
 
     public Path exportDiagnosisToDocuments(DiagnosisResult result, String reportName) throws IOException {
@@ -148,9 +129,181 @@ public class ContextExportService {
         sb.append("_Report 2: ").append(id2).append("_\n\n");
         sb.append("---\n\n");
         sb.append("```\n");
-        sb.append(new ComparisonReportContext(comparisonResult, id1, id2).getContent());
+        sb.append(formatComparison(comparisonResult, id1, id2));
         sb.append("```\n");
         return sb.toString();
+    }
+
+    private String formatComparison(List<BattleHistory> comparisonResult, String id1, String id2) {
+        BattleHistory r1 = comparisonResult.get(0);
+        BattleHistory r2 = comparisonResult.get(1);
+        BattleHistory delta = comparisonResult.get(2);
+
+        Map<SectionHeader, Section> m1 = r1.sectionMap();
+        Map<SectionHeader, Section> m2 = r2.sectionMap();
+        Map<SectionHeader, Section> md = delta.sectionMap();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== The Tower Battle Run Comparison ===\n\n");
+        sb.append("Report 1 ID: ").append(id1).append("\n");
+        sb.append("Report 2 ID: ").append(id2).append("\n\n");
+
+        appendBattleReport(sb, m1, m2, md);
+        appendRecords(sb, m1, m2, md);
+        appendDamage(sb, m1, m2, md);
+        appendDamageTaken(sb, m1, m2, md);
+        appendDamageBlocked(sb, m1, m2, md);
+        appendCoins(sb, m1, m2, md);
+        appendCurrencies(sb, m1, m2, md);
+        appendEnemiesDestroyedBy(sb, m1, m2, md);
+
+        return sb.toString();
+    }
+
+    private void appendBattleReport(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        BattleReport s1 = cast(m1, SectionHeader.BATTLE_REPORT, BattleReport.class);
+        BattleReport s2 = cast(m2, SectionHeader.BATTLE_REPORT, BattleReport.class);
+        BattleReport sd = cast(md, SectionHeader.BATTLE_REPORT, BattleReport.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Battle Report ---\n");
+        row(sb, "Tower Era",      s1.towerEra(),      s2.towerEra(),      null);
+        row(sb, "Tier",           s1.tier(),           s2.tier(),           sd != null ? sd.tier() : null);
+        row(sb, "Wave",           s1.wave(),           s2.wave(),           sd != null ? sd.wave() : null);
+        row(sb, "Game Time",      s1.gameTime(),       s2.gameTime(),       sd != null ? sd.gameTime() : null);
+        row(sb, "Real Time",      s1.realTime(),       s2.realTime(),       sd != null ? sd.realTime() : null);
+        row(sb, "Killed By",      s1.killedBy(),       s2.killedBy(),       null);
+        row(sb, "Coins Earned",   s1.coinsEarned(),    s2.coinsEarned(),    sd != null ? sd.coinsEarned() : null);
+        row(sb, "Coins Per Hour", s1.coinsPerHour(),   s2.coinsPerHour(),   sd != null ? sd.coinsPerHour() : null);
+        row(sb, "Cells Earned",   s1.cellsEarned(),    s2.cellsEarned(),    sd != null ? sd.cellsEarned() : null);
+        row(sb, "Cells Per Hour", s1.cellsPerHour(),   s2.cellsPerHour(),   sd != null ? sd.cellsPerHour() : null);
+        sb.append("\n");
+    }
+
+    private void appendRecords(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        Records s1 = cast(m1, SectionHeader.RECORDS, Records.class);
+        Records s2 = cast(m2, SectionHeader.RECORDS, Records.class);
+        Records sd = cast(md, SectionHeader.RECORDS, Records.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Records ---\n");
+        row(sb, "Highest Coins/Min",         s1.highestCoinsPerMinute(),    s2.highestCoinsPerMinute(),    sd != null ? sd.highestCoinsPerMinute() : null);
+        row(sb, "Largest Wave Skip",         s1.largestWaveSkip(),          s2.largestWaveSkip(),          sd != null ? sd.largestWaveSkip() : null);
+        row(sb, "Most Coins From Wave Skip", s1.mostCoinsFromWaveSkip(),    s2.mostCoinsFromWaveSkip(),    sd != null ? sd.mostCoinsFromWaveSkip() : null);
+        row(sb, "Largest Golden Combo",      s1.largestGoldenCombo(),       s2.largestGoldenCombo(),       sd != null ? sd.largestGoldenCombo() : null);
+        sb.append("\n");
+    }
+
+    private void appendDamage(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        Damage s1 = cast(m1, SectionHeader.DAMAGE, Damage.class);
+        Damage s2 = cast(m2, SectionHeader.DAMAGE, Damage.class);
+        Damage sd = cast(md, SectionHeader.DAMAGE, Damage.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Damage ---\n");
+        row(sb, "Damage Dealt",    s1.damageDealt(),    s2.damageDealt(),    sd != null ? sd.damageDealt() : null);
+        row(sb, "Projectiles",     s1.projectiles(),    s2.projectiles(),    sd != null ? sd.projectiles() : null);
+        row(sb, "Orbs",            s1.orbs(),           s2.orbs(),           sd != null ? sd.orbs() : null);
+        row(sb, "Chain Lightning", s1.chainLightning(), s2.chainLightning(), sd != null ? sd.chainLightning() : null);
+        row(sb, "Thorns",          s1.thorns(),         s2.thorns(),         sd != null ? sd.thorns() : null);
+        row(sb, "Land Mines",      s1.landMines(),      s2.landMines(),      sd != null ? sd.landMines() : null);
+        row(sb, "Smart Missiles",  s1.smartMissiles(),  s2.smartMissiles(),  sd != null ? sd.smartMissiles() : null);
+        row(sb, "Death Wave",      s1.deathWave(),      s2.deathWave(),      sd != null ? sd.deathWave() : null);
+        row(sb, "Black Hole",      s1.blackHole(),      s2.blackHole(),      sd != null ? sd.blackHole() : null);
+        sb.append("\n");
+    }
+
+    private void appendDamageTaken(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        DamageTaken s1 = cast(m1, SectionHeader.DAMAGE_TAKEN, DamageTaken.class);
+        DamageTaken s2 = cast(m2, SectionHeader.DAMAGE_TAKEN, DamageTaken.class);
+        DamageTaken sd = cast(md, SectionHeader.DAMAGE_TAKEN, DamageTaken.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Damage Taken ---\n");
+        row(sb, "Tower", s1.tower(), s2.tower(), sd != null ? sd.tower() : null);
+        row(sb, "Wall",  s1.wall(),  s2.wall(),  sd != null ? sd.wall()  : null);
+        sb.append("\n");
+    }
+
+    private void appendDamageBlocked(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        DamageBlocked s1 = cast(m1, SectionHeader.DAMAGE_BLOCKED, DamageBlocked.class);
+        DamageBlocked s2 = cast(m2, SectionHeader.DAMAGE_BLOCKED, DamageBlocked.class);
+        DamageBlocked sd = cast(md, SectionHeader.DAMAGE_BLOCKED, DamageBlocked.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Damage Blocked ---\n");
+        row(sb, "Defense %",     s1.defensePercent(),     s2.defensePercent(),     sd != null ? sd.defensePercent() : null);
+        row(sb, "Chrono Field",  s1.chronoField(),        s2.chronoField(),        sd != null ? sd.chronoField() : null);
+        row(sb, "Chain Thunder", s1.chainThunder(),       s2.chainThunder(),       sd != null ? sd.chainThunder() : null);
+        sb.append("\n");
+    }
+
+    private void appendCoins(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        Coins s1 = cast(m1, SectionHeader.COINS, Coins.class);
+        Coins s2 = cast(m2, SectionHeader.COINS, Coins.class);
+        Coins sd = cast(md, SectionHeader.COINS, Coins.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Coins ---\n");
+        row(sb, "Coins Earned",  s1.coinsEarned(),  s2.coinsEarned(),  sd != null ? sd.coinsEarned() : null);
+        row(sb, "Coins/Kill",    s1.coinsPerKill(), s2.coinsPerKill(), sd != null ? sd.coinsPerKill() : null);
+        row(sb, "Golden Tower",  s1.goldenTower(),  s2.goldenTower(),  sd != null ? sd.goldenTower() : null);
+        row(sb, "Wave Skip",     s1.waveSkip(),     s2.waveSkip(),     sd != null ? sd.waveSkip() : null);
+        row(sb, "Death Wave",    s1.deathWave(),    s2.deathWave(),    sd != null ? sd.deathWave() : null);
+        sb.append("\n");
+    }
+
+    private void appendCurrencies(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        Currencies s1 = cast(m1, SectionHeader.CURRENCIES, Currencies.class);
+        Currencies s2 = cast(m2, SectionHeader.CURRENCIES, Currencies.class);
+        Currencies sd = cast(md, SectionHeader.CURRENCIES, Currencies.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Currencies ---\n");
+        row(sb, "Cells Earned",  s1.cellsEarned(),       s2.cellsEarned(),       sd != null ? sd.cellsEarned() : null);
+        row(sb, "Gems",          s1.gems(),               s2.gems(),               sd != null ? sd.gems() : null);
+        row(sb, "Medals",        s1.medals(),             s2.medals(),             sd != null ? sd.medals() : null);
+        row(sb, "Reroll Shards", s1.reRollShardsEarned(), s2.reRollShardsEarned(), sd != null ? sd.reRollShardsEarned() : null);
+        sb.append("\n");
+    }
+
+    private void appendEnemiesDestroyedBy(StringBuilder sb,
+            Map<SectionHeader, Section> m1, Map<SectionHeader, Section> m2, Map<SectionHeader, Section> md) {
+        EnemiesDestroyedBy s1 = cast(m1, SectionHeader.ENEMIES_DESTROYED_BY, EnemiesDestroyedBy.class);
+        EnemiesDestroyedBy s2 = cast(m2, SectionHeader.ENEMIES_DESTROYED_BY, EnemiesDestroyedBy.class);
+        EnemiesDestroyedBy sd = cast(md, SectionHeader.ENEMIES_DESTROYED_BY, EnemiesDestroyedBy.class);
+        if (s1 == null || s2 == null) return;
+
+        sb.append("--- Enemies Destroyed By ---\n");
+        row(sb, "Projectiles",     s1.projectiles(),    s2.projectiles(),    sd != null ? sd.projectiles() : null);
+        row(sb, "Orbs",            s1.orbs(),           s2.orbs(),           sd != null ? sd.orbs() : null);
+        row(sb, "Chain Lightning", s1.chainLightning(), s2.chainLightning(), sd != null ? sd.chainLightning() : null);
+        row(sb, "Land Mines",      s1.landMines(),      s2.landMines(),      sd != null ? sd.landMines() : null);
+        row(sb, "Smart Missiles",  s1.smartMissiles(),  s2.smartMissiles(),  sd != null ? sd.smartMissiles() : null);
+        sb.append("\n");
+    }
+
+    private void row(StringBuilder sb, String label, Object v1, Object v2, Object delta) {
+        sb.append(String.format("  %-28s R1: %-16s R2: %-16s Delta: %s%n",
+                label + ":", fmt(v1), fmt(v2), fmt(delta)));
+    }
+
+    private String fmt(Object v) {
+        return v == null ? "-" : v.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T cast(Map<SectionHeader, Section> map, SectionHeader header, Class<T> type) {
+        Section s = map == null ? null : map.get(header);
+        if (s == null) return null;
+        return type.isInstance(s) ? (T) s : null;
     }
 
     public Path exportStatsToDocuments(String id) throws IOException {
@@ -180,20 +333,20 @@ public class ContextExportService {
 
     private String buildStatsMarkdown(BattleHistory history, String id, ReportSummaryDto summary) {
         var sm = history.sectionMap();
-        var br  = (BattleReport)        sm.get(SectionHeader.BATTLE_REPORT);
-        var dmg = (Damage)              sm.get(SectionHeader.DAMAGE);
-        var dmgBlk = (DamageBlocked)    sm.get(SectionHeader.DAMAGE_BLOCKED);
-        var dmgTkn = (DamageTaken)      sm.get(SectionHeader.DAMAGE_TAKEN);
-        var coins = (Coins)             sm.get(SectionHeader.COINS);
-        var cash  = (Cash)              sm.get(SectionHeader.CASH);
-        var curr  = (Currencies)        sm.get(SectionHeader.CURRENCIES);
-        var rec   = (Records)           sm.get(SectionHeader.RECORDS);
-        var util  = (Utility)           sm.get(SectionHeader.UTILITY);
-        var counts = (Counts)           sm.get(SectionHeader.COUNTS);
-        var enemies = (TotalEnemies)    sm.get(SectionHeader.TOTAL_ENEMIES);
+        var br      = (BattleReport)        sm.get(SectionHeader.BATTLE_REPORT);
+        var dmg     = (Damage)              sm.get(SectionHeader.DAMAGE);
+        var dmgBlk  = (DamageBlocked)       sm.get(SectionHeader.DAMAGE_BLOCKED);
+        var dmgTkn  = (DamageTaken)         sm.get(SectionHeader.DAMAGE_TAKEN);
+        var coins   = (Coins)               sm.get(SectionHeader.COINS);
+        var cash    = (Cash)                sm.get(SectionHeader.CASH);
+        var curr    = (Currencies)          sm.get(SectionHeader.CURRENCIES);
+        var rec     = (Records)             sm.get(SectionHeader.RECORDS);
+        var util    = (Utility)             sm.get(SectionHeader.UTILITY);
+        var counts  = (Counts)              sm.get(SectionHeader.COUNTS);
+        var enemies = (TotalEnemies)        sm.get(SectionHeader.TOTAL_ENEMIES);
         var destroyed = (EnemiesDestroyedBy) sm.get(SectionHeader.ENEMIES_DESTROYED_BY);
-        var hp    = (BonusHealthGained) sm.get(SectionHeader.BONUS_HEALTH_GAINED);
-        var hregen = (HealthRegenerated) sm.get(SectionHeader.HEALTH_REGENERATED);
+        var hp      = (BonusHealthGained)   sm.get(SectionHeader.BONUS_HEALTH_GAINED);
+        var hregen  = (HealthRegenerated)   sm.get(SectionHeader.HEALTH_REGENERATED);
 
         String timestamp = LocalDateTime.now().format(TIMESTAMP_FMT);
         StringBuilder sb = new StringBuilder();
@@ -212,7 +365,6 @@ public class ContextExportService {
         }
         sb.append("\n---\n\n");
 
-        // Overview
         sb.append("## Overview\n\n");
         sb.append("| Stat | Value |\n|------|-------|\n");
         if (br != null) {
@@ -226,7 +378,6 @@ public class ContextExportService {
         if (cash != null) sb.append("| Cash Earned | ").append(disp(cash.cashEarned())).append(" |\n");
         sb.append("\n");
 
-        // Records
         if (rec != null) {
             sb.append("## Records\n\n");
             sb.append("| Record | Value |\n|--------|-------|\n");
@@ -239,7 +390,6 @@ public class ContextExportService {
             sb.append("\n");
         }
 
-        // Damage Breakdown
         if (dmg != null) {
             sb.append("## Damage Breakdown\n\n");
             sb.append("| Source | Damage |\n|--------|--------|\n");
@@ -261,7 +411,6 @@ public class ContextExportService {
             sb.append("\n");
         }
 
-        // Kill Sources
         if (destroyed != null) {
             sb.append("## Kill Sources\n\n");
             sb.append("| Source | Kills |\n|--------|-------|\n");
@@ -280,38 +429,35 @@ public class ContextExportService {
             sb.append("\n");
         }
 
-        // Defense
         if (dmgBlk != null) {
             sb.append("## Damage Blocked\n\n");
             sb.append("| Source | Amount |\n|--------|--------|\n");
-            appendIfPositive(sb, "Defense %",             dmgBlk.defensePercent());
-            appendIfPositive(sb, "Chrono Field",          dmgBlk.chronoField());
-            appendIfPositive(sb, "Chain Thunder",         dmgBlk.chainThunder());
-            appendIfPositive(sb, "Flame Bot",             dmgBlk.flameBot());
-            appendIfPositive(sb, "Primordial Collapse",   dmgBlk.primordialCollapse());
-            appendIfPositive(sb, "Defense Absolute",      dmgBlk.defenseAbsolute());
-            appendIfPositive(sb, "Neg. Mass Projector",   dmgBlk.negativeMassProjector());
+            appendIfPositive(sb, "Defense %",           dmgBlk.defensePercent());
+            appendIfPositive(sb, "Chrono Field",        dmgBlk.chronoField());
+            appendIfPositive(sb, "Chain Thunder",       dmgBlk.chainThunder());
+            appendIfPositive(sb, "Flame Bot",           dmgBlk.flameBot());
+            appendIfPositive(sb, "Primordial Collapse", dmgBlk.primordialCollapse());
+            appendIfPositive(sb, "Defense Absolute",    dmgBlk.defenseAbsolute());
+            appendIfPositive(sb, "Neg. Mass Projector", dmgBlk.negativeMassProjector());
             sb.append("\n");
         }
 
-        // Coin Sources
         if (coins != null) {
             sb.append("## Coin Sources\n\n");
             sb.append("| Source | Coins |\n|--------|-------|\n");
-            appendIfPositive(sb, "Golden Tower",    coins.goldenTower());
-            appendIfPositive(sb, "Black Hole",      coins.blackHole());
-            appendIfPositive(sb, "Other Bonuses",   coins.otherCoinBonuses());
-            appendIfPositive(sb, "Golden Bot",      coins.goldenBot());
-            appendIfPositive(sb, "Death Wave",      coins.deathWave());
-            appendIfPositive(sb, "Spotlight",       coins.spotlight());
-            appendIfPositive(sb, "Critical Coin",   coins.criticalCoin());
-            appendIfPositive(sb, "Wave Skip",       coins.waveSkip());
-            appendIfPositive(sb, "Coins Fetched",   coins.coinsFetched());
-            appendIfPositive(sb, "Bounty Coins",    coins.bountyCoins());
+            appendIfPositive(sb, "Golden Tower",  coins.goldenTower());
+            appendIfPositive(sb, "Black Hole",    coins.blackHole());
+            appendIfPositive(sb, "Other Bonuses", coins.otherCoinBonuses());
+            appendIfPositive(sb, "Golden Bot",    coins.goldenBot());
+            appendIfPositive(sb, "Death Wave",    coins.deathWave());
+            appendIfPositive(sb, "Spotlight",     coins.spotlight());
+            appendIfPositive(sb, "Critical Coin", coins.criticalCoin());
+            appendIfPositive(sb, "Wave Skip",     coins.waveSkip());
+            appendIfPositive(sb, "Coins Fetched", coins.coinsFetched());
+            appendIfPositive(sb, "Bounty Coins",  coins.bountyCoins());
             sb.append("\n");
         }
 
-        // Survival
         sb.append("## Survival\n\n");
         sb.append("| Stat | Value |\n|------|-------|\n");
         if (hregen != null) {
@@ -326,7 +472,6 @@ public class ContextExportService {
         }
         sb.append("\n");
 
-        // Enemy Composition
         if (enemies != null) {
             sb.append("## Enemy Composition\n\n");
             sb.append("| Type | Count |\n|------|-------|\n");
@@ -345,7 +490,6 @@ public class ContextExportService {
             sb.append("\n");
         }
 
-        // Utility & Counts
         if (util != null || counts != null) {
             sb.append("## Utility & Counts\n\n");
             sb.append("| Stat | Value |\n|------|-------|\n");
@@ -364,7 +508,6 @@ public class ContextExportService {
             sb.append("\n");
         }
 
-        // Currencies
         if (curr != null) {
             sb.append("## Currencies & Shards\n\n");
             sb.append("| Currency | Amount |\n|----------|--------|\n");
@@ -398,104 +541,5 @@ public class ContextExportService {
 
     private static void appendLongIfPositive(StringBuilder sb, String label, long v) {
         if (v > 0) sb.append("| ").append(label).append(" | ").append(String.format("%,d", v)).append(" |\n");
-    }
-
-    public Path exportToDocuments() throws IOException {
-        Path outputDir = Path.of(System.getProperty("user.home"), "Documents", "TowerAnalyzer");
-        Files.createDirectories(outputDir);
-
-        String timestamp = LocalDateTime.now().format(TIMESTAMP_FMT);
-        for (ChatContext ctx : fetchAllContexts()) {
-            String fileName = ctx.getLabel().toLowerCase()
-                    .replaceAll("[\\\\/:*?\"<>|]", "")
-                    .replaceAll("\\s+", "-")
-                    .replaceAll("-{2,}", "-") + ".md";
-            StringBuilder sb = new StringBuilder();
-            sb.append("# ").append(ctx.getLabel()).append("\n\n");
-            sb.append("_Generated: ").append(timestamp).append("_\n\n");
-            sb.append("---\n\n");
-            sb.append(ctx.getContent()).append("\n");
-            Files.writeString(outputDir.resolve(fileName), sb.toString());
-        }
-
-        return outputDir;
-    }
-
-    private List<ChatContext> fetchAllContexts() throws IOException {
-        List<ChatContext> contexts = new ArrayList<>();
-
-        log.info("Fetching player currencies...");
-        com.pphi.tower.model.sheets.Currencies currencies = snapshotRepository.findLatest()
-                .orElseGet(() -> {
-                    try { return fetcherService.fetchCurrencies(); } catch (IOException e) { throw new RuntimeException(e); }
-                });
-        contexts.add(new PlayerCurrenciesContext(currencies));
-
-        log.info("Fetching labs...");
-        contexts.add(new LabsContext(fetcherService.fetchLabs()));
-
-        log.info("Fetching Lab Slot planning...");
-        contexts.add(new LabPlanningContext(fetcherService.fetchLabPlanning()));
-
-        log.info("Fetching lab tier list...");
-        contexts.add(new LabTierListContext(fetcherService.fetchLabTierList()));
-
-        log.info("Fetching ultimate weapons...");
-        contexts.add(new UltimateWeaponsContext(fetcherService.fetchUltimateWeapons()));
-
-        log.info("Fetching module inventory...");
-        contexts.add(new ModulesContext(fetcherService.fetchModuleInventory(), fetcherService.fetchModuleSubStats()));
-
-        log.info("Fetching farming module preset...");
-        contexts.add(new ModulePresetContext(Preset.FARMING, fetcherService.fetchModulePreset(Preset.FARMING)));
-
-        log.info("Fetching tournament module preset...");
-        contexts.add(new ModulePresetContext(Preset.TOURNAMENT, fetcherService.fetchModulePreset(Preset.TOURNAMENT)));
-
-        log.info("Fetching cards...");
-        contexts.add(new CardsContext(fetcherService.fetchCards()));
-
-        log.info("Fetching farming card preset...");
-        contexts.add(new CardPresetContext(CardPresetType.FARMING, fetcherService.fetchCardPreset(CardPresetType.FARMING)));
-
-        log.info("Fetching tournament card preset...");
-        contexts.add(new CardPresetContext(CardPresetType.TOURNAMENT, fetcherService.fetchCardPreset(CardPresetType.TOURNAMENT)));
-
-        log.info("Fetching workshop...");
-        contexts.add(new WorkshopContext(fetcherService.fetchWorkshop()));
-
-        log.info("Fetching guardians...");
-        contexts.add(new GuardiansContext(fetcherService.fetchGuardians()));
-
-        log.info("Fetching bots...");
-        contexts.add(new BotsContext(fetcherService.fetchBots()));
-
-        log.info("Fetching relics...");
-        contexts.add(new RelicsContext(relicRepository.toMarkdownContext()));
-
-        log.info("Fetching tier/wave info...");
-        contexts.add(new TierWaveContext(fetcherService.fetchTierWave()));
-
-        log.info("Fetching version history...");
-        contexts.add(new VersionHistoryContext(fetcherService.fetchVersionHistory()));
-
-        // ── Snapshot persistence ──────────────────────────────────────────────
-        // Runs after all contexts are populated so currency and module data are
-        // captured together under the same snapshot_time.
-        // Wrapped in try/catch: persistence failure must never break the export.
-        try {
-            LocalDateTime snapshotTime = LocalDateTime.now();
-            contexts.forEach(c -> {
-                if (c instanceof PlayerCurrenciesContext cc)
-                    snapshotRepository.saveCurrencySnapshot(snapshotTime, cc.getCurrencies());
-                if (c instanceof ModulesContext mc)
-                    snapshotRepository.saveModuleLevelSnapshots(snapshotTime, mc.getModules());
-            });
-            log.info("Currency snapshot saved at {}", snapshotTime);
-        } catch (Exception e) {
-            log.warn("Snapshot persistence failed (non-fatal): {}", e.getMessage());
-        }
-
-        return contexts;
     }
 }

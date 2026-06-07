@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Tower Analyzer</title>
-<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <style>
   :root {
     --bg:#0d0f14; --surface:#141720; --surface2:#1c2030;
@@ -149,32 +148,6 @@
   .delta-pos{color:var(--green);font-family:var(--mono);font-size:13px;}
   .delta-neg{color:var(--red);font-family:var(--mono);font-size:13px;}
   .delta-neu{color:var(--muted);font-family:var(--mono);font-size:13px;}
-  .gemini-chat{margin-top:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;}
-  .gemini-chat-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
-  .gemini-context-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
-  .gemini-context-options{margin-bottom:1rem;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-  .gemini-context-option{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;}
-  .gemini-context-option input[type=checkbox]{accent-color:var(--accent);cursor:pointer;}
-  .gemini-input-row{display:flex;gap:10px;align-items:flex-end;}
-  .gemini-textarea{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
-    color:var(--text);font-size:13px;padding:10px 12px;font-family:var(--font);resize:vertical;
-    min-height:72px;line-height:1.5;}
-  .gemini-textarea:focus{outline:none;border-color:var(--accent);}
-  .chat-thread{display:flex;flex-direction:column;gap:10px;margin-top:1rem;}
-  .chat-turn{padding:11px 14px;border-radius:8px;font-size:13px;line-height:1.7;}
-  .chat-turn.user{background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);}
-  .chat-turn.model{background:var(--surface2);border:1px solid var(--border);}
-  .chat-turn.model p{margin:0 0 .6em;}
-  .chat-turn.model p:last-child{margin-bottom:0;}
-  .chat-turn.model ul,.chat-turn.model ol{padding-left:1.4em;margin:.4em 0;}
-  .chat-turn.model li{margin:.2em 0;}
-  .chat-turn.model h1,.chat-turn.model h2,.chat-turn.model h3{font-size:1em;font-weight:700;margin:.8em 0 .3em;color:var(--accent);}
-  .chat-turn.model code{background:rgba(0,0,0,0.3);border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:.9em;}
-  .chat-turn.model pre{background:rgba(0,0,0,0.3);border-radius:6px;padding:.75em 1em;overflow-x:auto;margin:.5em 0;}
-  .chat-turn.model pre code{background:none;padding:0;}
-  .chat-turn.model strong{color:var(--text);font-weight:700;}
-  .chat-turn.model hr{border:none;border-top:1px solid var(--border);margin:.8em 0;}
-  .chat-turn-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;font-weight:600;}
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;}
   .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;width:520px;max-width:92vw;max-height:82vh;overflow-y:auto;}
   .modal-title{font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;}
@@ -607,7 +580,6 @@
     <button class="nav-btn" onclick="showView('cards')">Cards</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
-    <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
     <span class="status-dot" id="statusDot"></span>
@@ -640,7 +612,6 @@
 <script>
 const API='http://localhost:8080/api';
 let allReports=[],activeId=null,activePayload=null,activeView='reports',currentTab='stats';
-let chatState={id1:null,id2:null,history:[],provider:'gemini'};
 
 async function init(){
   try{
@@ -988,7 +959,6 @@ async function renderDiagnosisPanel(summary){
     const res=await fetch(`${API}/reports/${encodeURIComponent(summary.id)}/diagnosis`);
     const d=await res.json();
     const failureName=(d.primaryFailure||'Unknown').replace(/_/g,' ');
-    chatState={id1:summary.id,id2:null,history:[],provider:'gemini'};
     document.getElementById('tabPanel').innerHTML=`
       <div class="diag-card">
         <div class="diag-header">
@@ -1017,116 +987,13 @@ async function renderDiagnosisPanel(summary){
         <button class="btn" onclick="exportDiagnosis('${summary.id}')">Export to Markdown</button>
         <span id="diagExportStatus" style="font-size:12px;color:var(--muted);align-self:center"></span>
       </div>
-      ${buildGeminiChatHtml('diagnosis',false)}`;
-    await Promise.all([loadChatHistory(summary.id,null), populatePromptSelector()]);
+      `;
   }catch(e){
     document.getElementById('tabPanel').innerHTML=
       `<div class="empty-state" style="height:auto;padding:3rem"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
   }
 }
 
-function buildGeminiChatHtml(mode, hidden){
-  const ctxId    = mode==='compare' ? 'geminiCtxComparison' : 'geminiCtxDiagnosis';
-  const ctxLabel = mode==='compare' ? 'Comparison report'  : 'Diagnosis report';
-  const placeholder = mode==='compare'
-    ? 'Ask anything about these runs… (Ctrl+Enter to send)'
-    : 'Ask anything about this run… (Ctrl+Enter to send)';
-  return `
-    <div id="geminiChat" class="gemini-chat"${hidden?' style="display:none"':''}>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="gemini-chat-title" style="margin-bottom:0" id="aiChatTitle">✦ Ask AI</div>
-          <div style="display:flex;gap:4px">
-            <button class="btn btn-primary" id="providerGemini" style="font-size:11px;padding:3px 10px" onclick="switchProvider('gemini')">Gemini</button>
-            <button class="btn" id="providerClaude" style="font-size:11px;padding:3px 10px;opacity:0.5" onclick="switchProvider('claude')">Claude</button>
-          </div>
-        </div>
-        <button class="btn" style="font-size:11px;padding:3px 10px;opacity:0.6" onclick="clearChatHistory()">Clear chat</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
-        <div class="gemini-context-label" style="margin-bottom:0;white-space:nowrap">Base prompt</div>
-        <select class="compare-select" id="geminiPromptKey" style="min-width:160px;flex:1"><option value="">Loading…</option></select>
-      </div>
-      <div class="gemini-context-label">Context to include</div>
-      <div class="gemini-context-options">
-        <label class="gemini-context-option">
-          <input type="checkbox" id="${ctxId}" checked>
-          ${ctxLabel}
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxProfile" checked>
-          Player profile
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxCurrencies">
-          Currencies
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxLabs">
-          Laboratories
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxUltimateWeapons">
-          Ultimate weapons
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxModules">
-          Modules (inventory)
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxModulesFarming">
-          Farming preset
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxModulesTournament">
-          Tournament preset
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxCards">
-          Cards
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxCardsFarming">
-          Cards farming preset
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxCardsTournament">
-          Cards tournament preset
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxWorkshop">
-          Workshop
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxGuardians">
-          Guardians
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxBots">
-          Bots
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxRelics">
-          Relics
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxTierWave">
-          Tier / Wave
-        </label>
-        <label class="gemini-context-option">
-          <input type="checkbox" id="geminiCtxVersionHistory">
-          Version History
-        </label>
-      </div>
-      <div id="geminiThread" class="chat-thread"></div>
-      <div class="gemini-input-row" style="margin-top:1rem">
-        <textarea class="gemini-textarea" id="geminiPrompt"
-          placeholder="${placeholder}"
-          onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))sendGeminiChat()"></textarea>
-        <button class="btn btn-primary" id="geminiSendBtn" onclick="sendGeminiChat()">Send</button>
-      </div>
-    </div>`;
-}
 
 function renderComparePanel(summary){
   const others=allReports.filter(r=>r.id!==summary.id);
@@ -1137,14 +1004,12 @@ function renderComparePanel(summary){
       <select class="compare-select" id="compareSelect">${opts}</select>
       <button class="btn btn-primary" onclick="runComparison('${summary.id}')">Compare</button>
     </div>
-    <div id="compareResult"></div>
-    ${buildGeminiChatHtml('compare',true)}`;
+    <div id="compareResult"></div>`;
 }
 
 async function runComparison(id1){
   const id2=document.getElementById('compareSelect').value;
   if(!id2)return;
-  chatState={id1,id2,history:[],provider:'gemini'};
   document.getElementById('compareResult').innerHTML='<div class="loading-placeholder">Comparing…</div>';
   try{
     const res=await fetch(`${API}/reports/${encodeURIComponent(id1)}/comparison/${encodeURIComponent(id2)}`);
@@ -1191,39 +1056,9 @@ async function runComparison(id1){
     </div>`;
     html+='<div style="height:2rem"></div>';
     document.getElementById('compareResult').innerHTML=html;
-    const chat=document.getElementById('geminiChat');
-    chat.style.display='block';
-    document.getElementById('geminiThread').innerHTML='';
-    await Promise.all([loadChatHistory(id1,id2), populatePromptSelector()]);
   }catch(e){
     document.getElementById('compareResult').innerHTML=`<div style="color:var(--red);padding:1rem">${e.message}</div>`;
   }
-}
-
-async function populatePromptSelector(){
-  try{
-    const res=await fetch(`${API}/chat/prompts?provider=${encodeURIComponent(chatState.provider||'gemini')}`);
-    if(!res.ok)return;
-    const{keys,active}=await res.json();
-    const sel=document.getElementById('geminiPromptKey');
-    sel.innerHTML=keys.map(k=>`<option value="${escHtml(k)}"${k===active?' selected':''}>${escHtml(k)}</option>`).join('');
-  }catch(e){/* silently ignore */}
-}
-
-async function switchProvider(provider){
-  if(chatState.provider===provider)return;
-  chatState.provider=provider;
-  chatState.history=[];
-  document.getElementById('geminiThread').innerHTML='';
-  // Update button styles
-  document.getElementById('providerGemini').className='btn'+(provider==='gemini'?' btn-primary':'');
-  document.getElementById('providerGemini').style.opacity=provider==='gemini'?'1':'0.5';
-  document.getElementById('providerClaude').className='btn'+(provider==='claude'?' btn-primary':'');
-  document.getElementById('providerClaude').style.opacity=provider==='claude'?'1':'0.5';
-  await Promise.all([
-    loadChatHistory(chatState.id1,chatState.id2),
-    populatePromptSelector()
-  ]);
 }
 
 async function exportDiagnosis(id){
@@ -1256,124 +1091,8 @@ async function exportComparison(id1,id2){
   }
 }
 
-async function sendGeminiChat(){
-  const prompt=document.getElementById('geminiPrompt').value.trim();
-  if(!prompt)return;
-  const contextTypes=[];
-  if(document.getElementById('geminiCtxComparison')?.checked)contextTypes.push('comparison_report');
-  if(document.getElementById('geminiCtxDiagnosis')?.checked)contextTypes.push('diagnosis_report');
-  if(document.getElementById('geminiCtxProfile').checked)contextTypes.push('user_profile');
-  if(document.getElementById('geminiCtxCurrencies').checked)contextTypes.push('player_currencies');
-  if(document.getElementById('geminiCtxLabs').checked)contextTypes.push('labs');
-  if(document.getElementById('geminiCtxUltimateWeapons').checked)contextTypes.push('ultimate_weapons');
-  if(document.getElementById('geminiCtxModules').checked)contextTypes.push('modules');
-  if(document.getElementById('geminiCtxModulesFarming').checked)contextTypes.push('modules_farming');
-  if(document.getElementById('geminiCtxModulesTournament').checked)contextTypes.push('modules_tournament');
-  if(document.getElementById('geminiCtxCards').checked)contextTypes.push('cards');
-  if(document.getElementById('geminiCtxCardsFarming').checked)contextTypes.push('cards_farming');
-  if(document.getElementById('geminiCtxCardsTournament').checked)contextTypes.push('cards_tournament');
-  if(document.getElementById('geminiCtxWorkshop').checked)contextTypes.push('workshop');
-  if(document.getElementById('geminiCtxGuardians').checked)contextTypes.push('guardians');
-  if(document.getElementById('geminiCtxBots').checked)contextTypes.push('bots');
-  if(document.getElementById('geminiCtxRelics').checked)contextTypes.push('relics');
-  if(document.getElementById('geminiCtxTierWave').checked)contextTypes.push('tier_wave');
-  if(document.getElementById('geminiCtxVersionHistory').checked)contextTypes.push('version_history');
-  const sendBtn=document.getElementById('geminiSendBtn');
-  sendBtn.disabled=true;
-  const thread=document.getElementById('geminiThread');
-  thread.insertAdjacentHTML('beforeend',
-    `<div class="chat-turn user"><div class="chat-turn-label">You</div>${escHtml(prompt)}</div>
-     <div id="geminiLoading" class="loading-placeholder" style="padding:8px 0;text-align:left">Thinking…</div>`);
-  document.getElementById('geminiPrompt').value='';
-  thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
-  const provider=chatState.provider||'gemini';
-  const modelRole=provider==='claude'?'assistant':'model';
-  const modelLabel=provider==='claude'?'Claude':'Gemini';
-  try{
-    const res=await fetch(`${API}/chat`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt,contextTypes,reportId1:chatState.id1,reportId2:chatState.id2,history:chatState.history,promptKey:document.getElementById('geminiPromptKey').value||null,provider})
-    });
-    if(!res.ok)throw new Error(await res.text());
-    const data=await res.json();
-    const{reply,prependedTurns}=data;
-    // Silently add context preamble turns to history so they're included in future sends
-    if(prependedTurns&&prependedTurns.length>0){
-      for(const t of prependedTurns)chatState.history.push({role:t.role,text:t.text});
-    }
-    chatState.history.push({role:'user',text:prompt});
-    chatState.history.push({role:modelRole,text:reply});
-    document.getElementById('geminiLoading').remove();
-    thread.insertAdjacentHTML('beforeend',
-      `<div class="chat-turn model"><div class="chat-turn-label">${modelLabel}</div>${renderMarkdown(reply)}</div>`);
-    thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }catch(e){
-    document.getElementById('geminiLoading').remove();
-    thread.insertAdjacentHTML('beforeend',
-      `<div style="color:var(--red);padding:8px 0;font-size:13px">${escHtml(e.message)}</div>`);
-  }finally{
-    sendBtn.disabled=false;
-  }
-}
-
-async function loadChatHistory(id1,id2){
-  try{
-    const provider=chatState.provider||'gemini';
-    const modelLabel=provider==='claude'?'Claude':'Gemini';
-    const params=new URLSearchParams({reportId1:id1,provider});
-    if(id2)params.append('reportId2',id2);
-    const res=await fetch(`${API}/chat/history?${params}`);
-    if(!res.ok)return;
-    const history=await res.json();
-    chatState.history=history.map(t=>({role:t.role,text:t.text}));
-    const thread=document.getElementById('geminiThread');
-    for(const turn of history){
-      if(turn.role==='context'||turn.role==='context_ack')continue;
-      const isUser=turn.role==='user';
-      const label=isUser?'You':modelLabel;
-      const cls=isUser?'user':'model';
-      thread.insertAdjacentHTML('beforeend',
-        `<div class="chat-turn ${cls}"><div class="chat-turn-label">${label}</div>${cls==='model'?renderMarkdown(turn.text):escHtml(turn.text)}</div>`);
-    }
-    if(history.length>0)thread.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }catch(e){/* silently ignore */}
-}
-
-async function clearChatHistory(){
-  if(!chatState.id1)return;
-  try{
-    const provider=chatState.provider||'gemini';
-    const params=new URLSearchParams({reportId1:chatState.id1,provider});
-    if(chatState.id2)params.append('reportId2',chatState.id2);
-    await fetch(`${API}/chat/history?${params}`,{method:'DELETE'});
-    chatState.history=[];
-    document.getElementById('geminiThread').innerHTML='';
-  }catch(e){/* silently ignore */}
-}
-
 function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderMarkdown(s){
-  return marked.parse(String(s));
-}
-
-async function exportContext(){
-  const btn=document.getElementById('exportContextBtn');
-  btn.disabled=true;
-  btn.textContent='Exporting…';
-  try{
-    const res=await fetch(`${API}/reports/export-context`,{method:'POST'});
-    const data=await res.json();
-    alert('Context exported to:\n'+data.path);
-  }catch(e){
-    alert('Export failed: '+e.message);
-  }finally{
-    btn.disabled=false;
-    btn.innerHTML='&#8659; Export Context';
-  }
 }
 
 async function openProfileModal(){
