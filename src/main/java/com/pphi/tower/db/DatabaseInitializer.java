@@ -535,5 +535,136 @@ public class DatabaseInitializer {
                     PRIMARY KEY (preset_id, workshop_item_id)
                 )
                 """);
+
+        // ── Cards ─────────────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS card_value_unit (
+                    code TEXT PRIMARY KEY
+                )
+                """);
+
+        jdbc.execute("""
+                INSERT OR IGNORE INTO card_value_unit (code) VALUES
+                    ('MULTIPLIER'),
+                    ('PERCENT'),
+                    ('ADDITIVE_PERCENT'),
+                    ('SECONDS'),
+                    ('MINUTES'),
+                    ('COUNT')
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS card (
+                    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name                  TEXT    NOT NULL UNIQUE,
+                    rarity                TEXT    NOT NULL CHECK (rarity IN ('COMMON', 'RARE', 'EPIC')),
+                    description           TEXT    NOT NULL,
+                    value_unit            TEXT    NOT NULL REFERENCES card_value_unit(code),
+                    level_1               REAL    NOT NULL,
+                    level_2               REAL    NOT NULL,
+                    level_3               REAL    NOT NULL,
+                    level_4               REAL    NOT NULL,
+                    level_5               REAL    NOT NULL,
+                    level_6               REAL    NOT NULL,
+                    level_7               REAL    NOT NULL,
+                    milestone_unlock_tier INTEGER,
+                    milestone_unlock_wave INTEGER,
+                    mastery_description   TEXT    NOT NULL,
+                    mastery_stone_cost    INTEGER NOT NULL,
+                    mastery_value_unit    TEXT    NOT NULL REFERENCES card_value_unit(code),
+                    mastery_level_0       REAL    NOT NULL,
+                    mastery_level_1       REAL    NOT NULL,
+                    mastery_level_2       REAL    NOT NULL,
+                    mastery_level_3       REAL    NOT NULL,
+                    mastery_level_4       REAL    NOT NULL,
+                    mastery_level_5       REAL    NOT NULL,
+                    mastery_level_6       REAL    NOT NULL,
+                    mastery_level_7       REAL    NOT NULL,
+                    mastery_level_8       REAL    NOT NULL,
+                    mastery_level_9       REAL    NOT NULL
+                )
+                """);
+
+        // Slots 1-22 are unlocked with gems; slots 23-28 are unlocked with keys (vault).
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS card_slot (
+                    slot_number     INTEGER PRIMARY KEY CHECK (slot_number BETWEEN 1 AND 28),
+                    unlock_cost     INTEGER NOT NULL,
+                    unlock_currency TEXT    NOT NULL CHECK (unlock_currency IN ('GEM', 'KEY')),
+                    owned           INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        // Migration: add owned column to existing installs that predate this schema change.
+        try { jdbc.execute("ALTER TABLE card_slot ADD COLUMN owned INTEGER NOT NULL DEFAULT 0"); } catch (Exception ignored) {}
+
+        jdbc.execute("""
+                INSERT OR IGNORE INTO card_slot (slot_number, unlock_cost, unlock_currency) VALUES
+                    (1,  0,     'GEM'),
+                    (2,  50,    'GEM'),
+                    (3,  100,   'GEM'),
+                    (4,  200,   'GEM'),
+                    (5,  300,   'GEM'),
+                    (6,  400,   'GEM'),
+                    (7,  500,   'GEM'),
+                    (8,  600,   'GEM'),
+                    (9,  750,   'GEM'),
+                    (10, 1000,  'GEM'),
+                    (11, 1200,  'GEM'),
+                    (12, 1400,  'GEM'),
+                    (13, 1600,  'GEM'),
+                    (14, 1800,  'GEM'),
+                    (15, 2500,  'GEM'),
+                    (16, 3500,  'GEM'),
+                    (17, 4500,  'GEM'),
+                    (18, 5500,  'GEM'),
+                    (19, 6500,  'GEM'),
+                    (20, 7500,  'GEM'),
+                    (21, 8500,  'GEM'),
+                    (22, 10000, 'GEM'),
+                    (23, 10,    'KEY'),
+                    (24, 15,    'KEY'),
+                    (25, 20,    'KEY'),
+                    (26, 25,    'KEY'),
+                    (27, 35,    'KEY'),
+                    (28, 45,    'KEY')
+                """);
+
+        // Slot 1 is always owned (free, costs 0 gems).
+        jdbc.execute("UPDATE card_slot SET owned = 1 WHERE slot_number = 1");
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS card_player_state (
+                    card_id       INTEGER NOT NULL REFERENCES card(id) PRIMARY KEY,
+                    star_level    INTEGER NOT NULL DEFAULT 1 CHECK (star_level BETWEEN 1 AND 7),
+                    copies_owned  INTEGER NOT NULL DEFAULT 0,
+                    mastery_level INTEGER NOT NULL DEFAULT 0 CHECK (mastery_level BETWEEN 0 AND 9)
+                )
+                """);
+
+        // Up to 5 named presets; slot 1 is seeded as the default.
+        // Additional presets are created when the Card Presets lab is researched.
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS card_preset (
+                    id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                    slot INTEGER NOT NULL UNIQUE CHECK (slot BETWEEN 1 AND 5),
+                    name TEXT    NOT NULL DEFAULT ''
+                )
+                """);
+
+        jdbc.execute("""
+                INSERT OR IGNORE INTO card_preset (slot, name) VALUES (1, 'Preset 1')
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS card_preset_assignment (
+                    preset_id   INTEGER NOT NULL REFERENCES card_preset(id) ON DELETE CASCADE,
+                    slot_number INTEGER NOT NULL REFERENCES card_slot(slot_number),
+                    card_id     INTEGER NOT NULL REFERENCES card_player_state(card_id),
+                    PRIMARY KEY (preset_id, slot_number),
+                    UNIQUE (preset_id, card_id)
+                )
+                """);
     }
 }

@@ -516,6 +516,73 @@
   .ver-chip.cat-relic .cat{color:#c878f0;}
   .ver-chip.cat-other{border-color:var(--border);background:transparent;}
   .ver-chip.cat-other .cat{color:var(--muted);}
+
+  /* ── Cards ──────────────────────────────── */
+  .cards-summary-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1.25rem;}
+  .cards-summary-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;min-width:130px;}
+  .cards-summary-chip .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+  .cards-summary-chip .val{font-size:1.1rem;font-weight:700;font-family:var(--mono);}
+  .cards-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;}
+  .cards-tab-btn{padding:6px 18px;border-radius:20px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .cards-tab-btn:hover,.cards-tab-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.09);}
+  .cards-filter-btn{padding:4px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .cards-filter-btn:hover,.cards-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.08);}
+  .cards-search{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border2);
+    border-radius:6px;color:var(--text);font-size:12px;padding:5px 10px;font-family:var(--font);}
+  .cards-search:focus{outline:none;border-color:var(--accent);}
+  .cards-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);
+    border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);}
+  .cards-table th{background:var(--surface2);padding:8px 12px;text-align:left;
+    font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  .cards-table td{padding:7px 12px;border-top:1px solid var(--border);vertical-align:middle;}
+  .cards-table tr:hover td{background:var(--surface2);}
+  .cards-table tr.unowned td{opacity:.55;}
+  .cards-inline-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;
+    color:var(--text);font-size:12px;padding:2px 5px;font-family:var(--mono);cursor:pointer;}
+  .cards-inline-select:focus{outline:none;border-color:var(--accent);}
+  .cards-copies-input{width:60px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;
+    color:var(--text);font-size:12px;padding:2px 6px;font-family:var(--mono);text-align:center;}
+  .cards-copies-input:focus{outline:none;border-color:var(--accent);}
+  .cards-val{font-family:var(--mono);color:var(--accent);font-weight:600;}
+  .cards-milestone{font-size:10px;color:var(--muted);margin-top:2px;}
+  .rarity-badge.COMMON{background:rgba(122,128,153,.15);color:var(--muted);}
+  .rarity-badge.RARE{background:rgba(79,142,247,.15);color:var(--accent);}
+  .rarity-badge.EPIC{background:rgba(124,92,252,.15);color:var(--accent2);}
+  .cards-preset-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;}
+  .cards-preset-tab{padding:6px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:13px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .cards-preset-tab:hover,.cards-preset-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.09);}
+  .cards-preset-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;}
+  .cards-preset-name-input{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;
+    color:var(--text);font-size:14px;font-weight:600;padding:6px 10px;font-family:var(--font);width:220px;}
+  .cards-preset-name-input:focus{outline:none;border-color:var(--accent);}
+  .cards-slot-section{margin-bottom:1.5rem;}
+  .cards-slot-section-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    margin-bottom:.6rem;padding-bottom:4px;border-bottom:1px solid var(--border);}
+  .cards-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;}
+  .cards-slot{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:8px 10px;min-height:70px;display:flex;flex-direction:column;gap:4px;}
+  .cards-slot.filled{border-color:rgba(79,142,247,.35);}
+  .cards-slot-num{font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
+  .cards-slot-card-name{font-size:12px;font-weight:600;line-height:1.3;flex:1;}
+  .cards-slot-actions{display:flex;gap:5px;margin-top:auto;}
+  .cards-slot-assign-btn{flex:1;font-size:10px;padding:2px 6px;border-radius:4px;
+    border:1px dashed var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;}
+  .cards-slot-assign-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .cards-slot-clear-btn{font-size:10px;padding:2px 6px;border-radius:4px;
+    border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .12s;}
+  .cards-slot-clear-btn:hover{border-color:var(--red);color:var(--red);}
+  .cards-picker-search{width:100%;background:var(--surface2);border:1px solid var(--border2);
+    border-radius:6px;color:var(--text);font-size:13px;padding:7px 10px;font-family:var(--font);margin-bottom:10px;}
+  .cards-picker-search:focus{outline:none;border-color:var(--accent);}
+  .cards-picker-list{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;}
+  .cards-picker-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;
+    border:1px solid var(--border);cursor:pointer;transition:all .12s;}
+  .cards-picker-item:hover{border-color:var(--accent);background:rgba(79,142,247,.06);}
+  .cards-picker-item .cp-name{font-size:13px;font-weight:600;flex:1;}
+  .cards-picker-item .cp-val{font-size:11px;font-family:var(--mono);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -537,6 +604,7 @@
     <button class="nav-btn" onclick="showView('currencies')">Currencies</button>
     <button class="nav-btn" onclick="showView('tierpb')">Tier PB</button>
     <button class="nav-btn" onclick="showView('workshop')">Workshop</button>
+    <button class="nav-btn" onclick="showView('cards')">Cards</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
     <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
     <button class="nav-btn" id="exportContextBtn" onclick="exportContext()">&#8659; Export Context</button>
@@ -679,7 +747,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','versions'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','versions'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -692,6 +760,7 @@ function showView(view){
   else if(view==='currencies')renderCurrenciesView();
   else if(view==='tierpb')renderTierPbView();
   else if(view==='workshop')renderWorkshopView();
+  else if(view==='cards')renderCardsView();
   else if(view==='versions')renderVersionTrackerView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
@@ -3689,6 +3758,11 @@ init();
 <script>
 // ── Workshop ──────────────────────────────────────────────────────────────────
 
+// ── Cards state ───────────────────────────────────────────────────────────────
+let cardsData=[],cardsSlots=[],cardsPresets=[],cardsAssignments={};
+let cardsTab='collection',cardsRarityFilter='ALL',cardsSearch='',cardsHideUnowned=false;
+let cardsActivePreset=null,cardsPendingSlot=null;
+
 let wsData = null;          // all items from GET /api/workshop
 let wsDiscounts = null;     // discount multipliers
 let wsPlusProgress = null;  // Workshop+ unlock progress
@@ -4005,6 +4079,477 @@ async function wsPrefetchPlusCosts() {
       wsCostCache[item.id] = await res.json();
     } catch(_) {}
   }));
+}
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
+
+function fmtCardVal(value, unit) {
+  if (unit === 'MULTIPLIER')       return value.toFixed(2) + 'x';
+  if (unit === 'PERCENT')          return value.toFixed(1) + '%';
+  if (unit === 'ADDITIVE_PERCENT') return '+' + value.toFixed(1) + '%';
+  if (unit === 'SECONDS')          return value + 's';
+  if (unit === 'MINUTES')          return value + 'm';
+  if (unit === 'COUNT')            return Math.round(value).toString();
+  return value.toString();
+}
+
+function cardLevelVal(card) {
+  const vals = [card.level1, card.level2, card.level3, card.level4, card.level5, card.level6, card.level7];
+  return fmtCardVal(vals[card.starLevel - 1], card.valueUnit);
+}
+
+function cardMasteryVal(card) {
+  if (card.masteryLevel === 0) return '—';
+  const vals = [card.masteryLevel0, card.masteryLevel1, card.masteryLevel2, card.masteryLevel3, card.masteryLevel4,
+                card.masteryLevel5, card.masteryLevel6, card.masteryLevel7, card.masteryLevel8, card.masteryLevel9];
+  return fmtCardVal(vals[card.masteryLevel], card.masteryValueUnit);
+}
+
+// ── Main load ─────────────────────────────────────────────────────────────────
+
+async function renderCardsView() {
+  document.getElementById('mainContent').innerHTML =
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading cards…</div>';
+  try {
+    const [cRes, sRes, pRes] = await Promise.all([
+      fetch(`${API}/cards`),
+      fetch(`${API}/cards/slots`),
+      fetch(`${API}/cards/presets`)
+    ]);
+    cardsData    = await cRes.json();
+    cardsSlots   = await sRes.json();
+    cardsPresets = await pRes.json();
+    cardsAssignments = {};
+    await Promise.all(cardsPresets.map(async p => {
+      const r = await fetch(`${API}/cards/presets/${p.id}/assignments`);
+      cardsAssignments[p.id] = await r.json();
+    }));
+    if (!cardsActivePreset && cardsPresets.length > 0) cardsActivePreset = cardsPresets[0].id;
+    buildCardsPage();
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function buildCardsPage() {
+  const owned  = cardsData.filter(c => c.copiesOwned > 0).length;
+  const common = cardsData.filter(c => c.rarity === 'COMMON').length;
+  const rare   = cardsData.filter(c => c.rarity === 'RARE').length;
+  const epic   = cardsData.filter(c => c.rarity === 'EPIC').length;
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="report-title" style="margin-bottom:1rem">Cards</div>
+    <div class="cards-summary-bar">
+      <div class="cards-summary-chip"><div class="lbl">Total</div><div class="val">${cardsData.length}</div></div>
+      <div class="cards-summary-chip"><div class="lbl">Owned</div><div class="val" style="color:var(--green)">${owned}</div></div>
+      <div class="cards-summary-chip"><div class="lbl">Common</div><div class="val" style="color:var(--muted)">${common}</div></div>
+      <div class="cards-summary-chip"><div class="lbl">Rare</div><div class="val" style="color:var(--accent)">${rare}</div></div>
+      <div class="cards-summary-chip"><div class="lbl">Epic</div><div class="val" style="color:var(--accent2)">${epic}</div></div>
+    </div>
+    <div class="cards-controls">
+      <button class="cards-tab-btn${cardsTab==='collection'?' active':''}" onclick="cardsSetTab('collection')">Collection</button>
+      <button class="cards-tab-btn${cardsTab==='slots'?' active':''}" onclick="cardsSetTab('slots')">Slots</button>
+      <button class="cards-tab-btn${cardsTab==='presets'?' active':''}" onclick="cardsSetTab('presets')">Presets</button>
+    </div>
+    <div id="cardsBody"></div>`;
+
+  renderCardsBody();
+}
+
+function cardsSetTab(tab) { cardsTab = tab; renderCardsBody(); }
+
+function renderCardsBody() {
+  if (cardsTab === 'collection') renderCardsCollection();
+  else if (cardsTab === 'slots') renderCardsSlotsTab();
+  else renderCardsPresets();
+}
+
+// ── Collection tab ────────────────────────────────────────────────────────────
+
+function renderCardsCollection() {
+  const rarityBtns = ['ALL','COMMON','RARE','EPIC'].map(r =>
+    `<button class="cards-filter-btn${cardsRarityFilter===r?' active':''}" onclick="cardsSetRarity('${r}')">${r==='ALL'?'All':r.charAt(0)+r.slice(1).toLowerCase()}</button>`
+  ).join('');
+  const hideBtn = `<button class="cards-filter-btn${cardsHideUnowned?' active':''}" onclick="cardsToggleHideUnowned()">Owned Only</button>`;
+
+  let filtered = [...cardsData];
+  if (cardsRarityFilter !== 'ALL') filtered = filtered.filter(c => c.rarity === cardsRarityFilter);
+  if (cardsHideUnowned) filtered = filtered.filter(c => c.copiesOwned > 0);
+  if (cardsSearch) {
+    const q = cardsSearch.toLowerCase();
+    filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q));
+  }
+
+  const rows = filtered.map(c => {
+    const unowned = c.copiesOwned === 0 ? ' unowned' : '';
+    const milestoneHtml = c.milestoneUnlockTier != null
+      ? `<div class="cards-milestone">🔒 T${c.milestoneUnlockTier} W${c.milestoneUnlockWave}</div>` : '';
+    const starOpts = [1,2,3,4,5,6,7].map(s =>
+      `<option value="${s}"${c.starLevel===s?' selected':''}>${s}★</option>`).join('');
+    const masteryOpts = Array.from({length:10}, (_,i) => {
+      const locked = i > c.masteryLabLevel;
+      const sel = c.masteryLevel === i ? ' selected' : '';
+      const dis = locked ? ' disabled' : '';
+      const label = i === 0 ? 'Lv 0' : locked ? `Lv ${i} 🔒` : `Lv ${i}`;
+      return `<option value="${i}"${sel}${dis}>${label}</option>`;
+    }).join('');
+    const masteryHint = c.masteryLabLevel === 0
+      ? `<div class="cards-milestone" style="color:var(--red)">Lab not researched</div>`
+      : c.masteryLabLevel < 9
+        ? `<div class="cards-milestone">Lab Lv ${c.masteryLabLevel}</div>`
+        : '';
+    const ownedChecked = c.copiesOwned > 0 ? ' checked' : '';
+    return `<tr class="${unowned}">
+      <td style="text-align:center">
+        <label class="owned-toggle" title="${c.copiesOwned > 0 ? 'Mark unowned' : 'Mark owned'}">
+          <input type="checkbox"${ownedChecked} onchange="cardToggleOwned(${c.id},this.checked)">
+        </label>
+      </td>
+      <td><span class="rarity-badge ${c.rarity}">${c.rarity.charAt(0)+c.rarity.slice(1).toLowerCase()}</span></td>
+      <td style="font-weight:600;white-space:nowrap">${escHtml(c.name)}${milestoneHtml}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:220px">${escHtml(c.description)}</td>
+      <td><select class="cards-inline-select" onchange="cardUpdateStar(${c.id},+this.value)">${starOpts}</select></td>
+      <td><input class="cards-copies-input" type="number" min="0" value="${c.copiesOwned}" onchange="cardUpdateCopies(${c.id},+this.value)"></td>
+      <td><select class="cards-inline-select" onchange="cardUpdateMastery(${c.id},+this.value)"${c.masteryLabLevel===0?' disabled title="Research the mastery lab first"':''}>${masteryOpts}</select>${masteryHint}</td>
+      <td class="cards-val">${cardLevelVal(c)}</td>
+      <td style="font-size:11px;color:var(--muted);font-family:var(--mono)">${cardMasteryVal(c)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('cardsBody').innerHTML = `
+    <div class="cards-controls" style="margin-bottom:1rem">
+      ${rarityBtns}
+      ${hideBtn}
+      <input class="cards-search" type="text" placeholder="Search cards…" value="${escHtml(cardsSearch)}"
+        oninput="cardsSetSearch(this.value)">
+    </div>
+    <div class="table-section">
+      <table class="cards-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center">Own</th>
+          <th style="width:70px">Rarity</th><th>Name</th><th>Effect</th>
+          <th>Star</th><th>Copies</th><th>Mastery</th><th>Value</th><th>Mastery Val</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem">No cards match the current filter.</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+function cardsSetRarity(r) { cardsRarityFilter = r; renderCardsCollection(); }
+function cardsToggleHideUnowned() { cardsHideUnowned = !cardsHideUnowned; renderCardsCollection(); }
+function cardsSetSearch(v) { cardsSearch = v; renderCardsCollection(); }
+
+async function cardUpdateStar(id, val) {
+  const card = cardsData.find(c => c.id === id);
+  if (card) card.starLevel = val;
+  await fetch(`${API}/cards/${id}/star-level`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({starLevel:val})
+  });
+  renderCardsCollection();
+}
+
+async function cardToggleOwned(id, owned) {
+  const card = cardsData.find(c => c.id === id);
+  const newCopies = owned ? Math.max(1, card ? card.copiesOwned : 1) : 0;
+  if (card) card.copiesOwned = newCopies;
+  await fetch(`${API}/cards/${id}/copies-owned`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({copiesOwned:newCopies})
+  });
+  renderCardsCollection();
+}
+
+async function cardUpdateCopies(id, val) {
+  const card = cardsData.find(c => c.id === id);
+  if (card) card.copiesOwned = val;
+  await fetch(`${API}/cards/${id}/copies-owned`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({copiesOwned:val})
+  });
+}
+
+async function cardUpdateMastery(id, val) {
+  const card = cardsData.find(c => c.id === id);
+  if (card && val > card.masteryLabLevel) return; // lab gate: reject silently, dropdown will re-render correctly
+  if (card) card.masteryLevel = val;
+  await fetch(`${API}/cards/${id}/mastery-level`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({masteryLevel:val})
+  });
+  renderCardsCollection();
+}
+
+// ── Slots tab ─────────────────────────────────────────────────────────────────
+
+function renderCardsSlotsTab() {
+  const gemSlots = cardsSlots.filter(s => s.slotNumber <= 22);
+  const keySlots = cardsSlots.filter(s => s.slotNumber > 22);
+
+  const gemOwned     = gemSlots.filter(s => s.owned).length;
+  const gemsSpent    = gemSlots.filter(s => s.owned).reduce((sum, s) => sum + s.unlockCost, 0);
+  const gemsNeeded   = gemSlots.filter(s => !s.owned).reduce((sum, s) => sum + s.unlockCost, 0);
+
+  const keyOwned     = keySlots.filter(s => s.owned).length;
+  const keysSpent    = keySlots.filter(s => s.owned).reduce((sum, s) => sum + s.unlockCost, 0);
+  const keysNeeded   = keySlots.filter(s => !s.owned).reduce((sum, s) => sum + s.unlockCost, 0);
+
+  document.getElementById('cardsBody').innerHTML = `
+    <div class="cards-summary-bar" style="margin-bottom:1.25rem">
+      <div class="cards-summary-chip">
+        <div class="lbl">💎 Gem Slots</div>
+        <div class="val">${gemOwned} / ${gemSlots.length}</div>
+      </div>
+      <div class="cards-summary-chip">
+        <div class="lbl">💎 Gems Spent</div>
+        <div class="val" style="color:var(--accent)">${gemsSpent.toLocaleString()}</div>
+      </div>
+      <div class="cards-summary-chip">
+        <div class="lbl">💎 Gems to Go</div>
+        <div class="val" style="color:var(--gold)">${gemsNeeded.toLocaleString()}</div>
+      </div>
+      <div class="cards-summary-chip">
+        <div class="lbl">🔑 Key Slots</div>
+        <div class="val">${keyOwned} / ${keySlots.length}</div>
+      </div>
+      <div class="cards-summary-chip">
+        <div class="lbl">🔑 Keys Spent</div>
+        <div class="val" style="color:var(--accent)">${keysSpent}</div>
+      </div>
+      <div class="cards-summary-chip">
+        <div class="lbl">🔑 Keys to Go</div>
+        <div class="val" style="color:var(--gold)">${keysNeeded}</div>
+      </div>
+    </div>
+    <div class="cards-slot-section">
+      <div class="cards-slot-section-title">💎 Gem Slots (1–22)</div>
+      <div class="cards-slot-grid">${gemSlots.map(renderSlotOwnershipTile).join('')}</div>
+    </div>
+    <div class="cards-slot-section">
+      <div class="cards-slot-section-title">🔑 Key Vault Slots (23–28)</div>
+      <div class="cards-slot-grid">${keySlots.map(renderSlotOwnershipTile).join('')}</div>
+    </div>`;
+}
+
+function renderSlotOwnershipTile(slot) {
+  const costLabel = slot.unlockCost > 0
+    ? `${slot.unlockCurrency === 'GEM' ? '💎' : '🔑'} ${slot.unlockCost.toLocaleString()}`
+    : 'Free';
+  const costColor = slot.unlockCost > 0 ? 'var(--muted)' : 'var(--green)';
+  const statusColor = slot.owned ? 'var(--green)' : 'var(--muted)';
+  const statusLabel = slot.owned ? '✓ Owned' : 'Locked';
+  const disabled = slot.slotNumber === 1 ? ' disabled' : '';
+  return `<div class="cards-slot${slot.owned ? ' filled' : ''}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span class="cards-slot-num">Slot ${slot.slotNumber}</span>
+      <span style="font-size:10px;color:${costColor}">${costLabel}</span>
+    </div>
+    <div style="flex:1;display:flex;align-items:center">
+      <label style="display:flex;align-items:center;gap:6px;cursor:${slot.slotNumber===1?'default':'pointer'};font-size:12px;color:${statusColor}">
+        <input type="checkbox"${slot.owned?' checked':''}${disabled} onchange="cardToggleSlotOwned(${slot.slotNumber},this.checked)">
+        ${statusLabel}
+      </label>
+    </div>
+  </div>`;
+}
+
+async function cardToggleSlotOwned(slotNumber, owned) {
+  const slot = cardsSlots.find(s => s.slotNumber === slotNumber);
+  if (slot) slot.owned = owned;
+  await fetch(`${API}/cards/slots/${slotNumber}/owned`, {
+    method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({owned})
+  });
+  renderCardsSlotsTab();
+}
+
+// ── Presets tab ───────────────────────────────────────────────────────────────
+
+function renderCardsPresets() {
+  const presetTabs = cardsPresets.map(p =>
+    `<button class="cards-preset-tab${cardsActivePreset===p.id?' active':''}" onclick="cardsSetPreset(${p.id})">${escHtml(p.name)}</button>`
+  ).join('');
+  const addBtn = cardsPresets.length < 5
+    ? `<button class="cards-filter-btn" onclick="cardsAddPreset()">+ Add Preset</button>` : '';
+
+  const preset = cardsPresets.find(p => p.id === cardsActivePreset);
+  const body = preset ? renderPresetDetail(preset) : '<div style="color:var(--muted);padding:2rem">No preset selected.</div>';
+
+  document.getElementById('cardsBody').innerHTML = `
+    <div class="cards-preset-bar">${presetTabs}${addBtn}</div>
+    <div id="cardsPresetDetail">${body}</div>`;
+}
+
+function cardsSetPreset(id) { cardsActivePreset = id; renderCardsPresets(); }
+
+function renderPresetDetail(preset) {
+  const assignments = cardsAssignments[preset.id] || [];
+  const assignMap = {};
+  assignments.forEach(a => { assignMap[a.slotNumber] = a; });
+
+  const deleteBtn = preset.slot === 1 ? '' :
+    `<button class="btn" style="border-color:rgba(242,107,107,.4);color:var(--red)" onclick="cardsDeletePreset(${preset.id})">Delete</button>`;
+
+  const gemSlots = cardsSlots.filter(s => s.slotNumber <= 22);
+  const keySlots = cardsSlots.filter(s => s.slotNumber > 22);
+
+  return `
+    <div class="cards-preset-header">
+      <input class="cards-preset-name-input" id="presetNameInput_${preset.id}" type="text" value="${escHtml(preset.name)}">
+      <button class="btn btn-primary" onclick="cardsSavePresetName(${preset.id})">Save Name</button>
+      ${deleteBtn}
+    </div>
+    <div class="cards-slot-section">
+      <div class="cards-slot-section-title">💎 Gem Slots (1–22)</div>
+      <div class="cards-slot-grid">${gemSlots.map(s => renderCardSlotTile(preset.id, s, assignMap[s.slotNumber])).join('')}</div>
+    </div>
+    <div class="cards-slot-section">
+      <div class="cards-slot-section-title">🔑 Key Vault Slots (23–28)</div>
+      <div class="cards-slot-grid">${keySlots.map(s => renderCardSlotTile(preset.id, s, assignMap[s.slotNumber])).join('')}</div>
+    </div>`;
+}
+
+function renderCardSlotTile(presetId, slot, assignment) {
+  const num = slot.slotNumber;
+  const costHint = slot.unlockCost > 0
+    ? `<span style="font-size:9px;color:var(--muted)">${slot.unlockCurrency==='GEM'?'💎':'🔑'} ${slot.unlockCost}</span>` : '';
+
+  // Unowned slot: show locked state, no assign button
+  if (!slot.owned) {
+    return `<div class="cards-slot" style="opacity:.5">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="cards-slot-num">Slot ${num}</span>${costHint}
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-style:italic;flex:1;display:flex;align-items:center">🔒 Not unlocked</div>
+    </div>`;
+  }
+
+  if (assignment) {
+    const card = cardsData.find(c => c.id === assignment.cardId);
+    const col = card ? (card.rarity==='EPIC'?'var(--accent2)':card.rarity==='RARE'?'var(--accent)':'var(--muted)') : 'var(--text)';
+    return `<div class="cards-slot filled">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="cards-slot-num">Slot ${num}</span>${costHint}
+      </div>
+      <div class="cards-slot-card-name" style="color:${col}">${escHtml(assignment.cardName)}</div>
+      <div class="cards-slot-actions">
+        <button class="cards-slot-assign-btn" onclick="cardsOpenPicker(${presetId},${num})">Change</button>
+        <button class="cards-slot-clear-btn" onclick="cardsUnassignSlot(${presetId},${num})">✕</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="cards-slot">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="cards-slot-num">Slot ${num}</span>${costHint}
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-style:italic;flex:1;display:flex;align-items:center">Empty</div>
+    <div class="cards-slot-actions">
+      <button class="cards-slot-assign-btn" onclick="cardsOpenPicker(${presetId},${num})">+ Assign</button>
+    </div>
+  </div>`;
+}
+
+async function cardsSavePresetName(presetId) {
+  const input = document.getElementById(`presetNameInput_${presetId}`);
+  if (!input) return;
+  const name = input.value.trim();
+  if (!name) return;
+  await fetch(`${API}/cards/presets/${presetId}/name`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name})
+  });
+  const preset = cardsPresets.find(p => p.id === presetId);
+  if (preset) preset.name = name;
+  renderCardsPresets();
+}
+
+async function cardsDeletePreset(presetId) {
+  if (!confirm('Delete this preset and all its assignments?')) return;
+  await fetch(`${API}/cards/presets/${presetId}`, {method:'DELETE'});
+  cardsPresets = cardsPresets.filter(p => p.id !== presetId);
+  delete cardsAssignments[presetId];
+  if (cardsActivePreset === presetId) cardsActivePreset = cardsPresets[0]?.id ?? null;
+  renderCardsPresets();
+}
+
+async function cardsAddPreset() {
+  const usedSlots = new Set(cardsPresets.map(p => p.slot));
+  const nextSlot = [2,3,4,5].find(s => !usedSlots.has(s));
+  if (!nextSlot) return;
+  const name = `Preset ${nextSlot}`;
+  const res = await fetch(`${API}/cards/presets`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slot:nextSlot, name})
+  });
+  const newPreset = await res.json();
+  cardsPresets.push(newPreset);
+  cardsAssignments[newPreset.id] = [];
+  cardsActivePreset = newPreset.id;
+  renderCardsPresets();
+}
+
+// ── Card picker modal ─────────────────────────────────────────────────────────
+
+function cardsOpenPicker(presetId, slotNumber) {
+  cardsPendingSlot = {presetId, slotNumber};
+  // Cards already in this preset (in other slots) are dimmed but not hidden
+  const takenByOtherSlot = new Set(
+    (cardsAssignments[presetId] || [])
+      .filter(a => a.slotNumber !== slotNumber)
+      .map(a => a.cardId)
+  );
+
+  const items = cardsData.map(c => {
+    const vals = [c.level1, c.level2, c.level3, c.level4, c.level5, c.level6, c.level7];
+    const val = fmtCardVal(vals[c.starLevel - 1], c.valueUnit);
+    const dimmed = takenByOtherSlot.has(c.id) ? ' style="opacity:.35;pointer-events:none"' : '';
+    return `<div class="cards-picker-item"${dimmed} onclick="cardsPickCard(${c.id})">
+      <span class="rarity-badge ${c.rarity}" style="flex-shrink:0">${c.rarity.charAt(0)+c.rarity.slice(1).toLowerCase()}</span>
+      <span class="cp-name">${escHtml(c.name)}</span>
+      <span class="cp-val">${val}</span>
+    </div>`;
+  }).join('');
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="modal-overlay" id="cardsPickerOverlay" onclick="if(event.target===this)cardsClosePicker()">
+      <div class="modal" style="width:480px">
+        <div class="modal-title">Assign Card — Slot ${slotNumber}</div>
+        <input class="cards-picker-search" id="cardsPickerSearch" type="text" placeholder="Search cards…"
+          oninput="cardsFilterPicker(this.value)">
+        <div class="cards-picker-list" id="cardsPickerList">${items}</div>
+        <div class="modal-actions">
+          <button class="btn" onclick="cardsClosePicker()">Cancel</button>
+        </div>
+      </div>
+    </div>`);
+  document.getElementById('cardsPickerSearch').focus();
+}
+
+function cardsFilterPicker(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('#cardsPickerList .cards-picker-item').forEach(el => {
+    const name = el.querySelector('.cp-name')?.textContent.toLowerCase() || '';
+    el.style.display = name.includes(q) ? '' : 'none';
+  });
+}
+
+function cardsClosePicker() {
+  const el = document.getElementById('cardsPickerOverlay');
+  if (el) el.remove();
+  cardsPendingSlot = null;
+}
+
+async function cardsPickCard(cardId) {
+  if (!cardsPendingSlot) return;
+  const {presetId, slotNumber} = cardsPendingSlot;
+  cardsClosePicker();
+  await fetch(`${API}/cards/presets/${presetId}/assignments/${slotNumber}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({cardId})
+  });
+  const r = await fetch(`${API}/cards/presets/${presetId}/assignments`);
+  cardsAssignments[presetId] = await r.json();
+  renderCardsPresets();
+}
+
+async function cardsUnassignSlot(presetId, slotNumber) {
+  await fetch(`${API}/cards/presets/${presetId}/assignments/${slotNumber}`, {method:'DELETE'});
+  cardsAssignments[presetId] = (cardsAssignments[presetId] || []).filter(a => a.slotNumber !== slotNumber);
+  renderCardsPresets();
 }
 </script>
 </body>
