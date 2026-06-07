@@ -556,6 +556,72 @@
   .cards-picker-item:hover{border-color:var(--accent);background:rgba(79,142,247,.06);}
   .cards-picker-item .cp-name{font-size:13px;font-weight:600;flex:1;}
   .cards-picker-item .cp-val{font-size:11px;font-family:var(--mono);color:var(--accent);}
+
+  /* ── Bots ───────────────────────────────────── */
+  .bots-summary-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1.25rem;}
+  .bots-summary-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;min-width:130px;}
+  .bots-summary-chip .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+  .bots-summary-chip .val{font-size:1.1rem;font-weight:700;font-family:var(--mono);}
+  .bots-tab-bar{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);}
+  .bots-tab{padding:8px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+  .bots-tab:hover{color:var(--text);}
+  .bots-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .bots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+  .bot-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .bot-card.unlocked{border-color:rgba(255,255,255,0.18);}
+  .bot-card-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .bot-card-name{font-size:14px;font-weight:700;flex:1;}
+  .bot-unlock-cost{font-size:11px;color:var(--muted);font-family:var(--mono);white-space:nowrap;}
+  .bot-toggle-wrap{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+  .bot-toggle{display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;user-select:none;white-space:nowrap;}
+  .bot-toggle input{accent-color:var(--green);cursor:pointer;}
+  .bot-toggle.bot-plus-toggle input{accent-color:var(--accent2);}
+  .bot-plus-label{color:var(--accent2);}
+  .bot-stats-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .bot-stats-table th{background:var(--surface2);padding:5px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;}
+  .bot-stats-table th.r{text-align:right;}
+  .bot-stats-table td{padding:6px 10px;border-top:1px solid var(--border);vertical-align:middle;}
+  .bot-stats-table tr.bot-plus-row td{border-top:2px solid var(--border2);}
+  .bot-stats-table tr.bot-row-locked td{opacity:.35;}
+  .bot-val{font-family:var(--mono);color:var(--accent);font-weight:600;text-align:right;min-width:64px;}
+  .bot-val.plus{color:var(--accent2);}
+  .bot-cost{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;}
+  .bot-lvl-cell{text-align:right;}
+  .bot-level-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:56px;}
+  .bot-level-select:disabled{opacity:.4;cursor:not-allowed;}
+  .bots-medals-total{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:1.25rem;}
+  .bots-medals-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;}
+  .bots-medals-chip .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;}
+  .bots-medals-chip .val{font-family:var(--mono);font-weight:700;color:var(--gold);}
+  /* presets */
+  .bots-preset-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;}
+  .bots-preset-tab{padding:6px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .bots-preset-tab:hover,.bots-preset-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.09);}
+  .bots-preset-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;}
+  .bots-preset-name-input{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;font-weight:600;padding:6px 10px;font-family:var(--font);width:220px;}
+  .bots-preset-name-input:focus{outline:none;border-color:var(--accent);}
+  .bots-preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;}
+  .bots-preset-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .bots-preset-card-header{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .bots-preset-bot-name{font-size:13px;font-weight:700;flex:1;}
+  .bots-preset-toggles{display:flex;gap:10px;}
+  .bots-preset-toggle{display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;user-select:none;}
+  .bots-preset-toggle input{cursor:pointer;}
+  .bots-preset-toggle input[data-plus]{accent-color:var(--accent2);}
+  .bots-preset-stats{width:100%;border-collapse:collapse;font-size:12px;}
+  .bots-preset-stats th{background:var(--surface2);padding:4px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  .bots-preset-stats th.r{text-align:right;}
+  .bots-preset-stats td{padding:5px 10px;border-top:1px solid var(--border);vertical-align:middle;}
+  .bots-preset-stats tr.bot-plus-row td{border-top:2px solid var(--border2);}
+  .bots-preset-stats tr.bot-row-locked td{opacity:.35;}
+  .bots-preset-lvl-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:56px;}
+  .bots-preset-lvl-select:disabled{opacity:.4;cursor:not-allowed;}
+  .bots-preset-val{font-family:var(--mono);color:var(--accent);font-weight:600;text-align:right;}
+  .bots-preset-val.plus{color:var(--accent2);}
+  .bots-preset-medals{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;}
+  .bots-preset-medal-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11px;}
+  .bots-preset-medal-chip .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+  .bots-preset-medal-chip .val{font-family:var(--mono);font-weight:700;color:var(--gold);}
 </style>
 </head>
 <body>
@@ -578,6 +644,7 @@
     <button class="nav-btn" onclick="showView('tierpb')">Tier PB</button>
     <button class="nav-btn" onclick="showView('workshop')">Workshop</button>
     <button class="nav-btn" onclick="showView('cards')">Cards</button>
+    <button class="nav-btn" onclick="showView('bots')">Bots</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
@@ -717,7 +784,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','versions'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','versions'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -731,6 +798,7 @@ function showView(view){
   else if(view==='tierpb')renderTierPbView();
   else if(view==='workshop')renderWorkshopView();
   else if(view==='cards')renderCardsView();
+  else if(view==='bots')renderBotsView();
   else if(view==='versions')renderVersionTrackerView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
@@ -3403,7 +3471,7 @@ async function renderWorkshopView() {
     wsPlusProgress = await progressRes.json();
     buildWorkshopPage();
     // Prefetch Workshop+ costs in background so Next Cost column fills in
-    wsPrefetchPlusCosts().then(() => { if(document.getElementById('wsBody')) renderWorkshopBody(); });
+    wsPrefetchAllCosts().then(() => { if(document.getElementById('wsBody')) buildWorkshopPage(); });
   } catch(e) {
     document.getElementById('mainContent').innerHTML =
       `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
@@ -3416,13 +3484,19 @@ function buildWorkshopPage() {
 
   const maxed = items.filter(i => i.currentLevel >= i.maxLevel).length;
   const total = items.length;
-  const totalSpent = items.reduce((s, i) => s + wsCoinSpent(i), 0);
+  const totalBase = wsDiscounts ? items.reduce((s, i) => s + wsCoinSpent(i, 1.0), 0) : 0;
+  const totalSpent = wsDiscounts
+    ? items.reduce((s, i) => s + wsCoinSpent(i, isPlus ? wsPlusDisc(i.category) : wsDisc(i.category)), 0)
+    : 0;
+  const totalSaved = totalBase - totalSpent;
 
   const summaryHtml = `
     <div class="ws-summary-bar">
       <div class="ws-summary-chip"><div class="lbl">Items</div><div class="val">${total}</div></div>
       <div class="ws-summary-chip"><div class="lbl">Maxed</div><div class="val" style="color:var(--green)">${maxed}</div></div>
       <div class="ws-summary-chip"><div class="lbl">Total Invested</div><div class="val" style="color:var(--gold)">${fmtCoins(totalSpent)}</div></div>
+      <div class="ws-summary-chip"><div class="lbl">Without Discount</div><div class="val">${fmtCoins(totalBase)}</div></div>
+      <div class="ws-summary-chip"><div class="lbl">Saved</div><div class="val" style="color:var(--green)">${fmtCoins(totalSaved)}</div></div>
     </div>`;
 
   const discHtml = buildDiscountBar(isPlus);
@@ -3623,11 +3697,10 @@ function wsPlusDisc(cat) {
   return wsDiscounts.plusUtilityCostMult;
 }
 
-function wsCoinSpent(item) {
-  // Approximate from cached costs if available; otherwise 0
+function wsCoinSpent(item, disc = 1.0) {
   const costs = wsCostCache[item.id];
   if (!costs) return 0;
-  return costs.filter(c => c.level <= item.currentLevel).reduce((s, c) => s + c.baseCost, 0);
+  return costs.filter(c => c.level <= item.currentLevel).reduce((s, c) => s + c.baseCost * disc, 0);
 }
 
 function wsNextCost(item, disc) {
@@ -3688,10 +3761,9 @@ function wsSetCat(cat) { wsCatFilter = cat; renderWorkshopBody(); }
 function wsToggleHideMaxed() { wsHideMaxed = !wsHideMaxed; renderWorkshopBody(); }
 
 // Pre-fetch costs for Workshop+ items on first load so next-cost column populates
-async function wsPrefetchPlusCosts() {
+async function wsPrefetchAllCosts() {
   if (!wsData) return;
-  const plusItems = wsData.filter(i => i.isPlus);
-  await Promise.all(plusItems.map(async item => {
+  await Promise.all(wsData.map(async item => {
     if (wsCostCache[item.id]) return;
     try {
       const res = await fetch(`${API}/workshop/${item.id}/costs`);
@@ -4169,6 +4241,419 @@ async function cardsUnassignSlot(presetId, slotNumber) {
   await fetch(`${API}/cards/presets/${presetId}/assignments/${slotNumber}`, {method:'DELETE'});
   cardsAssignments[presetId] = (cardsAssignments[presetId] || []).filter(a => a.slotNumber !== slotNumber);
   renderCardsPresets();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── Bots ─────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let botsData = [];
+let botsUnlockCosts = [];
+let botsLevelValues = {};   // statId → [{level, value, medalsToNext}]
+let botsTab = 'tracker';
+let botsPresets = [];
+let botsPresetUnlocks = {};     // presetId → [{botId, unlocked, botPlusUnlocked}]
+let botsPresetStatLevels = {};  // presetId → [{botStatId, targetLevel}]
+let botsActivePreset = null;
+
+async function renderBotsView() {
+  document.getElementById('mainContent').innerHTML =
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading bots…</div>';
+  try {
+    const [botsRes, costsRes, presetsRes, lvlRes] = await Promise.all([
+      fetch(`${API}/bots`),
+      fetch(`${API}/bots/unlock-costs`),
+      fetch(`${API}/bots/presets`),
+      fetch(`${API}/bots/level-values`)
+    ]);
+    botsData        = await botsRes.json();
+    botsUnlockCosts = await costsRes.json();
+    botsPresets     = await presetsRes.json();
+
+    // Load all level values from single batch call
+    const lvlData = await lvlRes.json();
+    botsLevelValues = {};
+    lvlData.forEach(e => { botsLevelValues[e.statId] = e.levels; });
+
+    // Fetch preset details
+    botsPresetUnlocks = {};
+    botsPresetStatLevels = {};
+    await Promise.all(botsPresets.map(async p => {
+      const [uRes, lRes] = await Promise.all([
+        fetch(`${API}/bots/presets/${p.id}/unlocks`),
+        fetch(`${API}/bots/presets/${p.id}/stat-levels`)
+      ]);
+      botsPresetUnlocks[p.id]     = await uRes.json();
+      botsPresetStatLevels[p.id]  = await lRes.json();
+    }));
+
+    if (!botsActivePreset && botsPresets.length > 0) botsActivePreset = botsPresets[0].id;
+    buildBotsPage();
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function buildBotsPage() {
+  const unlocked     = botsData.filter(b => b.unlocked).length;
+  const botPlusCount = botsData.filter(b => b.botPlusUnlocked).length;
+  const totalMedals  = botsComputeMedals(botsData.map(b => ({
+    bot: b, statLevels: Object.fromEntries(b.stats.map(s => [s.statId, s.currentLevel]))
+  })));
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="report-title" style="margin-bottom:1rem">Bots</div>
+    <div class="bots-summary-bar">
+      <div class="bots-summary-chip"><div class="lbl">Bots</div><div class="val">${botsData.length}</div></div>
+      <div class="bots-summary-chip"><div class="lbl">Unlocked</div><div class="val" style="color:var(--green)">${unlocked}</div></div>
+      <div class="bots-summary-chip"><div class="lbl">Bot+</div><div class="val" style="color:var(--accent2)">${botPlusCount}</div></div>
+      <div class="bots-summary-chip"><div class="lbl">Medals Invested</div><div class="val" style="color:var(--gold)">${totalMedals.toLocaleString()}</div></div>
+    </div>
+    <div class="bots-tab-bar">
+      <div class="bots-tab${botsTab==='tracker'?' active':''}" onclick="botsSetTab('tracker')">Tracker</div>
+      <div class="bots-tab${botsTab==='presets'?' active':''}" onclick="botsSetTab('presets')">Presets</div>
+    </div>
+    <div id="botsBody"></div>`;
+
+  renderBotsBody();
+}
+
+function botsSetTab(tab) {
+  botsTab = tab;
+  document.querySelectorAll('.bots-tab').forEach(el => el.classList.toggle('active', el.textContent.toLowerCase() === tab));
+  renderBotsBody();
+}
+
+function renderBotsBody() {
+  if (botsTab === 'tracker') renderBotsTracker();
+  else renderBotsPresetsTab();
+}
+
+// ── Tracker ───────────────────────────────────────────────────────────────────
+
+function renderBotsTracker() {
+  const unlockedBots = botsData.filter(b => b.unlocked).sort((a,b) => (a.unlockOrder||99)-(b.unlockOrder||99));
+  const medalChips = `
+    <div class="bots-medals-total">
+      <div class="bots-medals-chip">
+        <div class="lbl">Unlock Medals</div>
+        <div class="val">${botsUnlockMedalsSpent().toLocaleString()}</div>
+      </div>
+      <div class="bots-medals-chip">
+        <div class="lbl">Upgrade Medals</div>
+        <div class="val">${botsUpgradeMedalsSpent().toLocaleString()}</div>
+      </div>
+    </div>`;
+
+  const cards = botsData.map(bot => botCardHtml(bot)).join('');
+  document.getElementById('botsBody').innerHTML = `${medalChips}<div class="bots-grid">${cards}</div>`;
+}
+
+function botCardHtml(bot) {
+  const unlockIdx  = botsData.filter(b => b.unlocked).sort((a,b)=>(a.unlockOrder||99)-(b.unlockOrder||99)).findIndex(b=>b.id===bot.id);
+  const nextCostIdx = botsData.filter(b => b.unlocked).length;
+  const unlockCost = bot.unlocked
+    ? botsUnlockCosts[bot.unlockOrder - 1]
+    : (nextCostIdx < botsUnlockCosts.length ? botsUnlockCosts[nextCostIdx] : null);
+
+  const costLabel = unlockCost != null ? `${unlockCost.toLocaleString()} 🏅` : '';
+
+  const rows = bot.stats.map(s => {
+    const lvls    = botsLevelValues[s.statId] || [];
+    const curLvl  = s.currentLevel;
+    const curEntry = lvls.find(e => e.level === curLvl);
+    const val     = curEntry ? fmtBotVal(curEntry.value, s.valueUnit) : '—';
+    const nextCost = curEntry?.medalsToNext != null ? `${curEntry.medalsToNext.toLocaleString()} 🏅` : 'Max';
+    const locked   = s.isBotPlus && !bot.botPlusUnlocked;
+    const opts     = Array.from({length: s.maxLevel + 1}, (_,i) =>
+      `<option value="${i}"${i===curLvl?' selected':''}>${i}</option>`).join('');
+    const rowClass = (s.isBotPlus ? ' bot-plus-row' : '') + (locked ? ' bot-row-locked' : '');
+    const valClass = `bot-val${s.isBotPlus?' plus':''}`;
+    return `<tr class="${rowClass}">
+      <td>${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}</td>
+      <td class="bot-lvl-cell">
+        <select class="bot-level-select"${locked?' disabled':''} onchange="botSetStatLevel(${s.statId},+this.value,${bot.id})">
+          ${opts}
+        </select>
+      </td>
+      <td class="${valClass}">${val}</td>
+      <td class="bot-cost">${nextCost}</td>
+    </tr>`;
+  }).join('');
+
+  const checkedU  = bot.unlocked ? ' checked' : '';
+  const checkedBP = bot.botPlusUnlocked ? ' checked' : '';
+
+  return `<div class="bot-card${bot.unlocked?' unlocked':''}">
+    <div class="bot-card-header">
+      <div class="bot-card-name">${escHtml(bot.name)}</div>
+      ${costLabel ? `<div class="bot-unlock-cost">${costLabel}</div>` : ''}
+      <div class="bot-toggle-wrap">
+        <label class="bot-toggle">
+          <input type="checkbox"${checkedU} onchange="botToggleUnlocked(${bot.id},this.checked)">
+          <span>Unlocked</span>
+        </label>
+        <label class="bot-toggle bot-plus-toggle">
+          <input type="checkbox"${checkedBP}${!bot.unlocked?' disabled':''} onchange="botToggleBotPlus(${bot.id},this.checked)">
+          <span class="bot-plus-label">${escHtml(bot.botPlusAbilityName)} (Bot+)</span>
+        </label>
+      </div>
+    </div>
+    <table class="bot-stats-table">
+      <thead><tr>
+        <th>Stat</th>
+        <th class="r" style="width:62px">Level</th>
+        <th class="r" style="width:72px">Value</th>
+        <th class="r" style="width:80px">Next Cost</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function fmtBotVal(value, unit) {
+  switch(unit) {
+    case 'PERCENT':    return (value * 100).toFixed(0) + '%';
+    case 'MULTIPLIER': return 'x' + value.toFixed(2);
+    case 'SECONDS':    return value.toFixed(1) + 's';
+    case 'METERS':     return value.toFixed(0) + 'm';
+    case 'COUNT':      return value.toFixed(0);
+    default:           return String(value);
+  }
+}
+
+function botsUnlockMedalsSpent() {
+  return botsData
+    .filter(b => b.unlocked && b.unlockOrder != null)
+    .reduce((sum, b) => sum + (botsUnlockCosts[b.unlockOrder - 1] || 0), 0);
+}
+
+function botsUpgradeMedalsSpent() {
+  return botsData.flatMap(b => b.stats).reduce((sum, s) => {
+    const lvls = botsLevelValues[s.statId] || [];
+    return sum + lvls.filter(e => e.level < s.currentLevel && e.medalsToNext != null)
+                     .reduce((a, e) => a + e.medalsToNext, 0);
+  }, 0);
+}
+
+function botsComputeMedals(entries) {
+  // entries: [{bot, statLevels}] where statLevels = {statId: level}
+  let total = 0;
+  entries.forEach(({bot, statLevels}) => {
+    if (bot.unlocked && bot.unlockOrder != null) total += botsUnlockCosts[bot.unlockOrder - 1] || 0;
+    bot.stats.forEach(s => {
+      const lvl  = statLevels[s.statId] ?? 0;
+      const lvls = botsLevelValues[s.statId] || [];
+      total += lvls.filter(e => e.level < lvl && e.medalsToNext != null)
+                   .reduce((a, e) => a + e.medalsToNext, 0);
+    });
+  });
+  return total;
+}
+
+async function botToggleUnlocked(botId, unlocked) {
+  let unlockOrder = null;
+  if (unlocked) {
+    const alreadyUnlocked = botsData.filter(b => b.unlocked && b.id !== botId).length;
+    unlockOrder = alreadyUnlocked + 1;
+  }
+  await fetch(`${API}/bots/${botId}/unlocked`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({unlocked, unlockOrder})
+  });
+  const bot = botsData.find(b => b.id === botId);
+  if (bot) { bot.unlocked = unlocked; bot.unlockOrder = unlockOrder; }
+  buildBotsPage();
+}
+
+async function botToggleBotPlus(botId, botPlusUnlocked) {
+  await fetch(`${API}/bots/${botId}/bot-plus-unlocked`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({botPlusUnlocked})
+  });
+  const bot = botsData.find(b => b.id === botId);
+  if (bot) bot.botPlusUnlocked = botPlusUnlocked;
+  buildBotsPage();
+}
+
+async function botSetStatLevel(statId, level, botId) {
+  await fetch(`${API}/bots/stats/${statId}/level`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({level})
+  });
+  const bot = botsData.find(b => b.id === botId);
+  if (bot) { const s = bot.stats.find(s => s.statId === statId); if (s) s.currentLevel = level; }
+  buildBotsPage();
+}
+
+// ── Presets ───────────────────────────────────────────────────────────────────
+
+function renderBotsPresetsTab() {
+  const tabBtns = botsPresets.map(p =>
+    `<button class="bots-preset-tab${botsActivePreset===p.id?' active':''}" onclick="botsSetActivePreset(${p.id})">${escHtml(p.name)}</button>`
+  ).join('');
+  const addBtn = botsPresets.length < 5
+    ? `<button class="bots-preset-tab" onclick="botsAddPreset()">+ New Preset</button>` : '';
+
+  const preset = botsPresets.find(p => p.id === botsActivePreset);
+  let bodyHtml = '';
+  if (preset) {
+    const unlocks    = botsPresetUnlocks[preset.id]    || [];
+    const statLevels = botsPresetStatLevels[preset.id] || [];
+
+    // Compute cost for this preset
+    const presetEntries = botsData.map(bot => {
+      const unlockEntry = unlocks.find(u => u.botId === bot.id) || {unlocked:false, botPlusUnlocked:false};
+      const levelMap = {};
+      bot.stats.forEach(s => {
+        const e = statLevels.find(l => l.botStatId === s.statId);
+        levelMap[s.statId] = e ? e.targetLevel : 0;
+      });
+      // Temporarily assign unlock order for cost calc (1-indexed by order in botsData)
+      const presetUnlockedBots = botsData
+        .filter(b => (unlocks.find(u => u.botId === b.id) || {}).unlocked)
+        .map((b, i) => ({...b, unlockOrder: i + 1}));
+      const fakeBot = {...bot, unlocked: unlockEntry.unlocked,
+        unlockOrder: presetUnlockedBots.findIndex(b => b.id === bot.id) + 1 || null};
+      return {bot: fakeBot, statLevels: levelMap};
+    });
+    const presetMedals = botsComputeMedals(presetEntries);
+
+    const medalBar = `<div class="bots-preset-medals">
+      <div class="bots-preset-medal-chip"><div class="lbl">Total Medals</div><div class="val">${presetMedals.toLocaleString()}</div></div>
+    </div>`;
+
+    const cards = botsData.map(bot => {
+      const unlockEntry = unlocks.find(u => u.botId === bot.id) || {unlocked:false, botPlusUnlocked:false};
+      const botPlus = unlockEntry.botPlusUnlocked;
+      const rows = bot.stats.map(s => {
+        const entry  = statLevels.find(l => l.botStatId === s.statId);
+        const curLvl = entry ? entry.targetLevel : 0;
+        const lvls   = botsLevelValues[s.statId] || [];
+        const curEntry = lvls.find(e => e.level === curLvl);
+        const val    = curEntry ? fmtBotVal(curEntry.value, s.valueUnit) : '—';
+        const locked = s.isBotPlus && !botPlus;
+        const opts   = Array.from({length: s.maxLevel + 1}, (_,i) =>
+          `<option value="${i}"${i===curLvl?' selected':''}>${i}</option>`).join('');
+        const rowClass = (s.isBotPlus?' bot-plus-row':'') + (locked?' bot-row-locked':'');
+        return `<tr class="${rowClass}">
+          <td>${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}</td>
+          <td style="text-align:right">
+            <select class="bots-preset-lvl-select"${locked?' disabled':''}
+              onchange="botsPresetSetStatLevel(${preset.id},${s.statId},+this.value)">${opts}</select>
+          </td>
+          <td class="bots-preset-val${s.isBotPlus?' plus':''}">${val}</td>
+        </tr>`;
+      }).join('');
+
+      return `<div class="bots-preset-card">
+        <div class="bots-preset-card-header">
+          <div class="bots-preset-bot-name">${escHtml(bot.name)}</div>
+          <div class="bots-preset-toggles">
+            <label class="bots-preset-toggle">
+              <input type="checkbox"${unlockEntry.unlocked?' checked':''}
+                onchange="botsPresetToggleUnlock(${preset.id},${bot.id},this.checked,'unlock')">
+              <span>Unlocked</span>
+            </label>
+            <label class="bots-preset-toggle">
+              <input type="checkbox"${botPlus?' checked':''}${!unlockEntry.unlocked?' disabled':''}
+                style="accent-color:var(--accent2)"
+                onchange="botsPresetToggleUnlock(${preset.id},${bot.id},this.checked,'botplus')">
+              <span class="bot-plus-label">Bot+</span>
+            </label>
+          </div>
+        </div>
+        <table class="bots-preset-stats">
+          <thead><tr>
+            <th>Stat</th>
+            <th class="r" style="width:62px">Target</th>
+            <th class="r" style="width:72px">Value</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+
+    const deleteBtn = botsPresets.length > 1
+      ? `<button class="btn" style="color:var(--red);border-color:var(--red)" onclick="botsDeletePreset(${preset.id})">Delete</button>` : '';
+
+    bodyHtml = `
+      <div class="bots-preset-header">
+        <input class="bots-preset-name-input" value="${escHtml(preset.name)}"
+          onblur="botsRenamePreset(${preset.id},this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        ${deleteBtn}
+      </div>
+      ${medalBar}
+      <div class="bots-preset-grid">${cards}</div>`;
+  }
+
+  document.getElementById('botsBody').innerHTML = `
+    <div class="bots-preset-bar">${tabBtns}${addBtn}</div>
+    ${bodyHtml}`;
+}
+
+function botsSetActivePreset(id) { botsActivePreset = id; renderBotsPresetsTab(); }
+
+async function botsAddPreset() {
+  const nextSlot = Math.max(0, ...botsPresets.map(p => p.slot)) + 1;
+  const name = `Preset ${nextSlot}`;
+  const res = await fetch(`${API}/bots/presets`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({slot: nextSlot, name})
+  });
+  const id = await res.json();
+  botsPresets.push({id, slot: nextSlot, name});
+  botsPresetUnlocks[id]    = [];
+  botsPresetStatLevels[id] = [];
+  botsActivePreset = id;
+  renderBotsPresetsTab();
+}
+
+async function botsDeletePreset(presetId) {
+  await fetch(`${API}/bots/presets/${presetId}`, {method:'DELETE'});
+  botsPresets = botsPresets.filter(p => p.id !== presetId);
+  delete botsPresetUnlocks[presetId];
+  delete botsPresetStatLevels[presetId];
+  if (botsActivePreset === presetId) botsActivePreset = botsPresets[0]?.id || null;
+  renderBotsPresetsTab();
+}
+
+async function botsRenamePreset(presetId, name) {
+  const preset = botsPresets.find(p => p.id === presetId);
+  if (!preset || preset.name === name) return;
+  await fetch(`${API}/bots/presets`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({slot: preset.slot, name})
+  });
+  preset.name = name;
+  renderBotsPresetsTab();
+}
+
+async function botsPresetToggleUnlock(presetId, botId, checked, field) {
+  const unlocks = botsPresetUnlocks[presetId] || [];
+  let entry = unlocks.find(u => u.botId === botId);
+  if (!entry) { entry = {botId, unlocked: false, botPlusUnlocked: false}; unlocks.push(entry); botsPresetUnlocks[presetId] = unlocks; }
+  if (field === 'unlock')  { entry.unlocked = checked; if (!checked) entry.botPlusUnlocked = false; }
+  if (field === 'botplus') entry.botPlusUnlocked = checked;
+  await fetch(`${API}/bots/presets/${presetId}/unlocks`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({unlocks})
+  });
+  renderBotsPresetsTab();
+}
+
+async function botsPresetSetStatLevel(presetId, botStatId, targetLevel) {
+  const levels = botsPresetStatLevels[presetId] || [];
+  const entry  = levels.find(l => l.botStatId === botStatId);
+  if (entry) entry.targetLevel = targetLevel;
+  else levels.push({botStatId, targetLevel});
+  botsPresetStatLevels[presetId] = levels;
+  await fetch(`${API}/bots/presets/${presetId}/stat-levels`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({levels})
+  });
+  renderBotsPresetsTab();
 }
 </script>
 </body>

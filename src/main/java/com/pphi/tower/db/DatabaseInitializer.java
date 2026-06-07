@@ -666,5 +666,88 @@ public class DatabaseInitializer {
                     UNIQUE (preset_id, card_id)
                 )
                 """);
+
+        // ── Bots ──────────────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot (
+                    id                    INTEGER PRIMARY KEY,
+                    code                  TEXT NOT NULL UNIQUE,
+                    name                  TEXT NOT NULL,
+                    bot_plus_ability_name TEXT NOT NULL
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot_stat (
+                    id          INTEGER PRIMARY KEY,
+                    bot_id      INTEGER NOT NULL REFERENCES bot(id),
+                    stat_key    TEXT    NOT NULL,
+                    label       TEXT    NOT NULL,
+                    value_unit  TEXT    NOT NULL,
+                    is_bot_plus INTEGER NOT NULL DEFAULT 0 CHECK (is_bot_plus IN (0, 1)),
+                    max_level   INTEGER NOT NULL,
+                    sort_order  INTEGER NOT NULL DEFAULT 0,
+                    UNIQUE (bot_id, stat_key)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot_stat_level_value (
+                    bot_stat_id    INTEGER NOT NULL REFERENCES bot_stat(id),
+                    level          INTEGER NOT NULL,
+                    value          REAL    NOT NULL,
+                    medals_to_next INTEGER,
+                    PRIMARY KEY (bot_stat_id, level)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot_player_state (
+                    bot_id            INTEGER NOT NULL REFERENCES bot(id) PRIMARY KEY,
+                    unlocked          INTEGER NOT NULL DEFAULT 0 CHECK (unlocked IN (0, 1)),
+                    bot_plus_unlocked INTEGER NOT NULL DEFAULT 0 CHECK (bot_plus_unlocked IN (0, 1)),
+                    unlock_order      INTEGER
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot_stat_player_level (
+                    bot_stat_id   INTEGER NOT NULL REFERENCES bot_stat(id) PRIMARY KEY,
+                    current_level INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        // Up to 5 named preset slots; slot 1 seeded as default.
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot_preset (
+                    id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                    slot INTEGER NOT NULL UNIQUE CHECK (slot BETWEEN 1 AND 5),
+                    name TEXT    NOT NULL DEFAULT ''
+                )
+                """);
+
+        jdbc.execute("""
+                INSERT OR IGNORE INTO bot_preset (slot, name) VALUES (1, 'Preset 1')
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot_preset_unlock (
+                    preset_id         INTEGER NOT NULL REFERENCES bot_preset(id) ON DELETE CASCADE,
+                    bot_id            INTEGER NOT NULL REFERENCES bot(id),
+                    unlocked          INTEGER NOT NULL DEFAULT 0 CHECK (unlocked IN (0, 1)),
+                    bot_plus_unlocked INTEGER NOT NULL DEFAULT 0 CHECK (bot_plus_unlocked IN (0, 1)),
+                    PRIMARY KEY (preset_id, bot_id)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS bot_preset_stat_level (
+                    preset_id    INTEGER NOT NULL REFERENCES bot_preset(id) ON DELETE CASCADE,
+                    bot_stat_id  INTEGER NOT NULL REFERENCES bot_stat(id),
+                    target_level INTEGER NOT NULL,
+                    PRIMARY KEY (preset_id, bot_stat_id)
+                )
+                """);
     }
 }
