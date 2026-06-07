@@ -622,6 +622,53 @@
   .bots-preset-medal-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11px;}
   .bots-preset-medal-chip .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
   .bots-preset-medal-chip .val{font-family:var(--mono);font-weight:700;color:var(--gold);}
+  /* ── Guardian ── */
+  .guardian-summary-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1.25rem;}
+  .guardian-summary-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;min-width:130px;}
+  .guardian-summary-chip .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+  .guardian-summary-chip .val{font-size:1.1rem;font-weight:700;font-family:var(--mono);}
+  .guardian-tab-bar{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);}
+  .guardian-tab{padding:8px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+  .guardian-tab:hover{color:var(--text);}
+  .guardian-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .guardian-chips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+  .guardian-chip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .guardian-chip-card-header{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .guardian-chip-name{font-size:13px;font-weight:700;flex:1;}
+  .guardian-chip-source{font-size:10px;color:var(--muted);}
+  .guardian-chip-stats{width:100%;border-collapse:collapse;font-size:12px;}
+  .guardian-chip-stats th{background:var(--surface2);padding:4px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  .guardian-chip-stats th.r{text-align:right;}
+  .guardian-chip-stats td{padding:6px 10px;border-top:1px solid var(--border);vertical-align:middle;}
+  .guardian-chip-val{font-family:var(--mono);color:var(--accent);font-weight:600;text-align:right;}
+  .guardian-level-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:56px;}
+  .guardian-bits-bar{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:1.25rem;}
+  .guardian-bits-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;}
+  .guardian-bits-chip .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;}
+  .guardian-bits-chip .val{font-family:var(--mono);font-weight:700;color:var(--accent);}
+  .guardian-slots-section{margin-bottom:1.25rem;}
+  .guardian-slots-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+  .guardian-slot-pill{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;}
+  .guardian-preset-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;}
+  .guardian-preset-tab{padding:6px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+  .guardian-preset-tab:hover,.guardian-preset-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.09);}
+  .guardian-preset-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;}
+  .guardian-preset-name-input{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;font-weight:600;padding:6px 10px;font-family:var(--font);width:220px;}
+  .guardian-preset-name-input:focus{outline:none;border-color:var(--accent);}
+  .guardian-preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;}
+  .guardian-preset-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .guardian-preset-card-header{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .guardian-preset-chip-name{font-size:13px;font-weight:700;flex:1;}
+  .guardian-preset-stats{width:100%;border-collapse:collapse;font-size:12px;}
+  .guardian-preset-stats th{background:var(--surface2);padding:4px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  .guardian-preset-stats th.r{text-align:right;}
+  .guardian-preset-stats td{padding:5px 10px;border-top:1px solid var(--border);vertical-align:middle;}
+  .guardian-preset-lvl-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:56px;}
+  .guardian-preset-val{font-family:var(--mono);color:var(--accent);font-weight:600;text-align:right;}
+  .guardian-preset-bits{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;}
+  .guardian-preset-bits-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11px;}
+  .guardian-preset-bits-chip .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+  .guardian-preset-bits-chip .val{font-family:var(--mono);font-weight:700;color:var(--accent);}
 </style>
 </head>
 <body>
@@ -645,6 +692,7 @@
     <button class="nav-btn" onclick="showView('workshop')">Workshop</button>
     <button class="nav-btn" onclick="showView('cards')">Cards</button>
     <button class="nav-btn" onclick="showView('bots')">Bots</button>
+    <button class="nav-btn" onclick="showView('guardian')">Guardian</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
@@ -784,7 +832,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','versions'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -799,6 +847,7 @@ function showView(view){
   else if(view==='workshop')renderWorkshopView();
   else if(view==='cards')renderCardsView();
   else if(view==='bots')renderBotsView();
+  else if(view==='guardian')renderGuardianView();
   else if(view==='versions')renderVersionTrackerView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
@@ -4654,6 +4703,385 @@ async function botsPresetSetStatLevel(presetId, botStatId, targetLevel) {
     body: JSON.stringify({levels})
   });
   renderBotsPresetsTab();
+}
+
+// ── Guardian ──────────────────────────────────────────────────────────────────
+
+let guardianUnlocked    = false;
+let guardianSlots       = [];
+let guardianChips       = [];
+let guardianLevelValues = {};   // statId → [{level, value, bitsToNext}]
+let guardianTab         = 'tracker';
+let guardianPresets     = [];
+let guardianPresetChips      = {};   // presetId → [{chipId, active}]
+let guardianPresetStatLevels = {};   // presetId → [{chipStatId, targetLevel}]
+let guardianActivePreset     = null;
+
+async function renderGuardianView() {
+  document.getElementById('mainContent').innerHTML =
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading guardian…</div>';
+  try {
+    const [gRes, presetsRes, lvlRes] = await Promise.all([
+      fetch(`${API}/guardian`),
+      fetch(`${API}/guardian/presets`),
+      fetch(`${API}/guardian/level-values`)
+    ]);
+    const g         = await gRes.json();
+    guardianUnlocked = g.unlocked;
+    guardianSlots    = g.slots;
+    guardianChips    = g.chips;
+    guardianPresets  = await presetsRes.json();
+
+    const lvlData = await lvlRes.json();
+    guardianLevelValues = {};
+    lvlData.forEach(e => { guardianLevelValues[e.statId] = e.levels; });
+
+    guardianPresetChips      = {};
+    guardianPresetStatLevels = {};
+    await Promise.all(guardianPresets.map(async p => {
+      const [cRes, lRes] = await Promise.all([
+        fetch(`${API}/guardian/presets/${p.id}/chips`),
+        fetch(`${API}/guardian/presets/${p.id}/stat-levels`)
+      ]);
+      guardianPresetChips[p.id]      = await cRes.json();
+      guardianPresetStatLevels[p.id] = await lRes.json();
+    }));
+
+    if (!guardianActivePreset && guardianPresets.length > 0)
+      guardianActivePreset = guardianPresets[0].id;
+    buildGuardianPage();
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function buildGuardianPage() {
+  const acquired    = guardianChips.filter(c => c.acquired).length;
+  const slotsUnlocked = guardianSlots.filter(s => s.unlocked).length;
+  const bitsSpent   = guardianBitsSpent();
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="report-title" style="margin-bottom:1rem">Guardian</div>
+    <div class="guardian-summary-bar">
+      <div class="guardian-summary-chip"><div class="lbl">Guardian</div><div class="val" style="color:${guardianUnlocked?'var(--green)':'var(--muted)'}">${guardianUnlocked?'Unlocked':'Locked'}</div></div>
+      <div class="guardian-summary-chip"><div class="lbl">Chips</div><div class="val">${acquired} / ${guardianChips.length}</div></div>
+      <div class="guardian-summary-chip"><div class="lbl">Slots Unlocked</div><div class="val">${slotsUnlocked} / ${guardianSlots.length}</div></div>
+      <div class="guardian-summary-chip"><div class="lbl">Bits Invested</div><div class="val" style="color:var(--accent)">${bitsSpent.toLocaleString()}</div></div>
+    </div>
+    <div class="guardian-tab-bar">
+      <div class="guardian-tab${guardianTab==='tracker'?' active':''}" onclick="guardianSetTab('tracker')">Tracker</div>
+      <div class="guardian-tab${guardianTab==='presets'?' active':''}" onclick="guardianSetTab('presets')">Presets</div>
+    </div>
+    <div id="guardianBody"></div>`;
+
+  renderGuardianBody();
+}
+
+function guardianSetTab(tab) {
+  guardianTab = tab;
+  document.querySelectorAll('.guardian-tab').forEach(el =>
+    el.classList.toggle('active', el.textContent.toLowerCase() === tab));
+  renderGuardianBody();
+}
+
+function renderGuardianBody() {
+  if (guardianTab === 'tracker') renderGuardianTracker();
+  else renderGuardianPresetsTab();
+}
+
+// ── Tracker ───────────────────────────────────────────────────────────────────
+
+function renderGuardianTracker() {
+  const unlockToggle = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;">
+      <label style="font-size:13px;font-weight:600">Guardian Unlocked (200 bits)</label>
+      <input type="checkbox" ${guardianUnlocked?'checked':''} onchange="guardianToggleUnlocked(this.checked)">
+    </div>`;
+
+  const slotsHtml = `
+    <div class="guardian-slots-section">
+      <div class="section-title">Chip Slots</div>
+      <div class="guardian-slots-row">
+        ${guardianSlots.map(s => {
+          const costLabel = s.unlockCostTokens != null ? `${s.unlockCostTokens} tokens` : 'Cost TBD';
+          return `<div class="guardian-slot-pill">
+            <input type="checkbox" ${s.unlocked?'checked':''} onchange="guardianToggleSlot(${s.slotNumber},this.checked)">
+            <span>Slot ${s.slotNumber}</span>
+            <span style="color:var(--muted);font-size:11px">${costLabel}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  const cards = guardianChips.map(chip => guardianChipCardHtml(chip)).join('');
+  document.getElementById('guardianBody').innerHTML =
+    `${unlockToggle}${slotsHtml}<div class="guardian-chips-grid">${cards}</div>`;
+}
+
+function guardianChipBitsSpent(chip) {
+  let total = 0;
+  for (const s of chip.stats) {
+    const lvls = guardianLevelValues[s.statId] || [];
+    for (let lv = 0; lv < s.currentLevel; lv++) {
+      const entry = lvls.find(e => e.level === lv);
+      if (entry?.bitsToNext) total += entry.bitsToNext;
+    }
+  }
+  return total;
+}
+
+function guardianChipCardHtml(chip) {
+  const sourceLabel = chip.source === 'BASE' ? 'Base chip' :
+    `Guild Shop${chip.unlockSeason ? ` S${chip.unlockSeason}` : ''} — ${chip.unlockCostTokens} tokens`;
+  const bitsSpent = guardianChipBitsSpent(chip);
+
+  const rows = chip.stats.map(s => {
+    const lvls     = guardianLevelValues[s.statId] || [];
+    const curEntry = lvls.find(e => e.level === s.currentLevel);
+    const val      = curEntry ? fmtGuardianVal(curEntry.value, s.valueUnit) : '—';
+    const nextCost = curEntry?.bitsToNext != null ? `${curEntry.bitsToNext.toLocaleString()} bits` : 'Max';
+    const opts     = Array.from({length: s.maxLevel + 1}, (_,i) =>
+      `<option value="${i}"${i===s.currentLevel?' selected':''}>${i}</option>`).join('');
+    return `<tr>
+      <td>${escHtml(s.label)}</td>
+      <td class="guardian-chip-val">${val}</td>
+      <td><select class="guardian-level-select" onchange="guardianSetStatLevel(${s.statId},+this.value,${chip.id})">${opts}</select></td>
+      <td style="color:var(--muted);font-size:11px;text-align:right">${nextCost}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="guardian-chip-card">
+    <div class="guardian-chip-card-header">
+      <div>
+        <div class="guardian-chip-name">${escHtml(chip.name)}</div>
+        <div class="guardian-chip-source">${sourceLabel}</div>
+        ${bitsSpent > 0 ? `<div style="font-size:11px;color:var(--accent);margin-top:2px;font-family:var(--mono)">${bitsSpent.toLocaleString()} bits invested</div>` : ''}
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+        <input type="checkbox" ${chip.acquired?'checked':''} onchange="guardianToggleChip(${chip.id},this.checked)">
+        Acquired
+      </label>
+    </div>
+    <table class="guardian-chip-stats">
+      <thead><tr><th>Stat</th><th class="r">Value</th><th class="r">Level</th><th class="r">Next</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function fmtGuardianVal(value, unit) {
+  if (unit === 'PERCENT')     return (value * 100).toFixed(1) + '%';
+  if (unit === 'SECONDS')     return value + 's';
+  if (unit === 'MULTIPLIER')  return 'x' + value.toFixed(2).replace(/\.?0+$/, '') ;
+  if (unit === 'COUNT')       return value.toString();
+  return value.toString();
+}
+
+function guardianBitsSpent() {
+  let total = 0;
+  for (const chip of guardianChips) {
+    for (const s of chip.stats) {
+      const lvls = guardianLevelValues[s.statId] || [];
+      for (let lv = 0; lv < s.currentLevel; lv++) {
+        const entry = lvls.find(e => e.level === lv);
+        if (entry?.bitsToNext) total += entry.bitsToNext;
+      }
+    }
+  }
+  return total;
+}
+
+async function guardianToggleUnlocked(unlocked) {
+  guardianUnlocked = unlocked;
+  await fetch(`${API}/guardian/unlocked`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({unlocked})
+  });
+  buildGuardianPage();
+}
+
+async function guardianToggleSlot(slotNumber, unlocked) {
+  const slot = guardianSlots.find(s => s.slotNumber === slotNumber);
+  if (slot) slot.unlocked = unlocked;
+  await fetch(`${API}/guardian/slots/${slotNumber}/unlocked`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({unlocked})
+  });
+  buildGuardianPage();
+}
+
+async function guardianToggleChip(chipId, acquired) {
+  const chip = guardianChips.find(c => c.id === chipId);
+  if (chip) chip.acquired = acquired;
+  await fetch(`${API}/guardian/chips/${chipId}/acquired`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({acquired})
+  });
+  buildGuardianPage();
+}
+
+async function guardianSetStatLevel(statId, level, chipId) {
+  const chip = guardianChips.find(c => c.id === chipId);
+  const stat = chip?.stats.find(s => s.statId === statId);
+  if (stat) stat.currentLevel = level;
+  await fetch(`${API}/guardian/stats/${statId}/level`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({level})
+  });
+  buildGuardianPage();
+}
+
+// ── Presets ───────────────────────────────────────────────────────────────────
+
+function renderGuardianPresetsTab() {
+  const preset = guardianPresets.find(p => p.id === guardianActivePreset);
+
+  const presetBar = `
+    <div class="guardian-preset-bar">
+      ${guardianPresets.map(p => `
+        <button class="guardian-preset-tab${p.id===guardianActivePreset?' active':''}"
+          onclick="guardianSetActivePreset(${p.id})">${escHtml(p.name)||'Preset '+p.slot}</button>`).join('')}
+      ${guardianPresets.length < 5
+        ? `<button class="guardian-preset-tab" onclick="guardianAddPreset()">+ Add</button>` : ''}
+    </div>`;
+
+  if (!preset) {
+    document.getElementById('guardianBody').innerHTML = presetBar +
+      '<div class="empty-state" style="padding:3rem"><p>No presets yet.</p></div>';
+    return;
+  }
+
+  const presetChips  = guardianPresetChips[preset.id]      || [];
+  const presetLevels = guardianPresetStatLevels[preset.id] || [];
+
+  const bitsTotal = guardianPresets.length ? (() => {
+    let t = 0;
+    for (const chip of guardianChips) {
+      for (const s of chip.stats) {
+        const lvls = guardianLevelValues[s.statId] || [];
+        const tgt  = (presetLevels.find(l => l.chipStatId === s.statId)?.targetLevel) || 0;
+        const cur  = s.currentLevel;
+        for (let lv = cur; lv < tgt; lv++) {
+          const e = lvls.find(e => e.level === lv);
+          if (e?.bitsToNext) t += e.bitsToNext;
+        }
+      }
+    }
+    return t;
+  })() : 0;
+
+  const header = `
+    <div class="guardian-preset-header">
+      <input class="guardian-preset-name-input" value="${escHtml(preset.name)}"
+        onchange="guardianRenamePreset(${preset.id},this.value)" placeholder="Preset name">
+      <button class="danger-btn" onclick="guardianDeletePreset(${preset.id})">Delete</button>
+    </div>
+    <div class="guardian-preset-bits">
+      <div class="guardian-preset-bits-chip">
+        <div class="lbl">Bits to Goal</div>
+        <div class="val">${bitsTotal.toLocaleString()}</div>
+      </div>
+    </div>`;
+
+  const cards = guardianChips.map(chip => {
+    const chipEntry = presetChips.find(c => c.chipId === chip.id);
+    const chipAcq   = chipEntry?.active ?? false;
+
+    const rows = chip.stats.map(s => {
+      const lvls  = guardianLevelValues[s.statId] || [];
+      const tgtLv = (presetLevels.find(l => l.chipStatId === s.statId)?.targetLevel) ?? s.currentLevel;
+      const entry = lvls.find(e => e.level === tgtLv);
+      const val   = entry ? fmtGuardianVal(entry.value, s.valueUnit) : '—';
+      const opts  = Array.from({length: s.maxLevel + 1}, (_,i) =>
+        `<option value="${i}"${i===tgtLv?' selected':''}>${i}</option>`).join('');
+      return `<tr>
+        <td>${escHtml(s.label)}</td>
+        <td class="guardian-preset-val">${val}</td>
+        <td><select class="guardian-preset-lvl-select"
+          onchange="guardianPresetSetStatLevel(${preset.id},${s.statId},+this.value)">${opts}</select></td>
+      </tr>`;
+    }).join('');
+
+    return `<div class="guardian-preset-card">
+      <div class="guardian-preset-card-header">
+        <div class="guardian-preset-chip-name">${escHtml(chip.name)}</div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer">
+          <input type="checkbox" ${chipAcq?'checked':''}
+            onchange="guardianPresetToggleActive(${preset.id},${chip.id},this.checked)">
+          In Preset
+        </label>
+      </div>
+      <table class="guardian-preset-stats">
+        <thead><tr><th>Stat</th><th class="r">Value</th><th class="r">Target</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  document.getElementById('guardianBody').innerHTML =
+    `${presetBar}${header}<div class="guardian-preset-grid">${cards}</div>`;
+}
+
+function guardianSetActivePreset(id) { guardianActivePreset = id; renderGuardianPresetsTab(); }
+
+async function guardianAddPreset() {
+  const slot = guardianPresets.length + 1;
+  if (slot > 5) return;
+  const id = await (await fetch(`${API}/guardian/presets`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({slot, name: `Preset ${slot}`})
+  })).json();
+  guardianPresets.push({id, slot, name: `Preset ${slot}`});
+  guardianPresetChips[id]      = [];
+  guardianPresetStatLevels[id] = [];
+  guardianActivePreset = id;
+  renderGuardianPresetsTab();
+}
+
+async function guardianDeletePreset(presetId) {
+  await fetch(`${API}/guardian/presets/${presetId}`, {method:'DELETE'});
+  guardianPresets = guardianPresets.filter(p => p.id !== presetId);
+  delete guardianPresetChips[presetId];
+  delete guardianPresetStatLevels[presetId];
+  if (guardianActivePreset === presetId)
+    guardianActivePreset = guardianPresets[0]?.id ?? null;
+  renderGuardianPresetsTab();
+}
+
+async function guardianRenamePreset(presetId, name) {
+  const preset = guardianPresets.find(p => p.id === presetId);
+  if (preset) preset.name = name;
+  await fetch(`${API}/guardian/presets`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({slot: preset.slot, name})
+  });
+}
+
+async function guardianPresetToggleActive(presetId, chipId, active) {
+  const chips = guardianPresetChips[presetId] || [];
+  const entry = chips.find(c => c.chipId === chipId);
+  if (entry) entry.active = active;
+  else chips.push({chipId, active});
+  guardianPresetChips[presetId] = chips;
+  await fetch(`${API}/guardian/presets/${presetId}/chips`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({chips})
+  });
+  renderGuardianPresetsTab();
+}
+
+async function guardianPresetSetStatLevel(presetId, chipStatId, targetLevel) {
+  const levels = guardianPresetStatLevels[presetId] || [];
+  const entry  = levels.find(l => l.chipStatId === chipStatId);
+  if (entry) entry.targetLevel = targetLevel;
+  else levels.push({chipStatId, targetLevel});
+  guardianPresetStatLevels[presetId] = levels;
+  await fetch(`${API}/guardian/presets/${presetId}/stat-levels`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({levels})
+  });
+  renderGuardianPresetsTab();
 }
 </script>
 </body>

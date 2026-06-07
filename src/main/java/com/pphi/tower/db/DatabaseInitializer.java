@@ -749,5 +749,118 @@ public class DatabaseInitializer {
                     PRIMARY KEY (preset_id, bot_stat_id)
                 )
                 """);
+
+        // ── Guardian ──────────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_chip (
+                    id                   INTEGER PRIMARY KEY,
+                    code                 TEXT    NOT NULL UNIQUE,
+                    name                 TEXT    NOT NULL,
+                    source               TEXT    NOT NULL CHECK (source IN ('BASE','GUILD_SHOP')),
+                    unlock_season        INTEGER,
+                    unlock_cost_tokens   INTEGER
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_chip_stat (
+                    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                    chip_id    INTEGER NOT NULL REFERENCES guardian_chip(id),
+                    stat_key   TEXT    NOT NULL,
+                    label      TEXT    NOT NULL,
+                    value_unit TEXT    NOT NULL,
+                    max_level  INTEGER NOT NULL,
+                    sort_order INTEGER NOT NULL DEFAULT 0,
+                    UNIQUE (chip_id, stat_key)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_chip_stat_level_value (
+                    chip_stat_id  INTEGER NOT NULL REFERENCES guardian_chip_stat(id),
+                    level         INTEGER NOT NULL,
+                    value         REAL    NOT NULL,
+                    bits_to_next  INTEGER,
+                    PRIMARY KEY (chip_stat_id, level)
+                )
+                """);
+
+        // Singleton — guardian unlocked state.
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_player_state (
+                    id       INTEGER PRIMARY KEY DEFAULT 1,
+                    unlocked INTEGER NOT NULL DEFAULT 0 CHECK (unlocked IN (0, 1))
+                )
+                """);
+
+        jdbc.execute("""
+                INSERT OR IGNORE INTO guardian_player_state (id, unlocked) VALUES (1, 0)
+                """);
+
+        // One row per chip slot. unlock_cost_tokens NULL = cost not yet confirmed.
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_chip_slot (
+                    slot_number        INTEGER PRIMARY KEY CHECK (slot_number BETWEEN 1 AND 10),
+                    unlock_cost_tokens INTEGER
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_chip_slot_player_state (
+                    slot_number INTEGER NOT NULL REFERENCES guardian_chip_slot(slot_number) PRIMARY KEY,
+                    unlocked    INTEGER NOT NULL DEFAULT 0 CHECK (unlocked IN (0, 1))
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_chip_player_state (
+                    chip_id  INTEGER NOT NULL REFERENCES guardian_chip(id) PRIMARY KEY,
+                    acquired INTEGER NOT NULL DEFAULT 0 CHECK (acquired IN (0, 1))
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_chip_stat_player_level (
+                    chip_stat_id  INTEGER NOT NULL REFERENCES guardian_chip_stat(id) PRIMARY KEY,
+                    current_level INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+
+        // Up to 5 named preset slots; slot 1 seeded as default.
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_preset (
+                    id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                    slot INTEGER NOT NULL UNIQUE CHECK (slot BETWEEN 1 AND 5),
+                    name TEXT    NOT NULL DEFAULT ''
+                )
+                """);
+
+        jdbc.execute("""
+                INSERT OR IGNORE INTO guardian_preset (slot, name) VALUES (1, 'Preset 1')
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_preset_chip (
+                    preset_id INTEGER NOT NULL REFERENCES guardian_preset(id) ON DELETE CASCADE,
+                    chip_id   INTEGER NOT NULL REFERENCES guardian_chip(id),
+                    active    INTEGER NOT NULL DEFAULT 0 CHECK (active IN (0, 1)),
+                    PRIMARY KEY (preset_id, chip_id)
+                )
+                """);
+
+        // Migration: rename acquired → active on existing installs.
+        try {
+            jdbc.execute("ALTER TABLE guardian_preset_chip RENAME COLUMN acquired TO active");
+        } catch (Exception ignored) {}
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS guardian_preset_stat_level (
+                    preset_id    INTEGER NOT NULL REFERENCES guardian_preset(id) ON DELETE CASCADE,
+                    chip_stat_id INTEGER NOT NULL REFERENCES guardian_chip_stat(id),
+                    target_level INTEGER NOT NULL,
+                    PRIMARY KEY (preset_id, chip_stat_id)
+                )
+                """);
     }
 }
