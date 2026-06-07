@@ -45,31 +45,6 @@ public class RelicRepository {
                 """, id, owned ? 1 : 0);
     }
 
-    public String toMarkdownContext() {
-        List<RelicData> relics = getAll();
-        long owned = relics.stream().filter(RelicData::owned).count();
-        StringBuilder sb = new StringBuilder();
-        sb.append("## Relics (").append(owned).append(" / ").append(relics.size()).append(" owned)\n\n");
-        sb.append("| Name | Rarity | Type | Stat | Value | Owned |\n");
-        sb.append("|------|--------|------|------|-------|-------|\n");
-        for (RelicData r : relics) {
-            sb.append("| ").append(r.name())
-              .append(" | ").append(r.rarity())
-              .append(" | ").append(r.type())
-              .append(" | ").append(r.bonusStat())
-              .append(" | ").append(formatValue(r.bonusStat(), r.bonusValue()))
-              .append(" | ").append(r.owned() ? "Yes" : "No")
-              .append(" |\n");
-        }
-        return sb.toString();
-    }
-
-    private String formatValue(String stat, double value) {
-        if ("Bot Range".equals(stat)) return (int) value + "m";
-        if ("Wall Rebuild".equals(stat)) return (int) value + "s";
-        return Math.round(value * 100) + "%";
-    }
-
     public long create(String name, String rarity, String type, String bonusStat,
                        double bonusValue, String obtainCondition) {
         Long id = jdbc.queryForObject(

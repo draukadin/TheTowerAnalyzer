@@ -83,18 +83,4 @@ public class VersionHistoryRepository {
                 .orElse("");
     }
 
-    public String toMarkdownContext() {
-        List<VersionEntry> versions = getAllVersions();
-        StringBuilder sb = new StringBuilder();
-        sb.append("## Version History\n\n");
-        sb.append("| Version | Type | Summary |\n");
-        sb.append("|---------|------|---------|\n");
-        for (VersionEntry v : versions) {
-            sb.append("| ").append(v.version())
-              .append(" | ").append(v.type())
-              .append(" | ").append(v.summary())
-              .append(" |\n");
-        }
-        return sb.toString();
-    }
 }

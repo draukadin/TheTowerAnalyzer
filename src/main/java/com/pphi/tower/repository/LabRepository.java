@@ -83,24 +83,4 @@ public class LabRepository {
         return new LabMultipliers(speedMult, costMult, sl, dl, rb);
     }
 
-    public String toMarkdownContext() {
-        List<LabData> labs = getAll();
-        StringBuilder sb = new StringBuilder();
-        sb.append("## Labs\n\n");
-        String currentCategory = null;
-        for (LabData lab : labs) {
-            if (!lab.category().equals(currentCategory)) {
-                currentCategory = lab.category();
-                sb.append("### ").append(currentCategory).append("\n\n");
-                sb.append("| Lab | Level | Target | Max |\n");
-                sb.append("|-----|-------|--------|-----|\n");
-            }
-            sb.append("| ").append(lab.name())
-              .append(" | ").append(lab.currentLevel())
-              .append(" | ").append(lab.targetLevel() != null ? lab.targetLevel() : "—")
-              .append(" | ").append(lab.maxLevel())
-              .append(" |\n");
-        }
-        return sb.toString();
-    }
 }

@@ -579,7 +579,6 @@
     <button class="nav-btn" onclick="showView('workshop')">Workshop</button>
     <button class="nav-btn" onclick="showView('cards')">Cards</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
-    <button class="nav-btn" onclick="openProfileModal()">&#9881; Profile</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
     <span class="status-dot" id="statusDot"></span>
@@ -931,25 +930,7 @@ function renderStatsPanel(summary,p){
       <div class="stat-card"><div class="label">Generator Shards</div><div class="value">${curr.generatorShards||0}</div></div>
       <div class="stat-card"><div class="label">Core Shards</div><div class="value">${curr.coreShards||0}</div></div>
     </div>
-    <div style="margin:1rem 0 2rem;display:flex;gap:0.5rem">
-      <button class="btn" onclick="exportStats('${summary.id}')">Export to Markdown</button>
-      <span id="statsExportStatus" style="font-size:12px;color:var(--muted);align-self:center"></span>
-    </div>`;
-}
-
-async function exportStats(id){
-  const status=document.getElementById('statsExportStatus');
-  status.textContent='Exporting…';
-  try{
-    const res=await fetch(`${API}/reports/${encodeURIComponent(id)}/stats/export`,{method:'POST'});
-    if(!res.ok)throw new Error(res.statusText);
-    const data=await res.json();
-    status.textContent='Saved: '+data.path;
-    setTimeout(()=>{status.textContent='';},8000);
-  }catch(e){
-    status.style.color='var(--red)';
-    status.textContent='Export failed: '+e.message;
-  }
+`;
 }
 
 async function renderDiagnosisPanel(summary){
@@ -983,10 +964,6 @@ async function renderDiagnosisPanel(summary){
             <div class="obs-detail">${o.detail}</div>
           </div>`).join('')}
         </div>`:''}
-      <div style="margin:1rem 0 2rem;display:flex;gap:0.5rem">
-        <button class="btn" onclick="exportDiagnosis('${summary.id}')">Export to Markdown</button>
-        <span id="diagExportStatus" style="font-size:12px;color:var(--muted);align-self:center"></span>
-      </div>
       `;
   }catch(e){
     document.getElementById('tabPanel').innerHTML=
@@ -1050,10 +1027,6 @@ async function runComparison(id1){
       });
     });
     html+='</tbody></table></div>';
-    html+=`<div style="margin:1rem 0 2rem;display:flex;gap:0.5rem">
-      <button class="btn" onclick="exportComparison('${id1}','${id2}')">Export to Markdown</button>
-      <span id="cmpExportStatus" style="font-size:12px;color:var(--muted);align-self:center"></span>
-    </div>`;
     html+='<div style="height:2rem"></div>';
     document.getElementById('compareResult').innerHTML=html;
   }catch(e){
@@ -1061,78 +1034,10 @@ async function runComparison(id1){
   }
 }
 
-async function exportDiagnosis(id){
-  const status=document.getElementById('diagExportStatus');
-  status.textContent='Exporting…';
-  try{
-    const res=await fetch(`${API}/reports/${encodeURIComponent(id)}/diagnosis/export`,{method:'POST'});
-    if(!res.ok)throw new Error(await res.text());
-    const{path}=await res.json();
-    status.style.color='var(--green,#4caf50)';
-    status.textContent='Saved to '+path;
-  }catch(e){
-    status.style.color='var(--red)';
-    status.textContent='Export failed: '+e.message;
-  }
-}
-
-async function exportComparison(id1,id2){
-  const status=document.getElementById('cmpExportStatus');
-  status.textContent='Exporting…';
-  try{
-    const res=await fetch(`${API}/reports/${encodeURIComponent(id1)}/comparison/${encodeURIComponent(id2)}/export`,{method:'POST'});
-    if(!res.ok)throw new Error(await res.text());
-    const{path}=await res.json();
-    status.style.color='var(--green,#4caf50)';
-    status.textContent='Saved to '+path;
-  }catch(e){
-    status.style.color='var(--red)';
-    status.textContent='Export failed: '+e.message;
-  }
-}
-
 function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-async function openProfileModal(){
-  document.getElementById('profileModal').style.display='flex';
-  try{
-    const res=await fetch(`${API}/profile`);
-    const p=await res.json();
-    document.getElementById('profilePlayerName').value=p.playerName||'';
-    document.getElementById('profilePrimaryGoal').value=p.primaryGoal||'';
-    document.getElementById('profileLabGoals').value=p.labGoals||'';
-    document.getElementById('profileUltimateWeaponGoals').value=p.ultimateWeaponGoals||'';
-    document.getElementById('profileModuleGoals').value=p.moduleGoals||'';
-    document.getElementById('profileWorkshopStrategy').value=p.workshopStrategy||'';
-    document.getElementById('profileTournamentFocus').value=p.tournamentFocus||'';
-    document.getElementById('profileRunStrategy').value=p.runStrategy||'';
-    document.getElementById('profileNotes').value=p.notes||'';
-  }catch(e){/* fields stay empty */}
-}
-
-async function saveProfile(){
-  const profile={
-    playerName:document.getElementById('profilePlayerName').value,
-    primaryGoal:document.getElementById('profilePrimaryGoal').value,
-    labGoals:document.getElementById('profileLabGoals').value,
-    ultimateWeaponGoals:document.getElementById('profileUltimateWeaponGoals').value,
-    moduleGoals:document.getElementById('profileModuleGoals').value,
-    workshopStrategy:document.getElementById('profileWorkshopStrategy').value,
-    tournamentFocus:document.getElementById('profileTournamentFocus').value,
-    runStrategy:document.getElementById('profileRunStrategy').value,
-    notes:document.getElementById('profileNotes').value
-  };
-  try{
-    await fetch(`${API}/profile`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(profile)});
-    closeProfileModal();
-  }catch(e){alert('Failed to save profile: '+e.message);}
-}
-
-function closeProfileModal(){
-  document.getElementById('profileModal').style.display='none';
-}
 
 async function renderCellsView(){
   document.getElementById('mainContent').innerHTML=`
@@ -3285,51 +3190,6 @@ async function renderVersionTrackerView() {
 init();
 </script>
 
-<div id="profileModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeProfileModal()">
-  <div class="modal">
-    <div class="modal-title">Player Profile</div>
-    <div class="form-group">
-      <label class="form-label" for="profilePlayerName">Player Name</label>
-      <input class="form-input" id="profilePlayerName" type="text" placeholder="Your in-game name">
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profilePrimaryGoal">Primary Goal</label>
-      <textarea class="form-textarea" id="profilePrimaryGoal" placeholder="Your overarching current objective, e.g. reach Level 161 modules and unlock sub-stat re-roll"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profileLabGoals">Lab Goals</label>
-      <textarea class="form-textarea" id="profileLabGoals" placeholder="Ordered lab priorities, e.g. Attack Speed to max → Defense % to 50 → Death Wave Armor Stripping → permanent Chrono Field sync"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profileUltimateWeaponGoals">Ultimate Weapon Goals</label>
-      <textarea class="form-textarea" id="profileUltimateWeaponGoals" placeholder="Stone upgrade roadmap in order, e.g. Chain Lightning Qty (400) → Black Hole Duration 26s → Spotlight Angle 40°"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profileModuleGoals">Module Goals</label>
-      <textarea class="form-textarea" id="profileModuleGoals" placeholder="Target module level, sub-stat goals, and any modules to protect/hoard"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profileWorkshopStrategy">Workshop Strategy</label>
-      <textarea class="form-textarea" id="profileWorkshopStrategy" placeholder="Enhancement rotation and economic rules, e.g. Utility first (Cash/Coin/Cells) → Attack (2:1) → Health; maintain 5T liquid safety net"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profileTournamentFocus">Tournament Focus</label>
-      <textarea class="form-textarea" id="profileTournamentFocus" placeholder="What you optimize for in tournaments, e.g. crowd control — lock enemies down before they reach the wall"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profileRunStrategy">Run Strategy</label>
-      <textarea class="form-textarea" id="profileRunStrategy" placeholder="Primary run types and farming approach, e.g. T10 for coins/cells, T12/T13 for stone pushes"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="profileNotes">Notes</label>
-      <textarea class="form-textarea" id="profileNotes" placeholder="Anything else Gemini should know about your playstyle or current situation"></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeProfileModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
-    </div>
-  </div>
-</div>
 <div id="addVersionModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddVersionModal()">
   <div class="modal" style="max-width:700px;width:95vw">
     <div class="modal-title" id="verModalTitle">Add New Version</div>

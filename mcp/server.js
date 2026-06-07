@@ -76,11 +76,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
-      name: 'get_lab_plan',
-      description: 'Get current lab slot status and upcoming transitions',
-      inputSchema: { type: 'object', properties: {} },
-    },
-    {
       name: 'get_lab_state',
       description: 'Get all lab levels, targets, and effective speed/cost multipliers (Labs Speed lab + owned relics)',
       inputSchema: {
@@ -143,15 +138,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get_tower_state': {
         const includeRelicDetails = args.includeRelicDetails ?? false;
-        const [stateData, labData] = await Promise.all([
-          fetchApi(`/api/player-tracker/state?includeRelicDetails=${includeRelicDetails}`),
-          fetchApi('/api/player-tracker/labs'),
-        ]);
-        return distillTowerState(stateData, labData, includeRelicDetails);
+        const stateData = await fetchApi(`/api/player-tracker/state?includeRelicDetails=${includeRelicDetails}`);
+        return distillTowerState(stateData, includeRelicDetails);
       }
-
-      case 'get_lab_plan':
-        return distillLabPlan(await fetchApi('/api/player-tracker/labs'));
 
       case 'get_lab_state': {
         const hideMaxed = args.hideMaxed !== false;
@@ -253,15 +242,7 @@ function distillRecentRuns(runs) {
   }));
 }
 
-function distillTowerState(d, labData, includeRelicDetails = false) {
-  const version = d.versionHistory ? parseVersion(d.versionHistory) : null;
-  const labSlots = labData?.labPlanning ? parseLabSlots(labData.labPlanning) : [];
-
-  const cfLabDuration = labSlots.find(s => s.slot === 1)?.fromLevel ?? null;
-
-  const healthPlus     = d.workshop ? extractEnhancement(d.workshop, 'Health +') : null;
-  const wallHealthPlus = d.workshop ? extractEnhancement(d.workshop, 'Wall Health +') : null;
-
+function distillTowerState(d, includeRelicDetails = false) {
   const ultimateWeapons = Object.fromEntries(
     (d.ultimateWeapons ?? []).map(uw => {
       if (!uw.unlocked) return [uw.name, { unlocked: false }];
@@ -280,17 +261,12 @@ function distillTowerState(d, labData, includeRelicDetails = false) {
         return [s.label, entry];
       }));
 
-      const uwEntry = {
+      return [uw.name, {
         unlocked:         true,
         uw_plus_unlocked: uw.uwPlusUnlocked,
         stones_to_max:    uw.stats.reduce((sum, s) => sum + (s.stonesToMax ?? 0), 0),
         stats,
-      };
-
-      // Attach CF-specific lab duration
-      if (uw.name === 'Chrono Field') uwEntry.lab_duration = cfLabDuration;
-
-      return [uw.name, uwEntry];
+      }];
     })
   );
 
@@ -298,7 +274,6 @@ function distillTowerState(d, labData, includeRelicDetails = false) {
   const { summary: relicSummary, owned: relicOwned } = distillRelics(d.relics ?? []);
 
   const out = {
-    version,
     ultimate_weapons: ultimateWeapons,
     modules,
     relic_summary: relicSummary,
@@ -358,26 +333,6 @@ function distillRelics(relicList) {
   return { summary, owned: ownedByType };
 }
 
-function distillLabPlan(d) {
-  const slots = parseLabSlots(d.labPlanning);
-
-  const leanSlots = slots.map(({ slot, current_lab, level, days_remaining }) => ({
-    slot, current_lab, level, days_remaining,
-  }));
-
-  const nextSlot = slots
-    .filter(s => s.days_remaining != null)
-    .sort((a, b) => a.days_remaining - b.days_remaining)[0];
-
-  const next_transition = nextSlot ? {
-    slot:     nextSlot.slot,
-    days:     nextSlot.days_remaining,
-    next_lab: nextSlot.next_lab,
-  } : null;
-
-  return result({ slots: leanSlots, next_transition });
-}
-
 function distillLabState(d, hideMaxed, category) {
   const m = d.multipliers;
   let labs = d.labs ?? [];
@@ -398,80 +353,6 @@ function distillLabState(d, hideMaxed, category) {
     coin_discount:    round(1 - m.costMult, 3),
     labs: byCategory,
   });
-}
-
-// -------------------------------------------------------------------------
-// Markdown parsers
-// -------------------------------------------------------------------------
-
-/**
- * Parse all non-separator table rows from a markdown table string.
- * Returns each row as an array of trimmed cell strings.
- */
-function mdRows(text) {
-  return text.split('\n')
-    .filter(l => l.includes('|') && !l.match(/^\s*\|[\s:|-]+\|/))
-    .map(l => l.split('|').slice(1, -1).map(c => c.trim()));
-}
-
-/** Return the version string from the first data row of the version-history table. */
-function parseVersion(vhText) {
-  const rows = mdRows(vhText).filter(r => r[0] && r[0] !== 'Version');
-  return rows[0]?.[0] ?? 'unknown';
-}
-
-/** Look up a named enhancement's current level from the workshop markdown. */
-function extractEnhancement(workshopText, label) {
-  const enhSection = workshopText.split('### Enhancements')[1] ?? '';
-  const row = mdRows(enhSection).find(r => r[0] === label);
-  return row ? parseInt(row[1]) : null;
-}
-
-/**
- * Parse all 5 lab slots from the lab-planning markdown.
- * Each slot entry carries an internal `fromLevel` used by distillTowerState
- * to populate cf.lab_duration; that field is stripped before the lean output.
- */
-function parseLabSlots(labText) {
-  const slots = [];
-  const slotRe = /### Lab Slot (\d+) Planning\n([\s\S]*?)(?=\n### Lab Slot \d+ Planning|$)/g;
-  let m;
-
-  while ((m = slotRe.exec(labText)) !== null) {
-    const slotNum  = parseInt(m[1]);
-    const slotText = m[2];
-
-    // Data rows: column 0 is a pure integer (the start level)
-    const dataRows = mdRows(slotText).filter(r => /^\d+$/.test(r[0]));
-
-    if (!dataRows.length) {
-      slots.push({ slot: slotNum, current_lab: null, level: null, days_remaining: null, next_lab: null, fromLevel: null });
-      continue;
-    }
-
-    const curr = dataRows[0];
-    const next = dataRows[1];
-
-    slots.push({
-      slot:          slotNum,
-      current_lab:   curr[2],
-      level:         `${curr[0]}→${curr[1]}`,
-      days_remaining: parseDurationDays(curr[4]),
-      next_lab:      next ? `${next[2]} ${next[0]}→${next[1]}` : null,
-      fromLevel:     parseInt(curr[0]),
-    });
-  }
-
-  return slots;
-}
-
-/** Parse "62d  1h 52m" → integer days (rounded). */
-function parseDurationDays(str) {
-  if (!str) return null;
-  const d = parseInt((str.match(/(\d+)d/) ?? [0, 0])[1]);
-  const h = parseInt((str.match(/(\d+)h/) ?? [0, 0])[1]);
-  const mn = parseInt((str.match(/(\d+)m/) ?? [0, 0])[1]);
-  return Math.round(d + h / 24 + mn / 1440);
 }
 
 // -------------------------------------------------------------------------
