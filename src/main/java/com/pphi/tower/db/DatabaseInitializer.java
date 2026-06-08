@@ -862,5 +862,38 @@ public class DatabaseInitializer {
                     PRIMARY KEY (preset_id, chip_stat_id)
                 )
                 """);
+
+        // ── Tournament Battle Conditions ──────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS battle_condition (
+                    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name     TEXT    NOT NULL UNIQUE,
+                    acronym  TEXT,
+                    category TEXT    NOT NULL CHECK (category IN ('OVERHEAT', 'HEAT'))
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS tournament (
+                    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date   TEXT    NOT NULL,
+                    league TEXT    NOT NULL CHECK (league IN ('SILVER', 'GOLD', 'PLATINUM', 'CHAMPION', 'LEGENDS')),
+                    UNIQUE (date, league)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS tournament_condition (
+                    tournament_id INTEGER NOT NULL REFERENCES tournament(id) ON DELETE CASCADE,
+                    condition_id  INTEGER NOT NULL REFERENCES battle_condition(id),
+                    PRIMARY KEY (tournament_id, condition_id)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE INDEX IF NOT EXISTS idx_tournament_date
+                ON tournament (date)
+                """);
     }
 }

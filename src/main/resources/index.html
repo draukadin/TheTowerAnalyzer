@@ -690,6 +690,36 @@
   .gn-add-stat-btn:hover{color:var(--accent);border-color:var(--accent);}
   .gn-select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;padding:9px 12px;font-family:var(--font);}
   .gn-select:focus{outline:none;border-color:var(--accent);}
+  /* ── Tournaments ── */
+  .tourn-tab-bar{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);}
+  .tourn-tab{padding:8px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+  .tourn-tab:hover{color:var(--text);}
+  .tourn-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .tourn-league-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  .tourn-league-badge.SILVER{background:rgba(122,128,153,.2);color:#b0b8d0;}
+  .tourn-league-badge.GOLD{background:rgba(245,200,66,.15);color:var(--gold);}
+  .tourn-league-badge.PLATINUM{background:rgba(79,142,247,.15);color:var(--accent);}
+  .tourn-league-badge.CHAMPION{background:rgba(124,92,252,.18);color:var(--accent2);}
+  .tourn-league-badge.LEGENDS{background:rgba(242,107,107,.15);color:var(--red);}
+  .tourn-cond-pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;margin:2px 2px 2px 0;}
+  .tourn-cond-pill.OVERHEAT{background:rgba(79,142,247,.12);color:var(--accent);}
+  .tourn-cond-pill.HEAT{background:rgba(242,107,107,.12);color:var(--red);}
+  .tourn-form-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem;}
+  .tourn-form-row{display:grid;grid-template-columns:180px 200px 1fr;gap:14px;align-items:start;margin-bottom:1rem;}
+  .tourn-field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px;}
+  .tourn-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:13px;padding:8px 10px;font-family:var(--font);}
+  .tourn-input:focus{outline:none;border-color:var(--accent);}
+  .tourn-cond-groups{display:flex;gap:24px;flex-wrap:wrap;}
+  .tourn-cond-group-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;}
+  .tourn-cond-check-list{display:flex;flex-direction:column;gap:5px;}
+  .tourn-cond-check{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;}
+  .tourn-form-actions{display:flex;gap:8px;margin-top:1rem;}
+  .tourn-history-row{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .tourn-history-date{font-size:13px;font-weight:600;min-width:100px;padding-top:2px;}
+  .tourn-history-pills{flex:1;display:flex;flex-wrap:wrap;gap:3px;align-items:center;}
+  .tourn-search-cond-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin-bottom:1.25rem;}
+  .tourn-search-cond-check{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer;}
+  .tourn-search-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -715,6 +745,7 @@
     <button class="nav-btn" onclick="showView('bots')">Bots</button>
     <button class="nav-btn" onclick="showView('guardian')">Guardian</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
+    <button class="nav-btn" onclick="showView('tournament')">Tournaments</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
     <span class="status-dot" id="statusDot"></span>
@@ -853,7 +884,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions','tournament'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -870,6 +901,7 @@ function showView(view){
   else if(view==='bots')renderBotsView();
   else if(view==='guardian')renderGuardianView();
   else if(view==='versions')renderVersionTrackerView();
+  else if(view==='tournament')renderTournamentView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -5251,6 +5283,244 @@ function gnRefreshLastRow(tbody) {
     bitsInput.disabled = isLast;
     if (isLast) bitsInput.value = '';
   });
+}
+
+// ── Tournaments ───────────────────────────────────────────────────────────────
+
+let tournamentConditions = [];
+let tournaments          = [];
+let tournamentTab        = 'history';
+let tournamentFormOpen   = false;
+let tournamentSearchResults    = null;
+let tournamentSearchCondIds   = [];
+
+async function renderTournamentView() {
+  document.getElementById('mainContent').innerHTML =
+    '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading tournaments…</div>';
+  try {
+    const [cRes, tRes] = await Promise.all([
+      fetch(`${API}/tournaments/conditions`),
+      fetch(`${API}/tournaments`)
+    ]);
+    tournamentConditions = await cRes.json();
+    tournaments          = await tRes.json();
+    tournamentSearchResults = null;
+    buildTournamentPage();
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function buildTournamentPage() {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="report-title" style="margin-bottom:1rem">Tournament Conditions</div>
+    <div class="tourn-tab-bar">
+      <div class="tourn-tab${tournamentTab==='history'?' active':''}" onclick="tournamentSetTab('history')">History</div>
+      <div class="tourn-tab${tournamentTab==='search'?' active':''}" onclick="tournamentSetTab('search')">Search</div>
+    </div>
+    <div id="tournamentBody"></div>`;
+  renderTournamentBody();
+}
+
+function tournamentSetTab(tab) {
+  tournamentTab = tab;
+  tournamentFormOpen = false;
+  document.querySelectorAll('.tourn-tab').forEach(el =>
+    el.classList.toggle('active', el.textContent.toLowerCase() === tab));
+  renderTournamentBody();
+}
+
+function renderTournamentBody() {
+  if (tournamentTab === 'history') renderTournamentHistory();
+  else renderTournamentSearch();
+}
+
+function tournamentLeagueBadge(league) {
+  return `<span class="tourn-league-badge ${league}">${league}</span>`;
+}
+
+function tournamentCondPills(conditions) {
+  const sorted = [...conditions].sort((a, b) =>
+    a.category === b.category ? 0 : a.category === 'HEAT' ? -1 : 1);
+  return sorted.map(c =>
+    `<span class="tourn-cond-pill ${c.category}" title="${c.category}">${c.name}</span>`
+  ).join('');
+}
+
+function renderTournamentHistory() {
+  const overheat = tournamentConditions.filter(c => c.category === 'OVERHEAT');
+  const heat     = tournamentConditions.filter(c => c.category === 'HEAT');
+
+  const formHtml = tournamentFormOpen ? `
+    <div class="tourn-form-card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:1rem">Log Tournament</div>
+      <div class="tourn-form-row">
+        <div class="tourn-field">
+          <label>Date</label>
+          <input id="tfDate" type="date" class="tourn-input" value="${new Date().toISOString().slice(0,10)}">
+        </div>
+        <div class="tourn-field">
+          <label>League</label>
+          <select id="tfLeague" class="tourn-input">
+            <option value="SILVER">Silver</option>
+            <option value="GOLD">Gold</option>
+            <option value="PLATINUM" selected>Platinum</option>
+            <option value="CHAMPION">Champion</option>
+            <option value="LEGENDS">Legends</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">Conditions</div>
+      <div class="tourn-cond-groups">
+        <div>
+          <div class="tourn-cond-group-title">Overheat (always active)</div>
+          <div class="tourn-cond-check-list">
+            ${overheat.map(c => `
+              <label class="tourn-cond-check">
+                <input type="checkbox" value="${c.id}" checked disabled>
+                <span style="color:var(--muted)">${c.name}</span>
+              </label>`).join('')}
+          </div>
+        </div>
+        <div>
+          <div class="tourn-cond-group-title">Heat (random per tournament)</div>
+          <div class="tourn-cond-check-list" id="tfHeatList">
+            ${heat.map(c => `
+              <label class="tourn-cond-check">
+                <input type="checkbox" value="${c.id}" class="tf-heat-cb">
+                <span>${c.name}${c.acronym ? ` <span style="color:var(--muted);font-size:11px">(${c.acronym})</span>` : ''}</span>
+              </label>`).join('')}
+          </div>
+          <button class="gn-add-stat-btn" style="margin-top:10px;width:auto;padding:4px 12px"
+            onclick="tournamentOpenAddCondition()">+ New Condition</button>
+        </div>
+      </div>
+      <div class="tourn-form-actions">
+        <button class="btn btn-primary" onclick="tournamentSave()">Save</button>
+        <button class="btn" onclick="tournamentCloseForm()">Cancel</button>
+      </div>
+    </div>` : '';
+
+  const rows = tournaments.length === 0
+    ? `<div style="color:var(--muted);font-size:13px;padding:2rem 0;text-align:center">No tournaments logged yet.</div>`
+    : tournaments.map(t => `
+        <div class="tourn-history-row">
+          <div class="tourn-history-date">${t.date}</div>
+          <div>${tournamentLeagueBadge(t.league)}</div>
+          <div class="tourn-history-pills">${tournamentCondPills(t.conditions)}</div>
+          <button class="btn" style="font-size:11px;padding:3px 10px;color:var(--red);border-color:rgba(242,107,107,.3)"
+            onclick="tournamentDelete(${t.id})">Delete</button>
+        </div>`).join('');
+
+  document.getElementById('tournamentBody').innerHTML = `
+    ${formHtml}
+    ${!tournamentFormOpen ? `<div style="margin-bottom:1rem">
+      <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="tournamentOpenForm()">+ Log Tournament</button>
+    </div>` : ''}
+    <div>${rows}</div>`;
+}
+
+function tournamentOpenForm() {
+  tournamentFormOpen = true;
+  renderTournamentHistory();
+}
+
+function tournamentCloseForm() {
+  tournamentFormOpen = false;
+  renderTournamentHistory();
+}
+
+async function tournamentSave() {
+  const date   = document.getElementById('tfDate').value;
+  const league = document.getElementById('tfLeague').value;
+  if (!date) { alert('Date is required.'); return; }
+
+  const overheatIds = tournamentConditions
+    .filter(c => c.category === 'OVERHEAT').map(c => c.id);
+  const heatIds = [...document.querySelectorAll('.tf-heat-cb:checked')]
+    .map(cb => parseInt(cb.value));
+  const conditionIds = [...overheatIds, ...heatIds];
+
+  const res = await fetch(`${API}/tournaments`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ date, league, conditionIds })
+  });
+  if (!res.ok) { alert('Failed to save tournament.'); return; }
+  tournamentFormOpen = false;
+  await renderTournamentView();
+}
+
+async function tournamentDelete(id) {
+  if (!confirm('Delete this tournament entry?')) return;
+  await fetch(`${API}/tournaments/${id}`, { method: 'DELETE' });
+  await renderTournamentView();
+}
+
+function renderTournamentSearch() {
+  const heat = tournamentConditions.filter(c => c.category === 'HEAT');
+
+  const grid = heat.map(c => `
+    <label class="tourn-search-cond-check">
+      <input type="checkbox" value="${c.id}" class="ts-cond-cb">
+      <span>${c.name}${c.acronym ? ` <span style="color:var(--muted);font-size:11px">(${c.acronym})</span>` : ''}</span>
+    </label>`).join('');
+
+  const searchedConds = tournamentConditions.filter(c => tournamentSearchCondIds.includes(c.id));
+  const resultsHtml = tournamentSearchResults === null ? '' :
+    tournamentSearchResults.length === 0
+      ? `<div style="color:var(--muted);font-size:13px;padding:1rem 0">No tournaments matched all selected conditions.</div>`
+      : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+           <span style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">${tournamentSearchResults.length} result${tournamentSearchResults.length!==1?'s':''}</span>
+           <span style="color:var(--muted);font-size:11px">—</span>
+           ${tournamentCondPills(searchedConds)}
+         </div>` +
+        tournamentSearchResults.map(t => `
+          <div class="tourn-search-result">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:600">${t.date}</span>
+              ${tournamentLeagueBadge(t.league)}
+            </div>
+            <div>${tournamentCondPills(t.conditions)}</div>
+          </div>`).join('');
+
+  document.getElementById('tournamentBody').innerHTML = `
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">
+      Select conditions to find tournaments where all were active
+    </div>
+    <div class="tourn-search-cond-grid">${grid}</div>
+    <button class="btn btn-primary" style="font-size:12px;padding:5px 14px;margin-bottom:1.25rem"
+      onclick="tournamentRunSearch()">Search</button>
+    ${resultsHtml}`;
+}
+
+async function tournamentRunSearch() {
+  const conditionIds = [...document.querySelectorAll('.ts-cond-cb:checked')]
+    .map(cb => parseInt(cb.value));
+  if (!conditionIds.length) { alert('Select at least one condition.'); return; }
+  tournamentSearchCondIds = conditionIds;
+  const res = await fetch(`${API}/tournaments/search`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ conditionIds })
+  });
+  tournamentSearchResults = await res.json();
+  renderTournamentSearch();
+  // Restore checked state after re-render
+  tournamentSearchCondIds.forEach(id => {
+    const cb = document.querySelector(`.ts-cond-cb[value="${id}"]`);
+    if (cb) cb.checked = true;
+  });
+}
+
+function tournamentOpenAddCondition() {
+  const name    = prompt('Condition name:');
+  if (!name) return;
+  const acronym = prompt('Acronym (leave blank if unknown):') || null;
+  const cat     = 'HEAT';
+  fetch(`${API}/tournaments/conditions`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ name, acronym: acronym || null, category: cat })
+  }).then(r => { if (!r.ok) { alert('Failed to add condition.'); return; } renderTournamentView(); });
 }
 
 async function guardianSubmitNewChip() {
