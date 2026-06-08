@@ -778,6 +778,7 @@
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
     <button class="nav-btn" onclick="showView('tournament')">Tournaments</button>
     <button class="nav-btn" onclick="showView('labplanner')">Lab Planner</button>
+    <button class="nav-btn" onclick="showView('admin')">Admin</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
     <span class="status-dot" id="statusDot"></span>
@@ -916,7 +917,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions','tournament','labplanner'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions','tournament','labplanner','admin'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -935,6 +936,7 @@ function showView(view){
   else if(view==='versions')renderVersionTrackerView();
   else if(view==='tournament')renderTournamentView();
   else if(view==='labplanner')renderLabPlannerView();
+  else if(view==='admin')renderAdminView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -5800,6 +5802,40 @@ async function lpMove(slotNumber, planId, direction) {
     body: JSON.stringify({direction})
   });
   await lpRefresh();
+}
+
+function renderAdminView() {
+  document.getElementById('mainContent').innerHTML = `
+    <div style="padding:2rem;max-width:600px">
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem">Admin</h2>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Database</div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <button class="btn btn-primary" id="backupBtn" onclick="backupDatabase()">Backup Database</button>
+          <span id="backupStatus" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function backupDatabase() {
+  const btn = document.getElementById('backupBtn');
+  const status = document.getElementById('backupStatus');
+  btn.disabled = true;
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Uploading…';
+  try {
+    const res = await fetch(`${API}/backup/database`, {method:'POST'});
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    status.style.color = 'var(--green,#4ade80)';
+    status.textContent = `✓ Backed up as ${data.fileName}`;
+  } catch (e) {
+    status.style.color = 'var(--red)';
+    status.textContent = `✗ ${e.message}`;
+  } finally {
+    btn.disabled = false;
+  }
 }
 </script>
 </body>

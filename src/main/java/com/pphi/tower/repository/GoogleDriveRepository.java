@@ -1,5 +1,6 @@
 package com.pphi.tower.repository;
 
+import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
@@ -63,6 +64,17 @@ public class GoogleDriveRepository {
                     .setFields("id, parents")
                     .execute();
         }
+    }
+
+    public File uploadFile(java.io.File localFile, String fileName, String folderId) throws IOException {
+        File metadata = new File();
+        metadata.setName(fileName);
+        metadata.setParents(List.of(folderId));
+        FileContent content = new FileContent("application/octet-stream", localFile);
+        return drive.files().create(metadata, content)
+                .setFields("id, name")
+                .setSupportsAllDrives(true)
+                .execute();
     }
 
     private InputStream convertToInputStream(OutputStream os) throws IOException {

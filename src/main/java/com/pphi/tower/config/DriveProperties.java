@@ -8,12 +8,17 @@ import org.springframework.stereotype.Component;
 public class DriveProperties {
 
     private String credentialsFile;
+    private String oauthCredentialsFile;
     private String tokensDir;
     private String applicationName;
     private String battleReportsFolderId;
+    private String backupFolderId;
 
     public String getCredentialsFile() { return credentialsFile; }
     public void setCredentialsFile(String v) { this.credentialsFile = v; }
+
+    public String getOauthCredentialsFile() { return oauthCredentialsFile; }
+    public void setOauthCredentialsFile(String v) { this.oauthCredentialsFile = v; }
 
     public String getTokensDir() { return tokensDir; }
     public void setTokensDir(String v) { this.tokensDir = v; }
@@ -23,4 +28,7 @@ public class DriveProperties {
 
     public String getBattleReportsFolderId() { return battleReportsFolderId; }
     public void setBattleReportsFolderId(String v) { this.battleReportsFolderId = v; }
+
+    public String getBackupFolderId() { return backupFolderId; }
+    public void setBackupFolderId(String v) { this.backupFolderId = v; }
 }
