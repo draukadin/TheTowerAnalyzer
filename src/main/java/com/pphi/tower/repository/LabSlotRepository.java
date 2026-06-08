@@ -1,5 +1,7 @@
 package com.pphi.tower.repository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,7 @@ public class LabSlotRepository {
                            double totalCoins, long totalDurationSeconds,
                            Double coinsPerDay) {}
 
+    @Cacheable("lab-slots")
     public List<SlotData> getAllSlots() {
         LabRepository.LabMultipliers mults = labRepo.getMultipliers();
 
@@ -103,10 +106,12 @@ public class LabSlotRepository {
                 }, slotNumber);
     }
 
+    @CacheEvict(value = "lab-slots", allEntries = true)
     public void updateCellSpeed(int slotNumber, double cellSpeedMult) {
         jdbc.update("UPDATE lab_slot SET cell_speed_mult=? WHERE slot_number=?", cellSpeedMult, slotNumber);
     }
 
+    @CacheEvict(value = "lab-slots", allEntries = true)
     @Transactional
     public void addPlan(int slotNumber, long labId, int startLevel, int targetLevel) {
         Integer maxOrder = jdbc.queryForObject(
@@ -117,15 +122,18 @@ public class LabSlotRepository {
                 slotNumber, nextOrder, labId, startLevel, targetLevel);
     }
 
+    @CacheEvict(value = "lab-slots", allEntries = true)
     public void deletePlan(long planId) {
         jdbc.update("DELETE FROM lab_slot_plan WHERE id=?", planId);
     }
 
+    @CacheEvict(value = "lab-slots", allEntries = true)
     public void updatePlan(long planId, int startLevel, int targetLevel) {
         jdbc.update("UPDATE lab_slot_plan SET start_level=?,target_level=? WHERE id=?",
                 startLevel, targetLevel, planId);
     }
 
+    @CacheEvict(value = "lab-slots", allEntries = true)
     @Transactional
     public void movePlan(long planId, String direction) {
         var row = jdbc.queryForMap("SELECT slot_number, sort_order FROM lab_slot_plan WHERE id=?", planId);

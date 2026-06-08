@@ -1,5 +1,8 @@
 package com.pphi.tower.repository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +21,7 @@ public class RelicRepository {
                             String bonusStat, double bonusValue, String obtainCondition,
                             boolean owned) {}
 
+    @Cacheable("relics")
     public List<RelicData> getAll() {
         return jdbc.query("""
                 SELECT r.id, r.name, r.rarity, r.type, r.bonus_stat, r.bonus_value,
@@ -38,6 +42,11 @@ public class RelicRepository {
                 ));
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "relics", allEntries = true),
+        @CacheEvict(value = "lab-multipliers", allEntries = true),
+        @CacheEvict(value = "lab-slots", allEntries = true)
+    })
     public void setOwned(long id, boolean owned) {
         jdbc.update("""
                 INSERT INTO relic_player_state (relic_id, owned) VALUES (?, ?)
@@ -45,6 +54,11 @@ public class RelicRepository {
                 """, id, owned ? 1 : 0);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "relics", allEntries = true),
+        @CacheEvict(value = "lab-multipliers", allEntries = true),
+        @CacheEvict(value = "lab-slots", allEntries = true)
+    })
     public long create(String name, String rarity, String type, String bonusStat,
                        double bonusValue, String obtainCondition) {
         Long id = jdbc.queryForObject(

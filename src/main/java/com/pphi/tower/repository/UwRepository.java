@@ -1,5 +1,7 @@
 package com.pphi.tower.repository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -45,6 +47,7 @@ public class UwRepository {
 
     // ── Reads ─────────────────────────────────────────────────────────────────
 
+    @Cacheable("uw-state")
     public List<UwPlayerData> getAllUwState() {
         List<Map<String, Object>> rows = jdbc.queryForList("""
                 SELECT
@@ -132,6 +135,7 @@ public class UwRepository {
 
     // ── Writes ────────────────────────────────────────────────────────────────
 
+    @CacheEvict(value = "uw-state", allEntries = true)
     public void setUnlocked(int uwId, boolean unlocked) {
         jdbc.update("""
                 INSERT INTO uw_player_state (uw_id, unlocked, uw_plus_unlocked)
@@ -140,6 +144,7 @@ public class UwRepository {
                 """, uwId, unlocked ? 1 : 0);
     }
 
+    @CacheEvict(value = "uw-state", allEntries = true)
     public void setUwPlusUnlocked(int uwId, boolean uwPlusUnlocked) {
         jdbc.update("""
                 INSERT INTO uw_player_state (uw_id, unlocked, uw_plus_unlocked)
@@ -148,6 +153,7 @@ public class UwRepository {
                 """, uwId, uwPlusUnlocked ? 1 : 0);
     }
 
+    @CacheEvict(value = "uw-state", allEntries = true)
     public void setTargetLevel(int uwStatId, int targetLevel) {
         jdbc.update("""
                 INSERT INTO uw_stat_target_level (uw_stat_id, target_level) VALUES (?,?)
@@ -155,6 +161,7 @@ public class UwRepository {
                 """, uwStatId, targetLevel);
     }
 
+    @CacheEvict(value = "uw-state", allEntries = true)
     public void setStatLevel(int uwStatId, int newLevel) {
         Integer oldLevel = jdbc.queryForObject(
                 "SELECT current_level FROM uw_stat_player_level WHERE uw_stat_id = ?",

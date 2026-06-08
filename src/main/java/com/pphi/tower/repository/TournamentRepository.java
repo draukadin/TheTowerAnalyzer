@@ -1,5 +1,8 @@
 package com.pphi.tower.repository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,7 @@ public class TournamentRepository {
 
     public record TournamentData(long id, String date, String league, List<BattleConditionData> conditions) {}
 
+    @Cacheable("tournament-conditions")
     public List<BattleConditionData> getAllConditions() {
         return jdbc.query("""
                 SELECT id, name, acronym, category
@@ -33,6 +37,7 @@ public class TournamentRepository {
                 ));
     }
 
+    @Cacheable("tournaments")
     public List<TournamentData> getAll() {
         List<TournamentData> tournaments = jdbc.query("""
                 SELECT id, date, league FROM tournament ORDER BY date DESC, league
@@ -66,6 +71,7 @@ public class TournamentRepository {
                 tournamentId);
     }
 
+    @CacheEvict(value = "tournaments", allEntries = true)
     @Transactional
     public long save(String date, String league, List<Long> conditionIds) {
         List<Long> found = jdbc.query(
@@ -94,6 +100,7 @@ public class TournamentRepository {
         return tournamentId;
     }
 
+    @CacheEvict(value = "tournament-conditions", allEntries = true)
     public long createCondition(String name, String acronym, String category) {
         Long id = jdbc.queryForObject("""
                 INSERT INTO battle_condition (name, acronym, category) VALUES (?, ?, ?) RETURNING id
@@ -102,6 +109,7 @@ public class TournamentRepository {
         return id;
     }
 
+    @CacheEvict(value = "tournaments", allEntries = true)
     public void delete(long id) {
         jdbc.update("DELETE FROM tournament WHERE id = ?", id);
     }

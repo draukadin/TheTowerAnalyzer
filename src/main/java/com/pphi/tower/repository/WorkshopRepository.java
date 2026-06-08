@@ -1,5 +1,8 @@
 package com.pphi.tower.repository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -66,6 +69,7 @@ public class WorkshopRepository {
     // ── Queries ───────────────────────────────────────────────────────────────
 
     /** All Workshop and Workshop+ items with their current player state. */
+    @Cacheable("workshop")
     public List<WorkshopItem> getAll() {
         return jdbc.query("""
                 SELECT
@@ -118,6 +122,11 @@ public class WorkshopRepository {
      * Also records the implied coin spend into the category's cumulative-spend tracker
      * so Workshop+ unlock progress stays accurate.
      */
+    @Caching(evict = {
+        @CacheEvict(value = "workshop", allEntries = true),
+        @CacheEvict(value = "workshop-plus-spend", allEntries = true),
+        @CacheEvict(value = "workshop-unlock-progress", allEntries = true)
+    })
     public void updateLevel(long workshopItemId, int newLevel) {
         jdbc.update("""
                 INSERT INTO workshop_item_state (workshop_item_id, current_level) VALUES (?,?)
@@ -126,6 +135,10 @@ public class WorkshopRepository {
     }
 
     /** Mark a Workshop (non-plus) unlock group as purchased. */
+    @Caching(evict = {
+        @CacheEvict(value = "workshop", allEntries = true),
+        @CacheEvict(value = "workshop-unlock-progress", allEntries = true)
+    })
     public void purchaseUnlockGroup(long unlockGroupId) {
         jdbc.update("""
                 INSERT INTO workshop_unlock_group_state (unlock_group_id, is_purchased) VALUES (?,1)
@@ -140,6 +153,7 @@ public class WorkshopRepository {
      * Spend = SUM of base_cost for levels 1..current_level for each item,
      * applying no discount (thresholds use base costs).
      */
+    @Cacheable("workshop-plus-spend")
     public List<PlusCategorySpend> getPlusCategorySpend() {
         return jdbc.query("""
                 SELECT wc.name AS category,
@@ -168,6 +182,7 @@ public class WorkshopRepository {
      * returns lock status, spend progress, and whether the prerequisite lab is done.
      * Lab-only items (first per category) have threshold/spent/remaining = 0.
      */
+    @Cacheable("workshop-unlock-progress")
     public List<PlusUnlockProgress> getPlusUnlockProgress() {
         return jdbc.query("""
                 SELECT
@@ -224,6 +239,7 @@ public class WorkshopRepository {
      * for each category (Workshop and Workshop+).
      * Each discount lab reduces cost by 0.5% per level.
      */
+    @Cacheable("workshop-discounts")
     public WorkshopDiscounts getDiscounts() {
         double atkDisc  = labDiscountMult("Workshop Attack Discount");
         double defDisc  = labDiscountMult("Workshop Defense Discount");
@@ -261,6 +277,7 @@ public class WorkshopRepository {
         return new PresetUnlock(ws, wsp);
     }
 
+    @CacheEvict(value = "workshop", allEntries = true)
     public void setPresetUnlocked(boolean isPlus, boolean unlocked) {
         jdbc.update("UPDATE workshop_preset_unlock SET is_unlocked = ? WHERE is_plus = ?",
                 unlocked ? 1 : 0, isPlus ? 1 : 0);

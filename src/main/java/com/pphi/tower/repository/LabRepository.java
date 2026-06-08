@@ -1,5 +1,8 @@
 package com.pphi.tower.repository;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +26,7 @@ public class LabRepository {
                                   int labsSpeedLevel, int coinDiscountLevel,
                                   double relicLabSpeedBonus) {}
 
+    @Cacheable("labs")
     public List<LabData> getAll() {
         return jdbc.query("""
                 SELECT l.id, l.name, l.category, l.max_level,
@@ -42,6 +46,13 @@ public class LabRepository {
                 ));
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "labs", allEntries = true),
+        @CacheEvict(value = "lab-multipliers", allEntries = true),
+        @CacheEvict(value = "lab-slots", allEntries = true),
+        @CacheEvict(value = "workshop-discounts", allEntries = true),
+        @CacheEvict(value = "workshop-unlock-progress", allEntries = true)
+    })
     public void updateState(long id, int currentLevel, Integer targetLevel) {
         jdbc.update("""
                 INSERT INTO lab_player_state (lab_id, current_level, target_level) VALUES (?,?,?)
@@ -65,6 +76,7 @@ public class LabRepository {
                 ), labId);
     }
 
+    @Cacheable("lab-multipliers")
     public LabMultipliers getMultipliers() {
         Integer speedLevel = jdbc.queryForObject(
                 "SELECT COALESCE(ps.current_level,0) FROM lab l LEFT JOIN lab_player_state ps ON ps.lab_id=l.id WHERE l.name='Labs Speed'",
