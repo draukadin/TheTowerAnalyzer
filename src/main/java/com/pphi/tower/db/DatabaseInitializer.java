@@ -342,6 +342,30 @@ public class DatabaseInitializer {
                 )
                 """);
 
+        // ── Lab Slot Planner ──────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS lab_slot (
+                    slot_number     INTEGER NOT NULL PRIMARY KEY CHECK(slot_number BETWEEN 1 AND 5),
+                    cell_speed_mult REAL    NOT NULL DEFAULT 1.0
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS lab_slot_plan (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    slot_number  INTEGER NOT NULL REFERENCES lab_slot(slot_number),
+                    sort_order   INTEGER NOT NULL,
+                    lab_id       INTEGER NOT NULL REFERENCES lab(id),
+                    start_level  INTEGER NOT NULL,
+                    target_level INTEGER NOT NULL
+                )
+                """);
+
+        for (int s = 1; s <= 5; s++) {
+            jdbc.update("INSERT OR IGNORE INTO lab_slot(slot_number) VALUES(?)", s);
+        }
+
         // Migrate coin_cost INTEGER → REAL for values that overflow Long (e.g. Dissonant Echo)
         try {
             boolean isInteger = jdbc.queryForList("PRAGMA table_info(lab_level_cost)").stream()

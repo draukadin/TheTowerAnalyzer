@@ -720,6 +720,37 @@
   .tourn-search-cond-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin-bottom:1.25rem;}
   .tourn-search-cond-check{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer;}
   .tourn-search-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;}
+  /* Lab Planner */
+  .lp-dashboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1.5rem;}
+  .lp-dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+  .lp-dash-card .label{font-size:11px;color:var(--muted);margin-bottom:4px;}
+  .lp-dash-card .value{font-size:1.1rem;font-weight:700;font-family:var(--mono);color:var(--gold);}
+  .lp-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:1rem;}
+  .lp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .lp-card-header{padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+  .lp-card-header-row{display:flex;align-items:center;gap:10px;}
+  .lp-slot-label{font-size:13px;font-weight:700;flex:1;}
+  .lp-totals{font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;}
+  .lp-totals span b{color:var(--text);font-family:var(--mono);}
+  .lp-speed-select{background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;padding:3px 7px;font-family:var(--font);}
+  .lp-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .lp-table th{padding:6px 10px;text-align:right;color:var(--muted);font-weight:600;font-size:11px;border-bottom:1px solid var(--border);}
+  .lp-table th:first-child,.lp-table td:first-child{text-align:left;}
+  .lp-table td{padding:7px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);text-align:right;vertical-align:middle;}
+  .lp-table td:first-child{font-family:var(--font);font-weight:500;color:var(--text);text-align:left;}
+  .lp-table tr:last-child td{border-bottom:none;}
+  .lp-table tr.lp-current-row td{background:rgba(79,142,247,0.06);}
+  .lp-table tr.lp-current-row td:first-child::before{content:'▶ ';color:var(--accent);font-size:10px;}
+  .lp-add-row{padding:8px 12px;display:flex;gap:6px;align-items:center;border-top:1px solid var(--border);background:var(--surface2);}
+  .lp-add-row select,.lp-add-row input{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:4px 7px;font-family:var(--font);}
+  .lp-add-row select{flex:1;max-width:180px;}
+  .lp-add-row input{width:65px;}
+  .lp-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--font);transition:all 0.12s;}
+  .lp-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .lp-btn.danger:hover{border-color:var(--red);color:var(--red);}
+  .lp-btn.primary{border-color:var(--accent);color:var(--accent);}
+  .lp-action-cell{display:flex;gap:4px;justify-content:flex-end;}
+  .lp-empty{padding:1.5rem;text-align:center;color:var(--muted);font-size:13px;}
 </style>
 </head>
 <body>
@@ -746,6 +777,7 @@
     <button class="nav-btn" onclick="showView('guardian')">Guardian</button>
     <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
     <button class="nav-btn" onclick="showView('tournament')">Tournaments</button>
+    <button class="nav-btn" onclick="showView('labplanner')">Lab Planner</button>
   </div>
   <div style="font-size:12px;color:var(--muted)">
     <span class="status-dot" id="statusDot"></span>
@@ -884,7 +916,7 @@ async function selectReport(summary){
 function showView(view){
   activeView=view;
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions','tournament'][i]===view);
+    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions','tournament','labplanner'][i]===view);
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
@@ -902,6 +934,7 @@ function showView(view){
   else if(view==='guardian')renderGuardianView();
   else if(view==='versions')renderVersionTrackerView();
   else if(view==='tournament')renderTournamentView();
+  else if(view==='labplanner')renderLabPlannerView();
   else if(activeId&&activePayload)renderReportView(allReports.find(r=>r.id===activeId),activePayload);
   else document.getElementById('mainContent').innerHTML=`
     <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
@@ -5571,6 +5604,202 @@ async function guardianSubmitNewChip() {
 
   guardianCloseAddChip();
   await renderGuardianView();
+}
+
+// ── Lab Planner ──────────────────────────────────────────────────────────────
+
+const LP_SPEEDS = [
+  {label:'1× (no cells)', value:1.0},
+  {label:'1.5×', value:1.5},
+  {label:'2×', value:2.0},
+  {label:'3×', value:3.0},
+  {label:'4×', value:4.0},
+  {label:'5×', value:5.0},
+  {label:'6×', value:6.0},
+  {label:'7×', value:7.0},
+  {label:'8×', value:8.0},
+];
+
+let lpSlots = [];
+let lpLabList = []; // [{id, name, maxLevel, currentLevel}] — excludes maxed labs
+
+async function renderLabPlannerView() {
+  document.getElementById('mainContent').innerHTML =
+    `<div class="report-title" style="margin-bottom:1.5rem">Lab Planner</div>
+     <div id="lp-dashboard" class="lp-dashboard"></div>
+     <div id="lp-slots" class="lp-slots"></div>`;
+
+  // Always reload so currentLevel reflects latest state
+  const labs = await fetch(`${API}/labs`).then(r => r.json());
+  lpLabList = labs
+    .filter(l => l.currentLevel < l.maxLevel)
+    .map(l => ({id: l.id, name: l.name, maxLevel: l.maxLevel, currentLevel: l.currentLevel}))
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  await lpRefresh();
+}
+
+async function lpRefresh() {
+  lpSlots = await fetch(`${API}/lab-slots`).then(r => r.json());
+  lpRenderDashboard();
+  lpRenderSlots();
+}
+
+function lpRenderDashboard() {
+  const totalCpd = lpSlots.reduce((s, sl) => s + (sl.coinsPerDay || 0), 0);
+  let html = `<div class="lp-dash-card" style="border-color:rgba(245,200,66,0.35)">
+    <div class="label">Total Coins / Day</div>
+    <div class="value">${fmtRaw(totalCpd)}</div>
+  </div>`;
+  for (const sl of lpSlots) {
+    const cpd = sl.coinsPerDay;
+    html += `<div class="lp-dash-card">
+      <div class="label">Slot ${sl.slotNumber} · Coins / Day</div>
+      <div class="value" style="color:${cpd ? 'var(--gold)' : 'var(--muted)'}">${cpd ? fmtRaw(cpd) : '—'}</div>
+    </div>`;
+  }
+  document.getElementById('lp-dashboard').innerHTML = html;
+}
+
+function lpRenderSlots() {
+  const wrap = document.getElementById('lp-slots');
+  if (!wrap) return;
+  wrap.innerHTML = lpSlots.map(sl => lpSlotCard(sl)).join('');
+}
+
+function lpSlotCard(sl) {
+  const speedOpts = LP_SPEEDS.map(s =>
+    `<option value="${s.value}" ${Math.abs(sl.cellSpeedMult - s.value) < 0.01 ? 'selected' : ''}>${s.label}</option>`
+  ).join('');
+
+  const planRows = sl.plans.length
+    ? sl.plans.map((p, idx) => {
+      const currentDuration = sl.plans[0]?.durationSeconds ?? 0;
+      const upNextCpd = idx === 1 && currentDuration > 0
+        ? `<div style="font-size:10px;color:var(--gold);margin-top:2px;font-family:var(--mono)">${fmtRaw(p.coinsTotalResearch / (currentDuration / 86400))}/day</div>`
+        : '';
+      return `
+      <tr class="${idx === 0 ? 'lp-current-row' : ''}">
+        <td>${escHtml(p.labName)}${upNextCpd}</td>
+        <td>${p.startLevel}</td>
+        <td>${p.targetLevel}</td>
+        <td>${fmtRaw(p.coinsAtStartLevel)}</td>
+        <td>${fmtRaw(p.coinsTotalResearch)}</td>
+        <td>${fmtDuration(p.durationSeconds)}</td>
+        <td>
+          <div class="lp-action-cell">
+            ${idx > 0 ? `<button class="lp-btn" onclick="lpMove(${sl.slotNumber},${p.id},'up')">↑</button>` : ''}
+            ${idx < sl.plans.length-1 ? `<button class="lp-btn" onclick="lpMove(${sl.slotNumber},${p.id},'down')">↓</button>` : ''}
+            <button class="lp-btn danger" onclick="lpDelete(${sl.slotNumber},${p.id})">✕</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('')
+    : `<tr><td colspan="7" class="lp-empty">No labs planned — add one below.</td></tr>`;
+
+  const labOptions = lpLabList.map(l =>
+    `<option value="${l.id}" data-max="${l.maxLevel}" data-cur="${l.currentLevel}">${escHtml(l.name)}</option>`
+  ).join('');
+
+  const firstLab = lpLabList[0];
+  const initMax = firstLab ? firstLab.maxLevel : '';
+  const initCur = firstLab ? firstLab.currentLevel : 0;
+
+  return `<div class="lp-card">
+    <div class="lp-card-header">
+      <div class="lp-card-header-row">
+        <span class="lp-slot-label">Slot ${sl.slotNumber}</span>
+        <select class="lp-speed-select" onchange="lpSetSpeed(${sl.slotNumber},+this.value)">${speedOpts}</select>
+      </div>
+      <div class="lp-totals">
+        <span>Total Cost: <b>${fmtRaw(sl.totalCoins)}</b></span>
+        <span>Total Time: <b>${fmtDuration(sl.totalDurationSeconds)}</b></span>
+      </div>
+    </div>
+    <table class="lp-table">
+      <thead><tr>
+        <th>Lab</th><th>From</th><th>To</th><th>Cost @ From</th><th>Research Cost</th><th>Duration</th><th></th>
+      </tr></thead>
+      <tbody>${planRows}</tbody>
+    </table>
+    <div class="lp-add-row">
+      <div style="display:flex;flex-direction:column;gap:3px;flex:1;max-width:200px">
+        <input type="text" id="lp-filter-${sl.slotNumber}" placeholder="Filter labs…"
+          oninput="lpFilterLabs(${sl.slotNumber})"
+          style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 7px;font-family:var(--font)">
+        <select id="lp-lab-${sl.slotNumber}" onchange="lpLabSelected(${sl.slotNumber})">${labOptions}</select>
+      </div>
+      <input type="number" id="lp-start-${sl.slotNumber}" min="0" max="${initCur}" value="${initCur}" placeholder="From" style="width:60px">
+      <input type="number" id="lp-end-${sl.slotNumber}" min="1" max="${initMax}" placeholder="To" style="width:60px">
+      <button class="lp-btn primary" onclick="lpAdd(${sl.slotNumber})">+ Add</button>
+    </div>
+  </div>`;
+}
+
+function lpFilterLabs(slotNumber) {
+  const filter = document.getElementById(`lp-filter-${slotNumber}`).value.toLowerCase();
+  const sel = document.getElementById(`lp-lab-${slotNumber}`);
+  Array.from(sel.options).forEach(opt => {
+    opt.hidden = filter.length > 0 && !opt.text.toLowerCase().includes(filter);
+  });
+  // If current selection is hidden, move to first visible
+  if (sel.selectedOptions[0]?.hidden) {
+    const first = Array.from(sel.options).find(o => !o.hidden);
+    if (first) { sel.value = first.value; lpLabSelected(slotNumber); }
+  }
+}
+
+function lpLabSelected(slotNumber) {
+  const sel = document.getElementById(`lp-lab-${slotNumber}`);
+  const opt = sel.selectedOptions[0];
+  if (!opt) return;
+  const maxLevel = +opt.dataset.max;
+  const curLevel = +opt.dataset.cur;
+  const startEl = document.getElementById(`lp-start-${slotNumber}`);
+  const endEl   = document.getElementById(`lp-end-${slotNumber}`);
+  startEl.max = curLevel;
+  startEl.value = curLevel;
+  endEl.max = maxLevel;
+  if (+endEl.value > maxLevel) endEl.value = maxLevel;
+}
+
+async function lpSetSpeed(slotNumber, mult) {
+  await fetch(`${API}/lab-slots/${slotNumber}/speed`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({cellSpeedMult: mult})
+  });
+  await lpRefresh();
+}
+
+async function lpAdd(slotNumber) {
+  const labSel = document.getElementById(`lp-lab-${slotNumber}`);
+  const startEl = document.getElementById(`lp-start-${slotNumber}`);
+  const endEl = document.getElementById(`lp-end-${slotNumber}`);
+  const labId = +labSel.value;
+  const startLevel = startEl.value !== '' ? +startEl.value : null;
+  const targetLevel = endEl.value !== '' ? +endEl.value : null;
+  if (startLevel === null || targetLevel === null || targetLevel <= startLevel) {
+    alert('Please enter valid From and To levels (To must be greater than From).');
+    return;
+  }
+  await fetch(`${API}/lab-slots/${slotNumber}/plans`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({labId, startLevel, targetLevel})
+  });
+  await lpRefresh();
+}
+
+async function lpDelete(slotNumber, planId) {
+  await fetch(`${API}/lab-slots/${slotNumber}/plans/${planId}`, {method:'DELETE'});
+  await lpRefresh();
+}
+
+async function lpMove(slotNumber, planId, direction) {
+  await fetch(`${API}/lab-slots/${slotNumber}/plans/${planId}/move`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({direction})
+  });
+  await lpRefresh();
 }
 </script>
 </body>
