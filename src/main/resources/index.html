@@ -3211,6 +3211,28 @@ let verChangeRows = [];
 let verModalMode = 'add'; // 'add' | 'edit'
 let verEditingVersion = null;
 
+async function openPendingVersionModal() {
+  const pending = window.verPending ?? [];
+  if (pending.length === 0) { alert('No pending changes to process.'); return; }
+  verModalMode = 'add';
+  verEditingVersion = null;
+  verChangeRows = [];
+  document.getElementById('newVerVersion').value = '';
+  document.getElementById('newVerVersion').readOnly = false;
+  document.getElementById('newVerType').value = 'Patch';
+  document.getElementById('verChangeRowsEl').innerHTML = '';
+  document.getElementById('verModalTitle').textContent = 'Process Pending Changes';
+  document.getElementById('verModalSaveBtn').textContent = 'Add Version';
+  document.getElementById('addVersionModal').style.display = 'flex';
+  pending.forEach(ch => addVerChangeRow({
+    category:   ch.category,
+    entityName: ch.entityName,
+    oldValue:   ch.oldValue,
+    newValue:   ch.newValue,
+    notes:      ch.notes,
+  }));
+}
+
 function openAddVersionModal() {
   verModalMode = 'add';
   verEditingVersion = null;
@@ -3297,6 +3319,10 @@ async function saveNewVersion() {
     }
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
+    if (verModalMode === 'add') {
+      await fetch(`${API}/versions/pending`, { method: 'DELETE' });
+      window.verPending = [];
+    }
     closeAddVersionModal();
     await renderVersionTrackerView();
     if (verModalMode === 'add' && !data.syncedToSheet) showVerSyncBanner(data.version);
@@ -3337,15 +3363,23 @@ async function renderVersionTrackerView() {
     <div id="verMsg" style="color:var(--muted);font-size:13px">Loading…</div>
     <div id="verContent" style="display:none"></div>`;
   try {
-    const versions = await fetch(`${API}/versions`).then(r => r.json());
+    const [versions, pending] = await Promise.all([
+      fetch(`${API}/versions`).then(r => r.json()),
+      fetch(`${API}/versions/pending`).then(r => r.json()),
+    ]);
     window.verData = versions;
+    window.verPending = pending;
     document.getElementById('verMsg').style.display = 'none';
     const el = document.getElementById('verContent');
     el.style.display = 'block';
     el.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+
         <p style="font-size:12px;color:var(--muted);margin:0">${versions.length} versions · click a row to expand changes</p>
-        <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openAddVersionModal()">+ Add Version</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="verPendingBtn" style="font-size:12px;padding:5px 14px;display:none" onclick="openPendingVersionModal()">⏳ Process Pending Changes</button>
+          <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openAddVersionModal()">+ Add Version</button>
+        </div>
       </div>
       <table style="width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden">
         <thead>
@@ -3358,6 +3392,10 @@ async function renderVersionTrackerView() {
         </thead>
         <tbody id="verTbody"></tbody>
       </table>`;
+    if (pending.length > 0) {
+      const btn = document.getElementById('verPendingBtn');
+      if (btn) { btn.style.display = ''; btn.textContent = `⏳ Process Pending Changes (${pending.length})`; }
+    }
     const tbody = document.getElementById('verTbody');
     versions.forEach((v, idx) => {
       const catClass = c => 'cat-' + c.toLowerCase();

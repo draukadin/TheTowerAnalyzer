@@ -54,12 +54,29 @@ public class LabRepository {
         @CacheEvict(value = "workshop-unlock-progress", allEntries = true)
     })
     public void updateState(long id, int currentLevel, Integer targetLevel) {
+        Integer oldLevel = jdbc.queryForObject(
+                "SELECT COALESCE(current_level, 0) FROM lab_player_state WHERE lab_id = ?",
+                Integer.class, id);
+
         jdbc.update("""
                 INSERT INTO lab_player_state (lab_id, current_level, target_level) VALUES (?,?,?)
                 ON CONFLICT(lab_id) DO UPDATE SET
                     current_level = excluded.current_level,
                     target_level  = excluded.target_level
                 """, id, currentLevel, targetLevel);
+
+        if (oldLevel != null && currentLevel != oldLevel) {
+            String labName = jdbc.queryForObject("SELECT name FROM lab WHERE id = ?", String.class, id);
+            jdbc.update("""
+                    INSERT INTO pending_version_change (category, entity_name, old_value, new_value)
+                    VALUES ('LAB', ?, ?, ?)
+                    """, labName, String.valueOf(oldLevel), String.valueOf(currentLevel));
+
+            jdbc.update("""
+                    UPDATE lab_slot_plan SET start_level = ?
+                    WHERE lab_id = ? AND start_level = ? AND target_level > ?
+                    """, currentLevel, id, oldLevel, currentLevel);
+        }
     }
 
     public List<LabLevelCost> getCosts(long labId) {

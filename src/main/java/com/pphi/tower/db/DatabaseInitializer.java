@@ -449,6 +449,18 @@ public class DatabaseInitializer {
                 ON tower_version_change (version)
                 """);
 
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS pending_version_change (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    category    TEXT    NOT NULL,
+                    entity_name TEXT    NOT NULL,
+                    old_value   TEXT,
+                    new_value   TEXT    NOT NULL,
+                    notes       TEXT,
+                    created_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+                )
+                """);
+
         // ── Tier Personal Bests ───────────────────────────────────────────────
 
         jdbc.execute("""

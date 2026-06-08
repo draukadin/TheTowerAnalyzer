@@ -1,6 +1,8 @@
 package com.pphi.tower.web;
 
 import com.pphi.tower.repository.GoogleSheetsRepository;
+import com.pphi.tower.repository.PendingVersionChangeRepository;
+import com.pphi.tower.repository.PendingVersionChangeRepository.PendingChange;
 import com.pphi.tower.repository.VersionHistoryRepository;
 import com.pphi.tower.repository.VersionHistoryRepository.VersionChange;
 import com.pphi.tower.repository.VersionHistoryRepository.VersionEntry;
@@ -21,12 +23,16 @@ public class VersionHistoryController {
     private static final String TRACKER_SHEET_NAME = "TowerVersionTracking";
     private static final String VERSION_CELL       = "B2";
 
-    private final VersionHistoryRepository repo;
-    private final GoogleSheetsRepository   sheetsRepo;
+    private final VersionHistoryRepository        repo;
+    private final PendingVersionChangeRepository  pendingRepo;
+    private final GoogleSheetsRepository          sheetsRepo;
 
-    public VersionHistoryController(VersionHistoryRepository repo, GoogleSheetsRepository sheetsRepo) {
-        this.repo       = repo;
-        this.sheetsRepo = sheetsRepo;
+    public VersionHistoryController(VersionHistoryRepository repo,
+                                    PendingVersionChangeRepository pendingRepo,
+                                    GoogleSheetsRepository sheetsRepo) {
+        this.repo        = repo;
+        this.pendingRepo = pendingRepo;
+        this.sheetsRepo  = sheetsRepo;
     }
 
     public record VersionWithChanges(String version, String type, String summary,
@@ -64,6 +70,16 @@ public class VersionHistoryController {
                 .map(VersionEntry::summary).findFirst().orElse("");
         return new VersionWithChanges(version, req.type(), summary,
                 repo.getChangesForVersion(version), true);
+    }
+
+    @GetMapping("/pending")
+    public List<PendingChange> getPending() {
+        return pendingRepo.getAll();
+    }
+
+    @DeleteMapping("/pending")
+    public void clearPending() {
+        pendingRepo.deleteAll();
     }
 
     @PostMapping("/{version}/sync-sheet")
