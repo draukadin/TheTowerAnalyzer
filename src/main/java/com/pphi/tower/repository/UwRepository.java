@@ -13,10 +13,12 @@ import java.util.Map;
 @Repository
 public class UwRepository {
 
-    private final JdbcTemplate jdbc;
+    private final JdbcTemplate                  jdbc;
+    private final PendingVersionChangeRepository pendingRepo;
 
-    public UwRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public UwRepository(JdbcTemplate jdbc, PendingVersionChangeRepository pendingRepo) {
+        this.jdbc        = jdbc;
+        this.pendingRepo = pendingRepo;
     }
 
     // ── DTOs ──────────────────────────────────────────────────────────────────
@@ -176,6 +178,14 @@ public class UwRepository {
         jdbc.update(
                 "INSERT INTO uw_stat_level_history (uw_stat_id, old_level, new_level) VALUES (?,?,?)",
                 uwStatId, old, newLevel);
+
+        if (newLevel != old) {
+            var row = jdbc.queryForMap("""
+                    SELECT s.label, u.name FROM uw_stat s JOIN uw u ON u.id = s.uw_id WHERE s.id = ?
+                    """, uwStatId);
+            String entity = row.get("name") + " " + row.get("label");
+            pendingRepo.record("UW", entity, String.valueOf(old), String.valueOf(newLevel), null);
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

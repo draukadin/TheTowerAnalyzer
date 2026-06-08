@@ -11,10 +11,12 @@ import java.util.List;
 @Repository
 public class WorkshopRepository {
 
-    private final JdbcTemplate jdbc;
+    private final JdbcTemplate                  jdbc;
+    private final PendingVersionChangeRepository pendingRepo;
 
-    public WorkshopRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public WorkshopRepository(JdbcTemplate jdbc, PendingVersionChangeRepository pendingRepo) {
+        this.jdbc        = jdbc;
+        this.pendingRepo = pendingRepo;
     }
 
     // ── Records ───────────────────────────────────────────────────────────────
@@ -128,10 +130,22 @@ public class WorkshopRepository {
         @CacheEvict(value = "workshop-unlock-progress", allEntries = true)
     })
     public void updateLevel(long workshopItemId, int newLevel) {
+        Integer oldLevel = jdbc.queryForObject(
+                "SELECT COALESCE(current_level, 0) FROM workshop_item_state WHERE workshop_item_id = ?",
+                Integer.class, workshopItemId);
+
         jdbc.update("""
                 INSERT INTO workshop_item_state (workshop_item_id, current_level) VALUES (?,?)
                 ON CONFLICT(workshop_item_id) DO UPDATE SET current_level = excluded.current_level
                 """, workshopItemId, newLevel);
+
+        if (oldLevel != null && newLevel != oldLevel) {
+            var row = jdbc.queryForMap("SELECT name, is_plus FROM workshop_item WHERE id = ?", workshopItemId);
+            String name    = (String) row.get("name");
+            boolean isPlus = ((Number) row.get("is_plus")).intValue() == 1;
+            pendingRepo.record(isPlus ? "WORKSHOP_PLUS" : "WORKSHOP",
+                    name, String.valueOf(oldLevel), String.valueOf(newLevel), null);
+        }
     }
 
     /** Mark a Workshop (non-plus) unlock group as purchased. */

@@ -34,6 +34,13 @@ public class PendingVersionChangeRepository {
                         rs.getString("created_at")));
     }
 
+    public void record(String category, String entityName, String oldValue, String newValue, String notes) {
+        jdbc.update("""
+                INSERT INTO pending_version_change (category, entity_name, old_value, new_value, notes)
+                VALUES (?,?,?,?,?)
+                """, category, entityName, oldValue, newValue, notes);
+    }
+
     public void deleteAll() {
         jdbc.update("DELETE FROM pending_version_change");
     }

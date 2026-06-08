@@ -13,10 +13,12 @@ public class BotRepository {
     /** Medal costs (medals) to unlock each successive bot: 1st, 2nd, 3rd, 4th, 5th. */
     public static final int[] UNLOCK_COSTS = {100, 300, 600, 900, 1200};
 
-    private final JdbcTemplate jdbc;
+    private final JdbcTemplate                  jdbc;
+    private final PendingVersionChangeRepository pendingRepo;
 
-    public BotRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public BotRepository(JdbcTemplate jdbc, PendingVersionChangeRepository pendingRepo) {
+        this.jdbc        = jdbc;
+        this.pendingRepo = pendingRepo;
     }
 
     // ── Records ───────────────────────────────────────────────────────────────
@@ -157,10 +159,22 @@ public class BotRepository {
     }
 
     public void setStatLevel(long botStatId, int level) {
+        Integer oldLevel = jdbc.queryForObject(
+                "SELECT COALESCE(current_level, 0) FROM bot_stat_player_level WHERE bot_stat_id = ?",
+                Integer.class, botStatId);
+
         jdbc.update("""
                 INSERT INTO bot_stat_player_level (bot_stat_id, current_level) VALUES (?,?)
                 ON CONFLICT(bot_stat_id) DO UPDATE SET current_level = excluded.current_level
                 """, botStatId, level);
+
+        if (oldLevel != null && level != oldLevel) {
+            var row = jdbc.queryForMap("""
+                    SELECT s.label, b.name FROM bot_stat s JOIN bot b ON b.id = s.bot_id WHERE s.id = ?
+                    """, botStatId);
+            String entity = row.get("name") + " " + row.get("label");
+            pendingRepo.record("BOT", entity, String.valueOf(oldLevel), String.valueOf(level), null);
+        }
     }
 
     // ── Presets ───────────────────────────────────────────────────────────────

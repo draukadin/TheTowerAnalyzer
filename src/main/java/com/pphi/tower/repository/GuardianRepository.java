@@ -10,10 +10,12 @@ import java.util.Map;
 @Repository
 public class GuardianRepository {
 
-    private final JdbcTemplate jdbc;
+    private final JdbcTemplate                  jdbc;
+    private final PendingVersionChangeRepository pendingRepo;
 
-    public GuardianRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public GuardianRepository(JdbcTemplate jdbc, PendingVersionChangeRepository pendingRepo) {
+        this.jdbc        = jdbc;
+        this.pendingRepo = pendingRepo;
     }
 
     // ── Records ───────────────────────────────────────────────────────────────
@@ -165,10 +167,23 @@ public class GuardianRepository {
     }
 
     public void setStatLevel(long chipStatId, int level) {
+        Integer oldLevel = jdbc.queryForObject(
+                "SELECT COALESCE(current_level, 0) FROM guardian_chip_stat_player_level WHERE chip_stat_id = ?",
+                Integer.class, chipStatId);
+
         jdbc.update("""
                 INSERT INTO guardian_chip_stat_player_level (chip_stat_id, current_level) VALUES (?,?)
                 ON CONFLICT(chip_stat_id) DO UPDATE SET current_level = excluded.current_level
                 """, chipStatId, level);
+
+        if (oldLevel != null && level != oldLevel) {
+            var row = jdbc.queryForMap("""
+                    SELECT s.label, c.name FROM guardian_chip_stat s
+                    JOIN guardian_chip c ON c.id = s.chip_id WHERE s.id = ?
+                    """, chipStatId);
+            String entity = row.get("name") + " " + row.get("label");
+            pendingRepo.record("GUARDIAN", entity, String.valueOf(oldLevel), String.valueOf(level), null);
+        }
     }
 
     // ── Presets ───────────────────────────────────────────────────────────────

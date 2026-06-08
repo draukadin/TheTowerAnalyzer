@@ -10,10 +10,12 @@ import java.util.*;
 @Repository
 public class ModuleRepository {
 
-    private final JdbcTemplate jdbc;
+    private final JdbcTemplate                  jdbc;
+    private final PendingVersionChangeRepository pendingRepo;
 
-    public ModuleRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public ModuleRepository(JdbcTemplate jdbc, PendingVersionChangeRepository pendingRepo) {
+        this.jdbc        = jdbc;
+        this.pendingRepo = pendingRepo;
     }
 
     // ── DTOs ──────────────────────────────────────────────────────────────────
@@ -127,6 +129,10 @@ public class ModuleRepository {
 
     @CacheEvict(value = "modules", allEntries = true)
     public void updateState(int moduleDefId, boolean owned, String rarity, int stars, int level) {
+        Integer oldLevel = jdbc.queryForObject(
+                "SELECT level FROM module_player_state WHERE module_def_id = ?",
+                Integer.class, moduleDefId);
+
         jdbc.update("""
                 INSERT INTO module_player_state (module_def_id, owned, rarity, stars, level)
                 VALUES (?,?,?,?,?)
@@ -134,6 +140,11 @@ public class ModuleRepository {
                     owned=excluded.owned, rarity=excluded.rarity, stars=excluded.stars,
                     level=excluded.level
                 """, moduleDefId, owned ? 1 : 0, rarity, stars, level);
+
+        if (oldLevel != null && level != oldLevel) {
+            String name = jdbc.queryForObject("SELECT name FROM module_def WHERE id = ?", String.class, moduleDefId);
+            pendingRepo.record("MODULE", name, String.valueOf(oldLevel), String.valueOf(level), null);
+        }
     }
 
     @CacheEvict(value = "modules", allEntries = true)
