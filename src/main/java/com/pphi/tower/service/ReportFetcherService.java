@@ -2,7 +2,7 @@ package com.pphi.tower.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.drive.model.File;
-import com.pphi.tower.config.AppConfig;
+import com.pphi.tower.config.DriveProperties;
 import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.model.battlehistory.BattleReport;
 import com.pphi.tower.model.battlehistory.Currencies;
@@ -29,14 +29,14 @@ public class ReportFetcherService {
             .ofPattern("yyyy-MM-dd")
             .withZone(ZoneId.of("America/Los_Angeles"));
 
-    private final AppConfig config;
+    private final DriveProperties config;
     private final BattleHistoryParser parser;
     private final RunRepository runRepository;
     private final GoogleDriveRepository googleDriveRepository;
     private final ObjectMapper objectMapper;
 
     public ReportFetcherService(
-            AppConfig config,
+            DriveProperties config,
             BattleHistoryParser parser,
             RunRepository runRepository,
             GoogleDriveRepository googleDriveRepository,
@@ -49,8 +49,12 @@ public class ReportFetcherService {
     }
 
     public int processReports() {
+        String folderId = config.getBattleReportsFolderId();
+        if (folderId == null || folderId.isBlank()) {
+            throw new IllegalStateException("Battle reports folder ID is not configured (drive.battle-reports-folder-id in user.properties)");
+        }
         try {
-            List<File> files = googleDriveRepository.listFilesInFolder(config.getBattleReportsFolderId());
+            List<File> files = googleDriveRepository.listFilesInFolder(folderId);
             List<File> unprocessed = files.stream()
                     .filter(f -> !runRepository.existsById(f.getId()))
                     .toList();

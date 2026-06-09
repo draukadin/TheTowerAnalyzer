@@ -2,18 +2,20 @@ package com.pphi.tower;
 
 import com.pphi.tower.analyzers.BattleDiagnostic;
 import com.pphi.tower.analyzers.RunComparison;
+import com.pphi.tower.config.DriveProperties;
+import com.pphi.tower.config.SheetProperties;
 import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
 import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.parser.BattleHistoryParser;
 import com.pphi.tower.reporter.ReflectionBattleComparisonReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 
@@ -67,30 +69,16 @@ public class TowerAnalyzerApplication {
     }
 
     @Bean
-    public CommandLineRunner cliRunner() {
+    public ApplicationRunner startupConfigLogger(DriveProperties drive, SheetProperties sheet) {
         return args -> {
-            if (args.length == 0) return;
-
-            List<String> argList = Arrays.asList(args);
-            BattleHistoryParser parser    = new BattleHistoryParser();
-            BattleDiagnostic    diagnostic = new BattleDiagnostic();
-            RunComparison       comparison = new RunComparison(parser);
-
-            String reportPath = argList.stream()
-                    .filter(a -> !a.startsWith("--"))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("No report file path provided"));
-
-            BattleHistory reportOne = parser.parse(Path.of(reportPath));
-            DiagnosisResult result  = diagnostic.analyzeReport(reportOne);
-            System.out.println(result);
-
-            List<String> reportPaths = argList.stream().filter(a -> !a.startsWith("--")).toList();
-            if (reportPaths.size() >= 2) {
-                BattleHistory reportTwo      = parser.parse(Path.of(reportPaths.get(1)));
-                List<BattleHistory> results  = comparison.compareBattles(reportOne, reportTwo);
-                new ReflectionBattleComparisonReporter().printReport(results);
-            }
+            String userPropsPath = System.getenv("APPDATA") + "\\TheTowerAnalyzer\\user.properties";
+            log.info("Loading user config from: {}", userPropsPath);
+            log.info("drive.oauth-credentials-file   = {}", drive.getOauthCredentialsFile());
+            log.info("drive.tokens-dir               = {}", drive.getTokensDir());
+            log.info("drive.application-name         = {}", drive.getApplicationName());
+            log.info("drive.battle-reports-folder-id = {}", drive.getBattleReportsFolderId() != null ? drive.getBattleReportsFolderId() : "(NOT SET)");
+            log.info("drive.backup-folder-id         = {}", drive.getBackupFolderId() != null ? drive.getBackupFolderId() : "(NOT SET)");
+            log.info("sheets.ids.player-tracker      = {}", sheet.getIds().get("player-tracker") != null ? sheet.resolve("player-tracker") : "(NOT SET)");
         };
     }
 }
