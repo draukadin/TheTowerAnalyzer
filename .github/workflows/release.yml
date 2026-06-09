@@ -40,6 +40,8 @@ jobs:
             $ver = "${{ github.event.inputs.version }}"
           }
           echo "APP_VERSION=$ver" >> $env:GITHUB_OUTPUT
+          $installer_ver = $ver -replace '-.*$', ''
+          echo "INSTALLER_VERSION=$installer_ver" >> $env:GITHUB_OUTPUT
 
       - name: Build fat JAR
         run: mvn package -DskipTests
@@ -54,7 +56,7 @@ jobs:
             --name "TheTowerAnalyzer" `
             --main-jar the-tower-analyzer.jar `
             --type exe `
-            --app-version $ver `
+            --app-version "${{ steps.version.outputs.INSTALLER_VERSION }}" `
             --description "The Tower Analyzer" `
             --vendor "Draukadin" `
             --win-dir-chooser `
