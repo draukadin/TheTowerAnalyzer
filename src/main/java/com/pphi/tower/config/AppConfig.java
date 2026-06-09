@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 public class AppConfig {
 
     private String battleReportsFolderId;
-    private String battleReportsArchiveFolderId;
 
     private Cells cells = new Cells();
 
@@ -27,9 +26,6 @@ public class AppConfig {
 
     public String getBattleReportsFolderId() { return battleReportsFolderId; }
     public void setBattleReportsFolderId(String v) { this.battleReportsFolderId = v; }
-
-    public String getBattleReportsArchiveFolderId() { return battleReportsArchiveFolderId; }
-    public void setBattleReportsArchiveFolderId(String v) { this.battleReportsArchiveFolderId = v; }
 
     public Cells getCells() { return cells; }
     public void setCells(Cells v) { this.cells = v; }
