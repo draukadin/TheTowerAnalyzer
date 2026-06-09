@@ -126,11 +126,13 @@
                                         <argument>--description</argument>
                                         <argument>The Tower Analyzer</argument>
                                         <argument>--vendor</argument>
-                                        <argument>Philippe Perrault</argument>
+                                        <argument>Draukadin</argument>
                                         <argument>--win-dir-chooser</argument>
                                         <argument>--win-menu</argument>
                                         <argument>--win-shortcut</argument>
                                         <argument>--win-console</argument>
+                                        <argument>--icon</argument>
+                                        <argument>src/main/resources/app.ico</argument>
                                         <argument>--java-options</argument>
                                         <argument>-Djava.awt.headless=true</argument>
                                     </arguments>
