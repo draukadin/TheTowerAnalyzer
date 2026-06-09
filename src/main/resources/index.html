@@ -1416,8 +1416,9 @@ async function loadLabSpeed(days){
   }
 }
 
-function shardLevelInputs(){
-  const saved  = k => localStorage.getItem('shardLevel_'  + k) || '1';
+let _shardModuleLevels = {cannon:1,armor:1,generator:1,core:1};
+
+function shardLevelInputs(moduleLevels){
   const savedTgt = k => localStorage.getItem('shardTarget_' + k) || '161';
   const savedDiscount = () => localStorage.getItem('shardDiscountLevel') || '0';
   const numInput = (id, min, max, val, onChange) =>
@@ -1434,7 +1435,9 @@ function shardLevelInputs(){
             <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${typeLabel[t]}</div>
             <div style="display:flex;align-items:center;gap:6px">
               <label style="font-size:12px;color:var(--muted)">Cur:</label>
-              ${numInput('shardLvl_'+t,   1,300,saved(t),   `saveShardLevel('${t}',this.value);reloadShards()`)}
+              <span id="shardLvl_${t}" style="width:70px;display:inline-block;background:var(--surface2);border:1px solid var(--border);
+                border-radius:var(--radius);color:var(--muted);padding:4px 8px;font-size:13px;font-family:var(--mono);
+                text-align:right" title="From Modules table (max level across owned ${typeLabel[t]} modules)">${moduleLevels[t]}</span>
               <label style="font-size:12px;color:var(--muted)">→ Tgt:</label>
               ${numInput('shardTgt_'+t, 2,300,savedTgt(t), `localStorage.setItem('shardTarget_${t}',this.value);reloadShards()`)}
             </div>
@@ -1448,7 +1451,6 @@ function shardLevelInputs(){
     </div>`;
 }
 
-function saveShardLevel(type,val){localStorage.setItem('shardLevel_'+type,val);}
 function reloadShards(){
   const disc=Number(document.getElementById('shardDiscountLvl')?.value)||0;
   document.getElementById('shardDiscountPct').textContent=disc+'%';
@@ -1456,6 +1458,14 @@ function reloadShards(){
 }
 
 async function renderShardsView(){
+  const mods = await fetch(`${API}/modules`).then(r=>r.json()).catch(()=>[]);
+  const maxByType = {cannon:1,armor:1,generator:1,core:1};
+  for(const mod of mods){
+    const t = mod.type?.toLowerCase();
+    if(t in maxByType && mod.level > maxByType[t]) maxByType[t] = mod.level;
+  }
+  _shardModuleLevels = maxByType;
+
   document.getElementById('mainContent').innerHTML=`
     <div class="report-title" style="margin-bottom:1rem">Shard Earning Rate</div>
     <div class="window-controls" style="margin-bottom:0.5rem">
@@ -1473,7 +1483,7 @@ async function renderShardsView(){
     <div id="shardSourceNote" style="font-size:12px;color:var(--muted);margin-bottom:0.75rem">
       Farming runs only · excludes Tournament, Dissonance, Event
     </div>
-    ${shardLevelInputs()}
+    ${shardLevelInputs(_shardModuleLevels)}
     <div id="shardsPanel"><div class="loading-placeholder">Loading…</div></div>`;
   loadShards(30);
 }
@@ -1484,7 +1494,7 @@ function updateShardDays(val){
 }
 
 async function loadShards(days){
-  const lvl=t=>Number(document.getElementById('shardLvl_'+t)?.value)||1;
+  const lvl=t=>_shardModuleLevels[t]||1;
   const tgt=t=>Number(document.getElementById('shardTgt_'+t)?.value)||161;
   const cannon=lvl('cannon'),armor=lvl('armor'),generator=lvl('generator'),core=lvl('core');
   const cannonTgt=tgt('cannon'),armorTgt=tgt('armor'),generatorTgt=tgt('generator'),coreTgt=tgt('core');
