@@ -7,15 +7,11 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "drive")
 public class DriveProperties {
 
-    private String credentialsFile;
     private String oauthCredentialsFile;
     private String tokensDir;
     private String applicationName;
     private String battleReportsFolderId;
     private String backupFolderId;
-
-    public String getCredentialsFile() { return credentialsFile; }
-    public void setCredentialsFile(String v) { this.credentialsFile = v; }
 
     public String getOauthCredentialsFile() { return oauthCredentialsFile; }
     public void setOauthCredentialsFile(String v) { this.oauthCredentialsFile = v; }

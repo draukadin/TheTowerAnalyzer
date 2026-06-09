@@ -3528,7 +3528,77 @@ async function renderVersionTrackerView() {
   }
 }
 
-init();
+// ── OAuth auth flow ──────────────────────────────────────────────────────────
+
+let authPollInterval = null;
+
+async function checkAuthAndInit() {
+  try {
+    const res = await fetch(`${API}/auth/status`);
+    const data = await res.json();
+    if (data.status === 'authenticated') {
+      await init();
+    } else if (data.status === 'pending') {
+      showAuthModal(data.url);
+      startAuthPolling();
+    } else {
+      showAuthModal(null, 'An error occurred during Google authorization. Please restart the application.');
+    }
+  } catch (e) {
+    setStatus(false, 'Cannot reach server');
+  }
+}
+
+function showAuthModal(url, errorMsg) {
+  const overlay = document.getElementById('authModal');
+  const msgEl   = document.getElementById('authModalMsg');
+  const btn     = document.getElementById('authOpenBtn');
+  const spinner = document.getElementById('authSpinner');
+
+  if (errorMsg) {
+    msgEl.textContent = errorMsg;
+    msgEl.style.color = 'var(--red)';
+    btn.style.display = 'none';
+    spinner.style.display = 'none';
+  } else if (url) {
+    msgEl.textContent = 'The Tower Analyzer needs access to your Google Drive and Sheets. Click the button below to open the Google authorization page in a new tab, grant access, then return here.';
+    msgEl.style.color = '';
+    btn.style.display = '';
+    btn.disabled = false;
+    btn.onclick = () => window.open(url, '_blank');
+    spinner.style.display = 'none';
+  } else {
+    msgEl.textContent = 'Preparing authorization link…';
+    msgEl.style.color = 'var(--muted)';
+    btn.style.display = '';
+    btn.disabled = true;
+    spinner.style.display = '';
+  }
+
+  overlay.style.display = 'flex';
+}
+
+function startAuthPolling() {
+  if (authPollInterval) return;
+  authPollInterval = setInterval(async () => {
+    try {
+      const res  = await fetch(`${API}/auth/status`);
+      const data = await res.json();
+      if (data.status === 'authenticated') {
+        clearInterval(authPollInterval);
+        authPollInterval = null;
+        document.getElementById('authModal').style.display = 'none';
+        await init();
+      } else if (data.status === 'pending' && data.url) {
+        // URL just became available — update the button
+        const btn = document.getElementById('authOpenBtn');
+        if (btn.disabled) showAuthModal(data.url);
+      }
+    } catch (_) { /* keep polling */ }
+  }, 2000);
+}
+
+checkAuthAndInit();
 </script>
 
 <div id="addVersionModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddVersionModal()">
@@ -5975,5 +6045,22 @@ async function backupDatabase() {
   }
 }
 </script>
+
+<!-- ── Google OAuth authorization modal ─────────────────────────────────── -->
+<div id="authModal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:480px;text-align:center">
+    <div style="font-size:32px;margin-bottom:1rem">🔑</div>
+    <div class="modal-title" style="margin-bottom:0.75rem">Google Authorization Required</div>
+    <p id="authModalMsg" style="font-size:13px;line-height:1.7;color:var(--muted);margin-bottom:1.5rem"></p>
+    <span id="authSpinner" style="display:none;font-size:12px;color:var(--muted)">⏳ Waiting for authorization…</span>
+    <div class="modal-actions" style="justify-content:center;margin-top:1rem">
+      <button id="authOpenBtn" class="btn btn-primary" style="display:none">Open Authorization Page</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:1.25rem">
+      After granting access in the browser tab, this dialog will close automatically.
+    </p>
+  </div>
+</div>
+
 </body>
 </html>
