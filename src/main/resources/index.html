@@ -24,10 +24,26 @@
     border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
   .logo-text{font-size:1.1rem;font-weight:700;letter-spacing:-0.5px;}
   .logo-text span{color:var(--accent);}
-  .header-nav{display:flex;gap:6px;}
-  .nav-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:transparent;
-    color:var(--muted);font-size:13px;cursor:pointer;transition:all 0.15s;font-family:var(--font);}
-  .nav-btn:hover,.nav-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,0.08);}
+  .header-nav{display:flex;align-items:center;gap:4px;}
+  /* Dropdown group */
+  .nav-group{position:relative;}
+  .nav-group-btn{padding:7px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:13px;cursor:pointer;transition:all 0.15s;font-family:var(--font);
+    display:flex;align-items:center;gap:5px;}
+  .nav-group-btn::after{content:'▾';font-size:10px;opacity:0.6;}
+  .nav-group-btn:hover,.nav-group-btn.group-active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,0.08);}
+  .nav-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);
+    border:1px solid var(--border2);border-radius:10px;padding:5px;min-width:150px;z-index:200;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);flex-direction:column;gap:2px;}
+  .nav-group.open .nav-dropdown{display:flex;}
+  .nav-btn{padding:7px 12px;border-radius:6px;border:none;background:transparent;
+    color:var(--muted);font-size:13px;cursor:pointer;transition:all 0.15s;font-family:var(--font);
+    text-align:left;white-space:nowrap;width:100%;}
+  .nav-btn:hover,.nav-btn.active{color:var(--accent);background:rgba(79,142,247,0.1);}
+  /* Gear admin button */
+  .nav-gear{padding:7px 10px;border-radius:8px;border:1px solid var(--border2);background:transparent;
+    color:var(--muted);font-size:15px;cursor:pointer;transition:all 0.15s;line-height:1;}
+  .nav-gear:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,0.08);}
   .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;}
   .status-dot.err{background:var(--red);}
   .layout{display:flex;height:calc(100vh - 57px);}
@@ -760,41 +776,79 @@
     <div class="logo-text">The Tower <span>Analyzer</span></div>
   </div>
   <div class="header-nav">
-    <button class="nav-btn active" onclick="showView('reports')">Reports</button>
-    <button class="nav-btn" onclick="showView('cells')">Cell Income</button>
-    <button class="nav-btn" onclick="showView('labspeed')">Lab Speed</button>
-    <button class="nav-btn" onclick="showView('shards')">Shard Rate</button>
-    <button class="nav-btn" onclick="showView('uw')">UW Tracker</button>
-    <button class="nav-btn" onclick="showView('modules')">Modules</button>
-    <button class="nav-btn" onclick="showView('relics')">Relics</button>
-    <button class="nav-btn" onclick="showView('labs')">Labs</button>
-    <button class="nav-btn" onclick="showView('cosmetics')">Cosmetics</button>
-    <button class="nav-btn" onclick="showView('currencies')">Currencies</button>
-    <button class="nav-btn" onclick="showView('tierpb')">Tier PB</button>
-    <button class="nav-btn" onclick="showView('workshop')">Workshop</button>
-    <button class="nav-btn" onclick="showView('cards')">Cards</button>
-    <button class="nav-btn" onclick="showView('bots')">Bots</button>
-    <button class="nav-btn" onclick="showView('guardian')">Guardian</button>
-    <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
-    <button class="nav-btn" onclick="showView('tournament')">Tournaments</button>
-    <button class="nav-btn" onclick="showView('labplanner')">Lab Planner</button>
-    <button class="nav-btn" onclick="showView('admin')">Admin</button>
+    <!-- Labs -->
+    <div class="nav-group">
+      <button class="nav-group-btn" id="grp-labs" onclick="navToggle('grp-labs')">Labs</button>
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="showView('labs')">Labs</button>
+        <button class="nav-btn" onclick="showView('labplanner')">Lab Planner</button>
+        <button class="nav-btn" onclick="showView('cells')">Cell Income</button>
+        <button class="nav-btn" onclick="showView('labspeed')">Lab Speed</button>
+      </div>
+    </div>
+    <!-- Upgrades -->
+    <div class="nav-group">
+      <button class="nav-group-btn" id="grp-upgrades" onclick="navToggle('grp-upgrades')">Upgrades</button>
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="showView('workshop')">Workshop</button>
+        <button class="nav-btn" onclick="showView('uw')">UW Tracker</button>
+        <button class="nav-btn" onclick="showView('cards')">Cards</button>
+        <button class="nav-btn" onclick="showView('bots')">Bots</button>
+        <button class="nav-btn" onclick="showView('guardian')">Guardian</button>
+      </div>
+    </div>
+    <!-- Modules -->
+    <div class="nav-group">
+      <button class="nav-group-btn" id="grp-modules" onclick="navToggle('grp-modules')">Modules</button>
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="showView('modules')">Modules</button>
+        <button class="nav-btn" onclick="showView('shards')">Shard Rate</button>
+      </div>
+    </div>
+    <!-- Battle Reports -->
+    <div class="nav-group">
+      <button class="nav-group-btn" id="grp-reports" onclick="navToggle('grp-reports')">Battle Reports</button>
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="showView('reports')">Reports</button>
+        <button class="nav-btn" onclick="showView('versions')">Version Tracker</button>
+      </div>
+    </div>
+    <!-- Collectibles -->
+    <div class="nav-group">
+      <button class="nav-group-btn" id="grp-collectibles" onclick="navToggle('grp-collectibles')">Collectibles</button>
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="showView('relics')">Relics</button>
+        <button class="nav-btn" onclick="showView('cosmetics')">Cosmetics</button>
+      </div>
+    </div>
+    <!-- Meta -->
+    <div class="nav-group">
+      <button class="nav-group-btn" id="grp-meta" onclick="navToggle('grp-meta')">Meta</button>
+      <div class="nav-dropdown">
+        <button class="nav-btn" onclick="showView('currencies')">Currencies</button>
+        <button class="nav-btn" onclick="showView('tierpb')">Tier PB</button>
+        <button class="nav-btn" onclick="showView('tournament')">Battle Conditions</button>
+      </div>
+    </div>
+    <!-- Admin gear -->
+    <button class="nav-gear" onclick="showView('admin')" title="Admin">⚙️</button>
   </div>
-  <div style="font-size:12px;color:var(--muted)">
-    <span class="status-dot" id="statusDot"></span>
-    <span id="statusText">Connecting…</span>
-  </div>
+
 </header>
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2>Battle Reports</h2>
       <select class="folder-filter" id="folderFilter" onchange="filterFolder(this.value)">
-        <option value="">All folders</option>
+        <option value="">All run types</option>
       </select>
     </div>
     <div class="sidebar-actions">
       <button class="btn-fetch" id="fetchBtn" onclick="fetchReports()">&#8595; Fetch New Reports</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;padding:0 2px;display:flex;align-items:center;gap:5px;">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connecting…</span>
+      </div>
     </div>
     <div class="report-list" id="reportList">
       <div class="loading-placeholder">Loading reports…</div>
@@ -914,10 +968,44 @@ async function selectReport(summary){
   }
 }
 
+function navToggle(grpId){
+  const btn=document.getElementById(grpId);
+  const group=btn.closest('.nav-group');
+  const isOpen=group.classList.contains('open');
+  // Close all groups first
+  document.querySelectorAll('.nav-group.open').forEach(g=>g.classList.remove('open'));
+  // Toggle this one
+  if(!isOpen)group.classList.add('open');
+}
+// Close nav dropdowns when clicking outside
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.nav-group')){
+    document.querySelectorAll('.nav-group.open').forEach(g=>g.classList.remove('open'));
+  }
+});
+
 function showView(view){
   activeView=view;
-  document.querySelectorAll('.nav-btn').forEach((b,i)=>{
-    b.classList.toggle('active',['reports','cells','labspeed','shards','uw','modules','relics','labs','cosmetics','currencies','tierpb','workshop','cards','bots','guardian','versions','tournament','labplanner','admin'][i]===view);
+  // Map each view to its group id
+  const viewGroup={
+    reports:'grp-reports',versions:'grp-reports',
+    cells:'grp-labs',labspeed:'grp-labs',labs:'grp-labs',labplanner:'grp-labs',
+    shards:'grp-modules',modules:'grp-modules',
+    uw:'grp-upgrades',workshop:'grp-upgrades',guardian:'grp-upgrades',bots:'grp-upgrades',cards:'grp-upgrades',
+    relics:'grp-collectibles',cosmetics:'grp-collectibles',
+    currencies:'grp-meta',tierpb:'grp-meta',tournament:'grp-meta',
+    admin:null
+  };
+  // Close any open dropdown
+  document.querySelectorAll('.nav-group.open').forEach(g=>g.classList.remove('open'));
+  // Update group button highlights
+  document.querySelectorAll('.nav-group-btn').forEach(b=>b.classList.remove('group-active'));
+  const grpId=viewGroup[view];
+  if(grpId)document.getElementById(grpId).classList.add('group-active');
+  // Update individual nav-btn highlights
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    const fn=b.getAttribute('onclick')||'';
+    b.classList.toggle('active',fn.includes(`'${view}'`));
   });
   if(view==='cells')renderCellsView();
   else if(view==='labspeed')renderLabSpeedView();
