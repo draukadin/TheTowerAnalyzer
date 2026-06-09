@@ -44,7 +44,7 @@ jobs:
           echo "INSTALLER_VERSION=$installer_ver" >> $env:GITHUB_OUTPUT
 
       - name: Build fat JAR
-        run: mvn package -DskipTests
+        run: mvn package -DskipTests -Drevision=${{ steps.version.outputs.APP_VERSION }}
 
       - name: Create Windows installer
         shell: pwsh

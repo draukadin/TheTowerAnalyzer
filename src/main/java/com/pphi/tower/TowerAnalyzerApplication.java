@@ -13,6 +13,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 
@@ -33,6 +34,8 @@ public class TowerAnalyzerApplication {
 
     public static void main(String[] args) throws IOException {
         installBundledDatabaseIfAbsent();
+        String version = TowerAnalyzerApplication.class.getPackage().getImplementationVersion();
+        log.info("Starting TheTowerAnalyzer version {}", version != null ? version : "unknown (dev build)");
         SpringApplication app = new SpringApplication(TowerAnalyzerApplication.class);
         if (args.length > 0) {
             app.setWebApplicationType(WebApplicationType.NONE);
