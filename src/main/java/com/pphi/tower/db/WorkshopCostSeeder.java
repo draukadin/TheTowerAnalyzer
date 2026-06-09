@@ -2,6 +2,8 @@ package com.pphi.tower.db;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @Component
 public class WorkshopCostSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(WorkshopCostSeeder.class);
 
     private final JdbcTemplate jdbc;
 
@@ -25,13 +29,22 @@ public class WorkshopCostSeeder {
                 "SELECT COUNT(*) FROM workshop_item_level_cost wlc" +
                 " JOIN workshop_item wi ON wi.id = wlc.workshop_item_id WHERE wi.is_plus = 0",
                 Integer.class);
-        if (regularCount == null || regularCount == 0) seedCosts();
+        if (regularCount == null || regularCount == 0) {
+            log.info("Seeding {}#costs...", this.getClass().getSimpleName().replace("Seeder", ""));
+            seedCosts();
+            log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        }
 
         Integer plusCount = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM workshop_item_level_cost wlc" +
                 " JOIN workshop_item wi ON wi.id = wlc.workshop_item_id WHERE wi.is_plus = 1",
                 Integer.class);
-        if (plusCount == null || plusCount == 0) seedPlusCosts();
+        if (plusCount == null || plusCount == 0) {
+            log.info("Seeding {}#plusCosts...", this.getClass().getSimpleName().replace("Seeder", ""));
+            seedPlusCosts();
+            log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        }
+
     }
 
     private void seedCosts() {

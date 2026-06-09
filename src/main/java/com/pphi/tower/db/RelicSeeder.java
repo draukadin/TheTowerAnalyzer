@@ -1,10 +1,17 @@
 package com.pphi.tower.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RelicSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(RelicSeeder.class);
+
+    // Update this whenever you refresh the bundled analyzer.db after adding new relics
+    private static final int SEEDED_RELICS_IN_BUNDLED_DB = 272;
 
     private final JdbcTemplate jdbc;
 
@@ -15,8 +22,10 @@ public class RelicSeeder {
 
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM relic", Integer.class);
-        if (count != null && count > 0) return;
+        if (count != null && count.equals(SEEDED_RELICS_IN_BUNDLED_DB)) return;
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedRelics();
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 
     private void seedRelics() {

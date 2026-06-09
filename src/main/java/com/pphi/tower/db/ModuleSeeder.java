@@ -1,10 +1,14 @@
 package com.pphi.tower.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ModuleSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(ModuleSeeder.class);
 
     private final JdbcTemplate jdbc;
 
@@ -16,9 +20,9 @@ public class ModuleSeeder {
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM module_def", Integer.class);
         if (count != null && count > 0) return;
-
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedDefs();
-        seedPlayerState();
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 
     // ── Static definitions ────────────────────────────────────────────────────
@@ -124,35 +128,5 @@ public class ModuleSeeder {
             "INSERT OR IGNORE INTO module_ability_value (module_def_id, rarity, value) VALUES (?,?,?)",
             moduleDefId, rarity, value
         );
-    }
-
-    // ── Player state seed (Amplifying Strike — Ancestral 3★, level 151) ──────
-
-    private void seedPlayerState() {
-        // AS is id=6
-        jdbc.update("""
-                INSERT OR IGNORE INTO module_player_state (module_def_id, owned, rarity, stars, level)
-                VALUES (6, 1, 'Ancestral', 3, 151)
-                ON CONFLICT(module_def_id) DO UPDATE SET
-                    owned=1, rarity='Ancestral', stars=3, level=151
-                """);
-
-        substat(6, 0, "super_crit_multi",  "Epic");
-        substat(6, 1, "attack_range",      "Epic");
-        substat(6, 2, "attack_speed",      "Common");
-        substat(6, 3, "critical_factor",   "Common");
-        substat(6, 4, "critical_chance",   "Common");
-
-        jdbc.update("""
-                INSERT OR IGNORE INTO module_player_copy (module_def_id, copy_index, copy_rarity)
-                VALUES (6, 0, 'Epic')
-                """);
-    }
-
-    private void substat(int moduleDefId, int slot, String key, String rarity) {
-        jdbc.update("""
-                INSERT OR IGNORE INTO module_player_substat (module_def_id, slot_index, substat_key, substat_rarity)
-                VALUES (?,?,?,?)
-                """, moduleDefId, slot, key, rarity);
     }
 }

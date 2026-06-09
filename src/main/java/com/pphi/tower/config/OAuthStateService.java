@@ -5,6 +5,8 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
@@ -12,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class OAuthStateService {
+
+    private static final Logger log = LoggerFactory.getLogger(OAuthStateService.class);
 
     public enum Status { PENDING, AUTHENTICATED, ERROR }
 
@@ -42,6 +46,7 @@ public class OAuthStateService {
             String redirectUri = receiver.getRedirectUri();
 
             authUrl = flow.newAuthorizationUrl().setRedirectUri(redirectUri).build();
+            log.info("Google OAuth required. Open this URL in your browser to authorize:\n{}", authUrl);
 
             String code = receiver.waitForCode();
             receiver.stop();

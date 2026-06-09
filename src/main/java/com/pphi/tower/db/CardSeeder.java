@@ -1,10 +1,14 @@
 package com.pphi.tower.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CardSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(CardSeeder.class);
 
     private final JdbcTemplate jdbc;
 
@@ -16,7 +20,9 @@ public class CardSeeder {
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM card", Integer.class);
         if (count != null && count > 0) return;
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedCards();
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 
     private void seedCards() {

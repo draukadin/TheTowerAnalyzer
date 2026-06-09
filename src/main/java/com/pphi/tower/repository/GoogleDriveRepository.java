@@ -4,6 +4,7 @@ import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Repository;
 
 import java.io.ByteArrayInputStream;
@@ -19,7 +20,7 @@ public class GoogleDriveRepository {
 
     private final Drive drive;
 
-    public GoogleDriveRepository(Drive drive) {
+    public GoogleDriveRepository(@Lazy Drive drive) {
         this.drive = drive;
     }
 

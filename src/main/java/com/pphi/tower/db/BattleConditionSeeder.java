@@ -1,10 +1,14 @@
 package com.pphi.tower.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BattleConditionSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(BattleConditionSeeder.class);
 
     private final JdbcTemplate jdbc;
 
@@ -19,7 +23,9 @@ public class BattleConditionSeeder {
 
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM battle_condition", Integer.class);
         if (count != null && count > 0) return;
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedConditions();
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 
     private void seedConditions() {

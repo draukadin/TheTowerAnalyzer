@@ -3,6 +3,7 @@ package com.pphi.tower.repository;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.pphi.tower.config.SheetProperties;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ public class GoogleSheetsRepository {
     private final Sheets sheets;
     private final SheetProperties sheetProperties;
 
-    public GoogleSheetsRepository(Sheets sheets, SheetProperties sheetProperties) {
+    public GoogleSheetsRepository(@Lazy Sheets sheets, SheetProperties sheetProperties) {
         this.sheets = sheets;
         this.sheetProperties = sheetProperties;
     }

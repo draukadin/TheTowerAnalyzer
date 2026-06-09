@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 set APP_DIR=%APPDATA%\TheTowerAnalyzer
 set USER_PROPERTIES_FILE=%APP_DIR%\user.properties
@@ -12,11 +12,12 @@ if not exist "%APP_DIR%" mkdir "%APP_DIR%"
 if not exist "%USER_PROPERTIES_FILE%" (
     echo Creating user.properties template at:
     echo   %USER_PROPERTIES_FILE%
+    set "APP_DIR_FWD=%APP_DIR:\=/%"
     (
         echo # Google Drive / Sheets OAuth 2.0 client secret
         echo # oauth-credentials.json = OAuth 2.0 client secret ^(used by both Google Drive and Sheets^)
-        echo drive.oauth-credentials-file=%APP_DIR%\oauth-credentials.json
-        echo drive.tokens-dir=%APP_DIR%\tokens
+        echo drive.oauth-credentials-file=!APP_DIR_FWD!/oauth-credentials.json
+        echo drive.tokens-dir=!APP_DIR_FWD!/tokens
         echo drive.application-name=TheTowerAnalyzer
         echo.
         echo # Google Drive folder IDs - replace with your own values

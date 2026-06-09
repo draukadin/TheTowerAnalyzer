@@ -2,6 +2,8 @@ package com.pphi.tower.db;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @Component
 public class LabCostSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(LabCostSeeder.class);
 
     private final JdbcTemplate jdbc;
 
@@ -28,6 +32,7 @@ public class LabCostSeeder {
                 Integer.class);
         boolean hasCorrupt = (negCount != null && negCount > 0) || (nullDurCount != null && nullDurCount > 0);
         if (count != null && count > 0 && !hasCorrupt) return;
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         if (hasCorrupt) jdbc.execute("DELETE FROM lab_level_cost");
 
         try {
@@ -60,5 +65,6 @@ public class LabCostSeeder {
         } catch (Exception e) {
             throw new RuntimeException("Failed to seed lab costs", e);
         }
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 }

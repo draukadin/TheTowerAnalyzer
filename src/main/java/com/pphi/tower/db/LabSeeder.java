@@ -1,10 +1,14 @@
 package com.pphi.tower.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LabSeeder {
+
+    private static final Logger log = LoggerFactory.getLogger(LabSeeder.class);
 
     private final JdbcTemplate jdbc;
 
@@ -16,127 +20,129 @@ public class LabSeeder {
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM lab", Integer.class);
         if (count != null && count > 0) return;
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedLabs();
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 
     private void seedLabs() {
         // MAIN RESEARCHES
-        lab("Game Speed",                           "Main",             7,   7,  7);
-        lab("Starting Cash",                        "Main",            10,  10, 99);
-        lab("Workshop Attack Discount",             "Main",            23,  23, 99);
-        lab("Workshop Defense Discount",            "Main",            41,  41, 99);
-        lab("Workshop Utility Discount",            "Main",            22,  22, 99);
-        lab("Labs Coin Discount",                   "Main",            49,  99, 99);
-        lab("Labs Speed",                           "Main",            99,  99, 99);
-        lab("Buy Multiplier",                       "Main",             4,   4,  4);
-        lab("More Round Stats",                     "Main",             1,   1,  1);
-        lab("Target Priority",                      "Main",             2,   2,  2);
-        lab("Card Presets",                         "Main",             1,   1,  1);
-        lab("Workshop Respec",                      "Main",             1,   1,  1);
-        lab("Reroll Daily Mission",                 "Main",             1,   1,  1);
-        lab("Workshop Enhancements",                "Main",             1,   1,  1);
-        lab("Enhancement Attack - Coin Discount",   "Main",             0,   1, 100);
-        lab("Enhancement Defense - Coin Discount",  "Main",             0,   1, 100);
-        lab("Enhancement Utility - Coin Discount",  "Main",             0,   1, 100);
-        lab("Dissonant Echo - Attack",              "Main",             0,   1, 20);
-        lab("Dissonant Echo - Defense",             "Main",             0,   1, 20);
-        lab("Dissonant Echo - Utility",             "Main",             0,   1, 20);
-        lab("Dissonant Echo - Ultimate Weapons",    "Main",             0,   1, 20);
+        lab("Game Speed",                           "Main",             0, null,  7);
+        lab("Starting Cash",                        "Main",             0, null, 99);
+        lab("Workshop Attack Discount",             "Main",             0, null, 99);
+        lab("Workshop Defense Discount",            "Main",             0, null, 99);
+        lab("Workshop Utility Discount",            "Main",             0, null, 99);
+        lab("Labs Coin Discount",                   "Main",             0, null, 99);
+        lab("Labs Speed",                           "Main",             0, null, 99);
+        lab("Buy Multiplier",                       "Main",             0, null,  4);
+        lab("More Round Stats",                     "Main",             0, null,  1);
+        lab("Target Priority",                      "Main",             0, null,  2);
+        lab("Card Presets",                         "Main",             0, null,  1);
+        lab("Workshop Respec",                      "Main",             0, null,  1);
+        lab("Reroll Daily Mission",                 "Main",             0, null,  1);
+        lab("Workshop Enhancements",                "Main",             0, null,  1);
+        lab("Enhancement Attack - Coin Discount",   "Main",             0, null, 100);
+        lab("Enhancement Defense - Coin Discount",  "Main",             0, null, 100);
+        lab("Enhancement Utility - Coin Discount",  "Main",             0, null, 100);
+        lab("Dissonant Echo - Attack",              "Main",             0, null, 20);
+        lab("Dissonant Echo - Defense",             "Main",             0, null, 20);
+        lab("Dissonant Echo - Utility",             "Main",             0, null, 20);
+        lab("Dissonant Echo - Ultimate Weapons",    "Main",             0, null, 20);
 
         // ATTACK
-        lab("Damage",                               "Attack",          61, 100, 100);
-        lab("Attack Speed",                         "Attack",          67,  99,  99);
-        lab("Critical Factor",                      "Attack",          57,  99,  99);
-        lab("Range",                                "Attack",           1,   1,  80);
-        lab("Damage / Meter",                       "Attack",          58,  58,  99);
-        lab("Super Crit Chance",                    "Attack",          10,  15,  50);
-        lab("Super Crit Multi",                     "Attack",          11,  15,  40);
-        lab("Max Rend Armor Multiplier",            "Attack",           9,   9,  30);
-        lab("Light Speed Shots",                    "Attack",           1,   1,   1);
+        lab("Damage",                               "Attack",           0, null, 100);
+        lab("Attack Speed",                         "Attack",           0, null,  99);
+        lab("Critical Factor",                      "Attack",           0, null,  99);
+        lab("Range",                                "Attack",           0, null,  80);
+        lab("Damage / Meter",                       "Attack",           0, null,  99);
+        lab("Super Crit Chance",                    "Attack",           0, null,  50);
+        lab("Super Crit Multi",                     "Attack",           0, null,  40);
+        lab("Max Rend Armor Multiplier",            "Attack",           0, null,  30);
+        lab("Light Speed Shots",                    "Attack",           0, null,   1);
 
         // DEFENSE
-        lab("Health",                               "Defense",         47, 100, 100);
-        lab("Health Regen",                         "Defense",         57, 100, 100);
-        lab("Defense Absolute",                     "Defense",          2,   2, 100);
-        lab("Defense %",                            "Defense",         26,  50,  50);
-        lab("Orbs Speed",                           "Defense",         10,  20,  20);
-        lab("Land Mine Damage",                     "Defense",         14,  14,  20);
-        lab("Land Mine Decay",                      "Defense",         10,  10,  35);
-        lab("Shockwave Size",                       "Defense",          7,  20,  20);
-        lab("Orb Boss Hit",                         "Defense",          0,  10,  10);
-        lab("Wall Health",                          "Defense",         50,  50,  50);
-        lab("Wall Rebuild",                         "Defense",          6,  20,  20);
-        lab("Wall Regen",                           "Defense",         20,  30,  30);
-        lab("Wall Thorns",                          "Defense",         15,  20,  20);
-        lab("Wall Invincibility",                   "Defense",          0,  10,  10);
-        lab("Wall Fortification",                   "Defense",         32,  60,  60);
-        lab("Garlic Thorns",                        "Defense",         10,  10,  10);
+        lab("Health",                               "Defense",          0, null, 100);
+        lab("Health Regen",                         "Defense",          0, null, 100);
+        lab("Defense Absolute",                     "Defense",          0, null, 100);
+        lab("Defense %",                            "Defense",          0, null,  50);
+        lab("Orbs Speed",                           "Defense",          0, null,  20);
+        lab("Land Mine Damage",                     "Defense",          0, null,  20);
+        lab("Land Mine Decay",                      "Defense",          0, null,  35);
+        lab("Shockwave Size",                       "Defense",          0, null,  20);
+        lab("Orb Boss Hit",                         "Defense",          0, null,  10);
+        lab("Wall Health",                          "Defense",          0, null,  50);
+        lab("Wall Rebuild",                         "Defense",          0, null,  20);
+        lab("Wall Regen",                           "Defense",          0, null,  30);
+        lab("Wall Thorns",                          "Defense",          0, null,  20);
+        lab("Wall Invincibility",                   "Defense",          0, null,  10);
+        lab("Wall Fortification",                   "Defense",          0, null,  60);
+        lab("Garlic Thorns",                        "Defense",          0, null,  10);
 
         // UTILITY
-        lab("Cash Bonus",                           "Utility",         24,  24,  99);
-        lab("Cash / Wave",                          "Utility",         12,  12,  99);
-        lab("Coins / Kill Bonus",                   "Utility",         63,  99,  99);
-        lab("Coins / Wave",                         "Utility",         25,  25,  99);
-        lab("Interest",                             "Utility",         10,  10,  99);
-        lab("Max Interest",                         "Utility",          8,   8,  15);
-        lab("Package After Boss",                   "Utility",          1,   1,   1);
-        lab("Recovery Package Amount",              "Utility",          0,   0,  20);
-        lab("Recovery Package Max",                 "Utility",          0,   0,  20);
-        lab("Recovery Package Chance",              "Utility",          3,  20,  20);
-        lab("Enemy Attack Level Skip",              "Utility",         20,  20,  20);
-        lab("Enemy Health Level Skip",              "Utility",         12,  20,  20);
+        lab("Cash Bonus",                           "Utility",          0, null,  99);
+        lab("Cash / Wave",                          "Utility",          0, null,  99);
+        lab("Coins / Kill Bonus",                   "Utility",          0, null,  99);
+        lab("Coins / Wave",                         "Utility",          0, null,  99);
+        lab("Interest",                             "Utility",          0, null,  99);
+        lab("Max Interest",                         "Utility",          0, null,  15);
+        lab("Package After Boss",                   "Utility",          0, null,   1);
+        lab("Recovery Package Amount",              "Utility",          0, null,  20);
+        lab("Recovery Package Max",                 "Utility",          0, null,  20);
+        lab("Recovery Package Chance",              "Utility",          0, null,  20);
+        lab("Enemy Attack Level Skip",              "Utility",          0, null,  20);
+        lab("Enemy Health Level Skip",              "Utility",          0, null,  20);
 
         // ULTIMATE WEAPONS
-        lab("Missile Despawn Time",                 "Ultimate Weapons", 0,   0,  20);
-        lab("Missiles Explosion",                   "Ultimate Weapons", 1,   1,   1);
-        lab("Missile Radius",                       "Ultimate Weapons",10,  10,  20);
-        lab("Chrono Field Duration",                "Ultimate Weapons",18,  30,  30);
-        lab("Chrono Field Damage Reduction",        "Ultimate Weapons", 1,   1,   1);
-        lab("Chrono Field Reduction %",             "Ultimate Weapons", 1,  30,  30);
-        lab("Swamp Radius",                         "Ultimate Weapons", 0,   0,  30);
-        lab("Swamp Stun",                           "Ultimate Weapons", 0,   0,   1);
-        lab("Swamp Stun Chance",                    "Ultimate Weapons", 0,   0,  30);
-        lab("Swamp Stun Time",                      "Ultimate Weapons", 0,   0,  30);
-        lab("Golden Tower Bonus",                   "Ultimate Weapons",25,  25,  25);
-        lab("Golden Tower Duration",                "Ultimate Weapons",20,  20,  20);
-        lab("Chain Lightning Shock",                "Ultimate Weapons", 1,   1,   1);
-        lab("Shock Chance",                         "Ultimate Weapons",21,  30,  30);
-        lab("Shock Multiplier",                     "Ultimate Weapons",14,  14,  14);
-        lab("Death Wave Health",                    "Ultimate Weapons",30,  30,  30);
-        lab("Death Wave Coin Bonus",                "Ultimate Weapons",20,  20,  20);
-        lab("Inner Mine Blast Radius",              "Ultimate Weapons", 0,   0,  20);
-        lab("Inner Mine Rotation Speed",            "Ultimate Weapons", 0,   0,  20);
-        lab("Chrono Field Range",                   "Ultimate Weapons", 9,  20,  20);
-        lab("Missile Amplifier",                    "Ultimate Weapons", 3,   3,  25);
-        lab("Missile Barrage",                      "Ultimate Weapons", 1,   1,   1);
-        lab("Missile Barrage Quantity",             "Ultimate Weapons", 0,   0,   6);
-        lab("Inner Mine Stun",                      "Ultimate Weapons", 0,   0,   1);
-        lab("Black Hole Damage",                    "Ultimate Weapons",10,  10,  10);
-        lab("Extra Black Hole",                     "Ultimate Weapons", 1,   1,   1);
-        lab("Black Hole Coin Bonus",                "Ultimate Weapons",20,  20,  20);
-        lab("Spotlight Coin Bonus",                 "Ultimate Weapons",20,  20,  20);
-        lab("Spotlight Missiles",                   "Ultimate Weapons", 2,   2,  18);
-        lab("Black Hole Disable Ranged Enemies",    "Ultimate Weapons", 1,   1,   1);
-        lab("Recharge Missile Barrage",             "Ultimate Weapons", 0,   0,   7);
-        lab("Swamp Rend",                           "Ultimate Weapons", 0,   0,  30);
-        lab("Swamp Rend - Additional Enemies",      "Ultimate Weapons", 0,   0,   6);
-        lab("Chain Thunder",                        "Ultimate Weapons", 2,  10,  30);
-        lab("Lightning Amplifier - Scatter",        "Ultimate Weapons", 2,  10,  30);
-        lab("Death Wave Cells Bonus",               "Ultimate Weapons",20,  20,  20);
-        lab("Death Wave Damage Amplifier",          "Ultimate Weapons", 6,  30,  30);
-        lab("Death Wave Armor Stripping",           "Ultimate Weapons", 2,   2,  10);
-        lab("Inner Land Mine - Chrono Jump",        "Ultimate Weapons", 0,   0,  10);
+        lab("Missile Despawn Time",                 "Ultimate Weapons", 0, null,  20);
+        lab("Missiles Explosion",                   "Ultimate Weapons", 0, null,   1);
+        lab("Missile Radius",                       "Ultimate Weapons", 0, null,  20);
+        lab("Chrono Field Duration",                "Ultimate Weapons", 0, null,  30);
+        lab("Chrono Field Damage Reduction",        "Ultimate Weapons", 0, null,   1);
+        lab("Chrono Field Reduction %",             "Ultimate Weapons", 0, null,  30);
+        lab("Swamp Radius",                         "Ultimate Weapons", 0, null,  30);
+        lab("Swamp Stun",                           "Ultimate Weapons", 0, null,   1);
+        lab("Swamp Stun Chance",                    "Ultimate Weapons", 0, null,  30);
+        lab("Swamp Stun Time",                      "Ultimate Weapons", 0, null,  30);
+        lab("Golden Tower Bonus",                   "Ultimate Weapons", 0, null,  25);
+        lab("Golden Tower Duration",                "Ultimate Weapons", 0, null,  20);
+        lab("Chain Lightning Shock",                "Ultimate Weapons", 0, null,   1);
+        lab("Shock Chance",                         "Ultimate Weapons", 0, null,  30);
+        lab("Shock Multiplier",                     "Ultimate Weapons", 0, null,  14);
+        lab("Death Wave Health",                    "Ultimate Weapons", 0, null,  30);
+        lab("Death Wave Coin Bonus",                "Ultimate Weapons", 0, null,  20);
+        lab("Inner Mine Blast Radius",              "Ultimate Weapons", 0, null,  20);
+        lab("Inner Mine Rotation Speed",            "Ultimate Weapons", 0, null,  20);
+        lab("Chrono Field Range",                   "Ultimate Weapons", 0, null,  20);
+        lab("Missile Amplifier",                    "Ultimate Weapons", 0, null,  25);
+        lab("Missile Barrage",                      "Ultimate Weapons", 0, null,   1);
+        lab("Missile Barrage Quantity",             "Ultimate Weapons", 0, null,   6);
+        lab("Inner Mine Stun",                      "Ultimate Weapons", 0, null,   1);
+        lab("Black Hole Damage",                    "Ultimate Weapons", 0, null,  10);
+        lab("Extra Black Hole",                     "Ultimate Weapons", 0, null,   1);
+        lab("Black Hole Coin Bonus",                "Ultimate Weapons", 0, null,  20);
+        lab("Spotlight Coin Bonus",                 "Ultimate Weapons", 0, null,  20);
+        lab("Spotlight Missiles",                   "Ultimate Weapons", 0, null,  18);
+        lab("Black Hole Disable Ranged Enemies",    "Ultimate Weapons", 0, null,   1);
+        lab("Recharge Missile Barrage",             "Ultimate Weapons", 0, null,   7);
+        lab("Swamp Rend",                           "Ultimate Weapons", 0, null,  30);
+        lab("Swamp Rend - Additional Enemies",      "Ultimate Weapons", 0, null,   6);
+        lab("Chain Thunder",                        "Ultimate Weapons", 0, null,  30);
+        lab("Lightning Amplifier - Scatter",        "Ultimate Weapons", 0, null,  30);
+        lab("Death Wave Cells Bonus",               "Ultimate Weapons", 0, null,  20);
+        lab("Death Wave Damage Amplifier",          "Ultimate Weapons", 0, null,  30);
+        lab("Death Wave Armor Stripping",           "Ultimate Weapons", 0, null,  10);
+        lab("Inner Land Mine - Chrono Jump",        "Ultimate Weapons", 0, null,  10);
 
         // CARDS
         lab("Second Wind Blast",                    "Cards",            0, null,  4);
         lab("Double Death Ray",                     "Cards",            0, null, 30);
-        lab("Extra Orb Adjuster",                   "Cards",            1,    1,  1);
-        lab("Extra Extra Orbs",                     "Cards",            2,    2,  2);
-        lab("Energy Shield Extra Hit",              "Cards",            1,    1,  2);
+        lab("Extra Orb Adjuster",                   "Cards",            0, null,  1);
+        lab("Extra Extra Orbs",                     "Cards",            0, null,  2);
+        lab("Energy Shield Extra Hit",              "Cards",            0, null,  2);
         lab("Super Tower Bonus",                    "Cards",            0, null, 30);
         lab("Recharge Second Wind",                 "Cards",            0, null,  7);
         lab("Recharge Demon Mode",                  "Cards",            0, null,  7);
-        lab("Recharge Nuke",                        "Cards",            1,    1,  7);
+        lab("Recharge Nuke",                        "Cards",            0, null,  7);
         lab("Damage Mastery",                       "Cards",            0, null,  9);
         lab("Attack Speed Mastery",                 "Cards",            0, null,  9);
         lab("Health Mastery",                       "Cards",            0, null,  9);
@@ -170,27 +176,27 @@ public class LabSeeder {
         lab("Area of Effect Mastery",               "Cards",            0, null,  9);
 
         // PERKS
-        lab("Unlock Perks",                         "Perks",            1,   1,   1);
-        lab("Waves Required",                       "Perks",           13,  20, 100);
-        lab("Auto Pick Perks",                      "Perks",            1,   1,   1);
-        lab("Standard Perks Bonus",                 "Perks",           20,  25,  25);
-        lab("Perk Option Quantity",                 "Perks",            2,   2,   2);
-        lab("First Perk Choice",                    "Perks",            1,   1,   1);
-        lab("Ban Perks",                            "Perks",            5,   5,   8);
-        lab("Improve Trade-off Perks",              "Perks",           10,  10,  10);
-        lab("Auto Pick Ranking",                    "Perks",           14,  14,  32);
+        lab("Unlock Perks",                         "Perks",            0, null,   1);
+        lab("Waves Required",                       "Perks",            0, null, 100);
+        lab("Auto Pick Perks",                      "Perks",            0, null,   1);
+        lab("Standard Perks Bonus",                 "Perks",            0, null,  25);
+        lab("Perk Option Quantity",                 "Perks",            0, null,   2);
+        lab("First Perk Choice",                    "Perks",            0, null,   1);
+        lab("Ban Perks",                            "Perks",            0, null,   8);
+        lab("Improve Trade-off Perks",              "Perks",            0, null,  10);
+        lab("Auto Pick Ranking",                    "Perks",            0, null,  32);
 
         // BOTS
-        lab("Flame Bot - Cooldown",                 "Bots",            13,  25,  25);
-        lab("Thunder Bot - Cooldown",               "Bots",             0,   0,  25);
-        lab("Gold Bot - Cooldown",                  "Bots",             3,   8,  25);
-        lab("Amp Bot - Cooldown",                   "Bots",             0,  25,  25);
-        lab("Bot Bot - Cooldown",                   "Bots",             0,   0,  25);
-        lab("Flame Bot - Burn Stack",               "Bots",             0,   0,   5);
-        lab("Thunder Bot - Linger Time",            "Bots",             0,   0,  20);
-        lab("Gold Bot - Duration",                  "Bots",             0,  20,  20);
-        lab("Amp Bot - Duration",                   "Bots",             0,  20,  20);
-        lab("Bot Bot - Duration",                   "Bots",             0,   0,  20);
+        lab("Flame Bot - Cooldown",                 "Bots",             0, null,  25);
+        lab("Thunder Bot - Cooldown",               "Bots",             0, null,  25);
+        lab("Gold Bot - Cooldown",                  "Bots",             0, null,  25);
+        lab("Amp Bot - Cooldown",                   "Bots",             0, null,  25);
+        lab("Bot Bot - Cooldown",                   "Bots",             0, null,  25);
+        lab("Flame Bot - Burn Stack",               "Bots",             0, null,   5);
+        lab("Thunder Bot - Linger Time",            "Bots",             0, null,  20);
+        lab("Gold Bot - Duration",                  "Bots",             0, null,  20);
+        lab("Amp Bot - Duration",                   "Bots",             0, null,  20);
+        lab("Bot Bot - Duration",                   "Bots",             0, null,  20);
 
         // ENEMIES
         lab("Common Enemy Health",                  "Enemies",          0, null, 30);
@@ -216,18 +222,18 @@ public class LabSeeder {
         lab("Ranged Enemy Range",                   "Enemies",          0, null, 30);
 
         // MODULES
-        lab("Common Drop Chance",                   "Modules",         10,  10,  10);
-        lab("Reroll Shards",                        "Modules",         55, 100, 100);
-        lab("Daily Mission Shards",                 "Modules",         50,  50,  50);
-        lab("Module Shards Cost",                   "Modules",         30,  30,  30);
-        lab("Module Coin Cost",                     "Modules",         30,  30,  30);
-        lab("Rare Drop Chance",                     "Modules",         10,  10,  10);
-        lab("Unmerge Module",                       "Modules",          1,   1,   1);
-        lab("Shatter Shards",                       "Modules",          0,   5,   5);
-        lab("Cannon Effect Bans",                   "Modules",          1,   2,   4);
-        lab("Armor Effect Bans",                    "Modules",          2,   2,   4);
-        lab("Generator Effect Bans",                "Modules",          1,   1,   3);
-        lab("Core Effect Bans",                     "Modules",          0,   1,   7);
+        lab("Common Drop Chance",                   "Modules",          0, null,  10);
+        lab("Reroll Shards",                        "Modules",          0, null, 100);
+        lab("Daily Mission Shards",                 "Modules",          0, null,  50);
+        lab("Module Shards Cost",                   "Modules",          0, null,  30);
+        lab("Module Coin Cost",                     "Modules",          0, null,  30);
+        lab("Rare Drop Chance",                     "Modules",          0, null,  10);
+        lab("Unmerge Module",                       "Modules",          0, null,   1);
+        lab("Shatter Shards",                       "Modules",          0, null,   5);
+        lab("Cannon Effect Bans",                   "Modules",          0, null,   4);
+        lab("Armor Effect Bans",                    "Modules",          0, null,   4);
+        lab("Generator Effect Bans",                "Modules",          0, null,   3);
+        lab("Core Effect Bans",                     "Modules",          0, null,   7);
         lab("Assist Module Substats - Cannon",      "Modules",          0, null, 30);
         lab("Assist Module Substats - Armor",       "Modules",          0, null, 30);
         lab("Assist Module Substats - Generator",   "Modules",          0, null, 30);

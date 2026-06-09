@@ -1,5 +1,7 @@
 package com.pphi.tower.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +30,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class GuardianSeeder {
 
+    private static final Logger log = LoggerFactory.getLogger(GuardianSeeder.class);
+
     private final JdbcTemplate jdbc;
 
     public GuardianSeeder(JdbcTemplate jdbc, DatabaseInitializer init) {
@@ -38,8 +42,10 @@ public class GuardianSeeder {
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM guardian_chip", Integer.class);
         if (count != null && count > 0) return;
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedSlots();
         seedChips();
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 
     // ── Cost helpers ──────────────────────────────────────────────────────────

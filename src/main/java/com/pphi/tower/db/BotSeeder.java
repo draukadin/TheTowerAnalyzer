@@ -1,5 +1,7 @@
 package com.pphi.tower.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +22,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class BotSeeder {
 
+    private static final Logger log = LoggerFactory.getLogger(BotSeeder.class);
+
     private final JdbcTemplate jdbc;
 
     public BotSeeder(JdbcTemplate jdbc, DatabaseInitializer init) {
@@ -30,7 +34,9 @@ public class BotSeeder {
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM bot", Integer.class);
         if (count != null && count > 0) return;
+        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedBots();
+        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
     }
 
     // ── Cost helpers ──────────────────────────────────────────────────────────
