@@ -51,11 +51,12 @@ jobs:
             --type exe `
             --app-version $ver `
             --description "The Tower Analyzer" `
-            --vendor "Philippe Perrault" `
+            --vendor "Draukadin" `
             --win-dir-chooser `
             --win-menu `
             --win-shortcut `
             --win-console `
+            --icon src/main/resources/app.ico `
             --java-options "-Djava.awt.headless=true"
 
       - name: Upload installer artifact

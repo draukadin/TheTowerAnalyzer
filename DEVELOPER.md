@@ -30,7 +30,7 @@ The installer is a self-contained `.exe` that bundles a JRE — no Java required
 ### Build the installer locally
 
 ```
-mvn package -DskipTests -Ppackage-installer
+mvn verify -DskipTests -Ppackage-installer
 ```
 
 Output: `target/installer/TheTowerAnalyzer-1.0.0.exe`
