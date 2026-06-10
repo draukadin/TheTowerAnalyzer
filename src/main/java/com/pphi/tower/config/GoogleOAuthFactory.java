@@ -9,6 +9,7 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import java.io.FileReader;
 import java.nio.file.Files;
@@ -18,7 +19,7 @@ import java.util.List;
 @Configuration
 public class GoogleOAuthFactory {
 
-    @Bean
+    @Bean @Lazy
     public GoogleAuthorizationCodeFlow googleAuthorizationCodeFlow(DriveProperties props) throws Exception {
         GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 

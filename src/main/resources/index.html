@@ -3598,7 +3598,21 @@ function startAuthPolling() {
   }, 2000);
 }
 
-checkAuthAndInit();
+async function checkSetupThenAuth() {
+  try {
+    const res = await fetch(`${API}/setup/status`);
+    const data = await res.json();
+    if (data.step === 'complete') {
+      checkAuthAndInit();
+    } else {
+      showSetupWizard(data.step);
+    }
+  } catch (e) {
+    setStatus(false, 'Cannot reach server');
+  }
+}
+
+checkSetupThenAuth();
 </script>
 
 <div id="addVersionModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddVersionModal()">
@@ -3883,10 +3897,10 @@ function buildWorkshopPage() {
     <button class="ws-tab-btn${wsTab==='plus'?' ws-plus-active':''}" onclick="wsSetTab('plus')">Workshop+</button>`;
 
   const catBtns = ['All','ATTACK','DEFENSE','UTILITY'].map(c =>
-    `<button class="ws-filter-btn${wsCatFilter===c?' active':''}" onclick="wsSetCat('${c}')">${c==='All'?'All':c.charAt(0)+c.slice(1).toLowerCase()}</button>`
+    `<button class="ws-filter-btn ws-cat-btn${wsCatFilter===c?' active':''}" data-cat="${c}" onclick="wsSetCat('${c}')">${c==='All'?'All':c.charAt(0)+c.slice(1).toLowerCase()}</button>`
   ).join('');
 
-  const hideBtn = `<button class="ws-filter-btn${wsHideMaxed?' active':''}" onclick="wsToggleHideMaxed()">Hide Maxed</button>`;
+  const hideBtn = `<button class="ws-filter-btn ws-hide-maxed-btn${wsHideMaxed?' active':''}" onclick="wsToggleHideMaxed()">Hide Maxed</button>`;
 
   document.getElementById('mainContent').innerHTML = `
     <div class="report-title" style="margin-bottom:1rem">Workshop</div>
@@ -4134,8 +4148,17 @@ async function wsPurchaseGroup(groupId) {
 // ── Tab / filter controls ─────────────────────────────────────────────────────
 
 function wsSetTab(tab) { wsTab = tab; wsCatFilter = 'All'; buildWorkshopPage(); }
-function wsSetCat(cat) { wsCatFilter = cat; renderWorkshopBody(); }
-function wsToggleHideMaxed() { wsHideMaxed = !wsHideMaxed; renderWorkshopBody(); }
+function wsSetCat(cat) {
+  wsCatFilter = cat;
+  document.querySelectorAll('.ws-cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  renderWorkshopBody();
+}
+function wsToggleHideMaxed() {
+  wsHideMaxed = !wsHideMaxed;
+  const btn = document.querySelector('.ws-hide-maxed-btn');
+  if (btn) btn.classList.toggle('active', wsHideMaxed);
+  renderWorkshopBody();
+}
 
 // Pre-fetch costs for Workshop+ items on first load so next-cost column populates
 async function wsPrefetchAllCosts() {
@@ -6042,6 +6065,219 @@ async function backupDatabase() {
     status.textContent = `✗ ${e.message}`;
   } finally {
     btn.disabled = false;
+  }
+}
+</script>
+
+<!-- ── First-run setup wizard ────────────────────────────────────────────── -->
+<div id="setupWizard" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:2000;
+     overflow-y:auto;align-items:flex-start;justify-content:center;padding:3rem 1rem;">
+  <div style="width:100%;max-width:580px;">
+
+    <!-- Logo -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:2.5rem;">
+      <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+           border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">🗼</div>
+      <div style="font-size:1.15rem;font-weight:700;letter-spacing:-0.5px;">The Tower <span style="color:var(--accent)">Analyzer</span></div>
+    </div>
+
+    <!-- Step indicator -->
+    <div id="wizardStepIndicator" style="display:flex;align-items:center;gap:0;margin-bottom:2rem;">
+      <div id="wizInd1" style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;">
+        <div id="wizDot1" style="width:24px;height:24px;border-radius:50%;background:var(--accent);
+             display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">1</div>
+        <span style="color:var(--accent)">Google Credentials</span>
+      </div>
+      <div style="flex:1;height:1px;background:var(--border);margin:0 12px;"></div>
+      <div id="wizInd2" style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;">
+        <div id="wizDot2" style="width:24px;height:24px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);
+             display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;">2</div>
+        <span id="wizLabel2" style="color:var(--muted)">Drive &amp; Sheets IDs</span>
+      </div>
+    </div>
+
+    <!-- Step 1: OAuth credentials file -->
+    <div id="wizardStep1">
+      <div style="margin-bottom:1.75rem;">
+        <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem;">Set up Google Credentials</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;">
+          The Tower Analyzer uses the Google Drive and Sheets APIs to store your data.
+          You'll need to provide an OAuth 2.0 client secret from your Google Cloud project.
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+           padding:1.25rem;margin-bottom:1.5rem;font-size:13px;line-height:1.8;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.75rem;font-weight:600;">How to get your credentials file</div>
+        <ol style="padding-left:1.25rem;color:var(--text);display:flex;flex-direction:column;gap:4px;">
+          <li>Go to <span style="font-family:var(--mono);color:var(--accent)">console.cloud.google.com</span></li>
+          <li>Open your project → <b>APIs &amp; Services</b> → <b>Credentials</b></li>
+          <li>Click <b>Create Credentials</b> → <b>OAuth 2.0 Client ID</b></li>
+          <li>Choose <b>Desktop app</b>, give it a name, click <b>Create</b></li>
+          <li>Click <b>Download JSON</b> on the credential you just created</li>
+          <li>Open the downloaded file in a text editor, select all, and paste below</li>
+        </ol>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Paste the contents of your downloaded JSON file</label>
+        <textarea id="credentialsJson" class="form-textarea" rows="7"
+          placeholder='{"installed":{"client_id":"...","client_secret":"...",...}}'
+          style="font-family:var(--mono);font-size:12px;min-height:130px;"></textarea>
+      </div>
+      <div id="credentialsError" style="display:none;color:var(--red);font-size:13px;margin-bottom:1rem;
+           background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);border-radius:8px;padding:10px 14px;"></div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button id="credentialsBtn" class="btn btn-primary" onclick="submitCredentials()" style="padding:10px 24px;font-size:14px;">
+          Continue →
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Folder & Sheet IDs -->
+    <div id="wizardStep2" style="display:none;">
+      <div style="margin-bottom:1.75rem;">
+        <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem;">Configure Drive &amp; Sheets</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;">
+          Enter the Google Drive folder IDs and the Google Sheets spreadsheet ID the app will use.
+          You can find these in the URL when you open the folder or sheet in your browser.
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+           padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:12px;color:var(--muted);line-height:1.7;">
+        <b style="color:var(--text);">Finding a folder ID:</b> Open the folder in Google Drive.
+        The URL looks like <span style="font-family:var(--mono);color:var(--accent)">drive.google.com/drive/folders/<b style="color:var(--gold)">FOLDER_ID</b></span> — copy the highlighted part.<br>
+        <b style="color:var(--text);">Finding a sheet ID:</b> Open the spreadsheet.
+        The URL looks like <span style="font-family:var(--mono);color:var(--accent)">docs.google.com/spreadsheets/d/<b style="color:var(--gold)">SHEET_ID</b>/edit</span> — copy the highlighted part.
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Backup Folder ID</label>
+        <input id="backupFolderId" class="form-input" type="text" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Battle Reports Folder ID</label>
+        <input id="battleReportsFolderId" class="form-input" type="text" placeholder="e.g. 1FAIpQLSf8z3...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Player Tracker Sheet ID</label>
+        <input id="playerTrackerSheetId" class="form-input" type="text" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+      </div>
+      <div id="configError" style="display:none;color:var(--red);font-size:13px;margin-bottom:1rem;
+           background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);border-radius:8px;padding:10px 14px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button class="btn" onclick="goToWizardStep(1)" style="font-size:13px;">← Back</button>
+        <button id="configBtn" class="btn btn-primary" onclick="submitConfig()" style="padding:10px 24px;font-size:14px;">
+          Complete Setup
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Setup wizard ──────────────────────────────────────────────────────────────
+
+function showSetupWizard(step) {
+  document.getElementById('setupWizard').style.display = 'flex';
+  goToWizardStep(step === 'config' ? 2 : 1);
+}
+
+function goToWizardStep(n) {
+  document.getElementById('wizardStep1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('wizardStep2').style.display = n === 2 ? '' : 'none';
+
+  const dot1 = document.getElementById('wizDot1');
+  const dot2 = document.getElementById('wizDot2');
+  const lbl2 = document.getElementById('wizLabel2');
+
+  if (n === 1) {
+    dot1.style.background = 'var(--accent)'; dot1.style.color = '#fff'; dot1.style.border = 'none';
+    dot2.style.background = 'var(--surface2)'; dot2.style.color = 'var(--muted)'; dot2.style.border = '1px solid var(--border2)';
+    lbl2.style.color = 'var(--muted)';
+    document.getElementById('wizInd1').querySelector('span').style.color = 'var(--accent)';
+  } else {
+    dot1.textContent = '✓'; dot1.style.background = 'var(--green)'; dot1.style.color = '#fff'; dot1.style.border = 'none';
+    dot2.style.background = 'var(--accent)'; dot2.style.color = '#fff'; dot2.style.border = 'none';
+    lbl2.style.color = 'var(--accent)';
+    document.getElementById('wizInd1').querySelector('span').style.color = 'var(--green)';
+  }
+}
+
+async function submitCredentials() {
+  const content = document.getElementById('credentialsJson').value.trim();
+  const errEl   = document.getElementById('credentialsError');
+  const btn     = document.getElementById('credentialsBtn');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const res  = await fetch(`${API}/setup/credentials`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content})
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errEl.textContent = data.error || 'An error occurred.';
+      errEl.style.display = '';
+    } else {
+      goToWizardStep(2);
+    }
+  } catch (e) {
+    errEl.textContent = 'Could not reach the server.';
+    errEl.style.display = '';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Continue →';
+  }
+}
+
+async function submitConfig() {
+  const errEl = document.getElementById('configError');
+  const btn   = document.getElementById('configBtn');
+
+  const backupFolderId         = document.getElementById('backupFolderId').value.trim();
+  const battleReportsFolderId  = document.getElementById('battleReportsFolderId').value.trim();
+  const playerTrackerSheetId   = document.getElementById('playerTrackerSheetId').value.trim();
+
+  errEl.style.display = 'none';
+
+  if (!backupFolderId || !battleReportsFolderId || !playerTrackerSheetId) {
+    errEl.textContent = 'All three IDs are required.';
+    errEl.style.display = '';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const res  = await fetch(`${API}/setup/config`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({backupFolderId, battleReportsFolderId, playerTrackerSheetId})
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errEl.textContent = data.error || 'An error occurred.';
+      errEl.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Complete Setup';
+    } else {
+      // Setup complete — hide wizard and proceed to OAuth auth flow
+      document.getElementById('setupWizard').style.display = 'none';
+      checkAuthAndInit();
+    }
+  } catch (e) {
+    errEl.textContent = 'Could not reach the server.';
+    errEl.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Complete Setup';
   }
 }
 </script>

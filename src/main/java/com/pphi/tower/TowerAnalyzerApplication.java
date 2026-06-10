@@ -16,16 +16,18 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.EventListener;
 
+import java.awt.Desktop;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
 
 @SpringBootApplication
 @EnableConfigurationProperties
@@ -36,6 +38,7 @@ public class TowerAnalyzerApplication {
 
     public static void main(String[] args) throws IOException {
         installBundledDatabaseIfAbsent();
+        installUserPropertiesIfAbsent();
         String version = TowerAnalyzerApplication.class.getPackage().getImplementationVersion();
         log.info("Starting TheTowerAnalyzer version {}", version != null ? version : "unknown (dev build)");
         SpringApplication app = new SpringApplication(TowerAnalyzerApplication.class);
@@ -65,6 +68,52 @@ public class TowerAnalyzerApplication {
                     log.info("First run detected — no bundled database found, seeding from scratch.");
                 }
             }
+        }
+    }
+
+    private static void installUserPropertiesIfAbsent() throws IOException {
+        String appData = System.getenv("APPDATA");
+        Path dir   = Path.of(appData, "TheTowerAnalyzer");
+        Path props = dir.resolve("user.properties");
+        Files.createDirectories(dir);
+        if (!Files.exists(props)) {
+            log.info("First run detected — creating user.properties template at {}", props);
+            String fwdDir = dir.toString().replace('\\', '/');
+            String content = String.join(System.lineSeparator(),
+                "# Google Drive / Sheets OAuth 2.0 client secret",
+                "# oauth-credentials.json = OAuth 2.0 client secret (used by both Google Drive and Sheets)",
+                "drive.oauth-credentials-file=" + fwdDir + "/oauth-credentials.json",
+                "drive.tokens-dir=" + fwdDir + "/tokens",
+                "drive.application-name=TheTowerAnalyzer",
+                "",
+                "# Google Drive folder IDs - replace with your own values",
+                "drive.backup-folder-id=REPLACE_WITH_YOUR_BACKUP_FOLDER_ID",
+                "drive.battle-reports-folder-id=REPLACE_WITH_YOUR_BATTLE_REPORTS_FOLDER_ID",
+                "",
+                "# Google Sheets sheet IDs - replace with your own values",
+                "sheets.ids.player-tracker=REPLACE_WITH_YOUR_PLAYER_TRACKER_SHEET_ID",
+                "",
+                "# Optional: change the port if 8080 is already in use on your machine",
+                "# server.port=8080"
+            );
+            Files.writeString(props, content);
+            log.info("user.properties created. Edit {} and replace all REPLACE_WITH_... placeholders before restarting.", props);
+        }
+    }
+
+    @EventListener(WebServerInitializedEvent.class)
+    public void openBrowser(WebServerInitializedEvent event) {
+        int port = event.getWebServer().getPort();
+        String url = "http://localhost:" + port;
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(URI.create(url));
+            } else {
+                // Fallback for headless/non-Desktop environments (e.g. --win-console mode)
+                new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url).start();
+            }
+        } catch (Exception e) {
+            log.warn("Could not open browser automatically: {}", e.getMessage());
         }
     }
 

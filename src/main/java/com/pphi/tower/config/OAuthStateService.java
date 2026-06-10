@@ -7,6 +7,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
@@ -20,16 +21,31 @@ public class OAuthStateService {
     public enum Status { PENDING, AUTHENTICATED, ERROR }
 
     private final GoogleAuthorizationCodeFlow flow;
+    private final SetupStateService setupState;
+
     private volatile Status status = Status.PENDING;
     private volatile String authUrl;
-    private final CompletableFuture<Credential> credentialFuture = new CompletableFuture<>();
+    private volatile CompletableFuture<Credential> credentialFuture = new CompletableFuture<>();
 
-    public OAuthStateService(GoogleAuthorizationCodeFlow flow) {
+    public OAuthStateService(@Lazy GoogleAuthorizationCodeFlow flow, SetupStateService setupState) {
         this.flow = flow;
+        this.setupState = setupState;
     }
 
     @PostConstruct
     public void init() {
+        if (!setupState.isComplete()) {
+            log.info("First-run setup not yet complete — OAuth flow deferred until setup finishes.");
+            return;
+        }
+        CompletableFuture.runAsync(this::runAuthFlow);
+    }
+
+    public synchronized void reinitialize() {
+        if (status == Status.AUTHENTICATED) return;
+        credentialFuture = new CompletableFuture<>();
+        status = Status.PENDING;
+        authUrl = null;
         CompletableFuture.runAsync(this::runAuthFlow);
     }
 
@@ -61,6 +77,7 @@ public class OAuthStateService {
             credentialFuture.complete(credential);
 
         } catch (Exception e) {
+            log.error("OAuth flow failed", e);
             status = Status.ERROR;
             credentialFuture.completeExceptionally(e);
         }
