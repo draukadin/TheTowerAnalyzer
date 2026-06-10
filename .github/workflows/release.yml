@@ -44,7 +44,7 @@ jobs:
           echo "INSTALLER_VERSION=$installer_ver" >> $env:GITHUB_OUTPUT
 
       - name: Build fat JAR
-        run: mvn package -DskipTests -Drevision=${{ steps.version.outputs.APP_VERSION }}
+        run: mvn package -DskipTests "-Drevision=${{ steps.version.outputs.APP_VERSION }}"
 
       - name: Create Windows installer
         shell: pwsh
@@ -81,12 +81,10 @@ jobs:
             ## Installation
 
             1. Download and run `TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}.exe`
-            2. On first launch, a `user.properties` file will be created at `%APPDATA%\TheTowerAnalyzer\`
-            3. Fill in your Google Drive folder IDs, Sheets IDs, and place your credential files there
-            4. Relaunch the app — it will start a local server at http://localhost:8080
-
-            ### Required files in `%APPDATA%\TheTowerAnalyzer\`
-            - `user.properties` (auto-created on first run, fill in the placeholders)
-            - `oauth-credentials.json` (OAuth 2.0 client secret — used for both Drive and Sheets)
+            2. The app will open your browser automatically to `http://localhost:8080`
+            3. On first launch a setup wizard will guide you through:
+               - Pasting your Google OAuth 2.0 credentials (from Google Cloud Console)
+               - Entering your Google Drive folder IDs and Sheets spreadsheet ID
+            4. After setup the app is ready to use — no manual file editing required
           files: target/installer/*.exe
           generate_release_notes: true
