@@ -96,26 +96,92 @@
 
     <profiles>
         <!--
-            Build a self-contained Windows installer (bundles a JRE — no Java required on target).
+            Build a self-contained Windows installer (bundles a JRE and Node.js — no Java or Node required on target).
             Requires: JDK 21+ with jpackage, WiX Toolset 3.x on PATH.
             Usage: mvn package -DskipTests -Ppackage-installer
             Output: target/installer/TheTowerAnalyzer-<version>.exe
+            Installed layout:
+              <install-dir>/app/   — JAR + bundled JRE (managed by jpackage)
+              <install-dir>/mcp/   — MCP server (server.js, node_modules, node.exe)
         -->
         <profile>
             <id>package-installer</id>
             <build>
                 <plugins>
+
+                    <!-- ── Step 1: download and unzip Node.js ───────────────────── -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>download-nodejs</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${nodejs.extracted}"/>
+                                        <get src="https://nodejs.org/dist/v${nodejs.version}/${nodejs.dir}.zip"
+                                             dest="${nodejs.zip}"
+                                             skipexisting="true"
+                                             verbose="true"/>
+                                        <unzip src="${nodejs.zip}" dest="${nodejs.extracted}" overwrite="false"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+
+                            <!-- ── Step 3: stage mcp/ + node.exe into mcp-bundle/ ── -->
+                            <execution>
+                                <id>stage-mcp-bundle</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${mcp.bundle.dir}/mcp"/>
+                                        <copy todir="${mcp.bundle.dir}/mcp">
+                                            <fileset dir="${project.basedir}/mcp">
+                                                <include name="server.js"/>
+                                                <include name="package.json"/>
+                                                <include name="node_modules/**"/>
+                                                <exclude name="node_modules/.package-lock.json"/>
+                                            </fileset>
+                                        </copy>
+                                        <copy file="${nodejs.extracted}/${nodejs.dir}/node.exe"
+                                              todir="${mcp.bundle.dir}/mcp"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ── Step 2: npm install (omit dev deps) using bundled Node ── -->
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>3.3.0</version>
                         <executions>
                             <execution>
+                                <id>npm-install-mcp</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>exec</goal></goals>
+                                <configuration>
+                                    <executable>${nodejs.extracted}/${nodejs.dir}/node.exe</executable>
+                                    <arguments>
+                                        <argument>${nodejs.extracted}/${nodejs.dir}/node_modules/npm/bin/npm-cli.js</argument>
+                                        <argument>install</argument>
+                                        <argument>--omit=dev</argument>
+                                        <argument>--prefix</argument>
+                                        <argument>${project.basedir}/mcp</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                            <!-- ── Step 4: jpackage ──────────────────────────────── -->
+                            <execution>
                                 <id>jpackage-windows</id>
                                 <phase>verify</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
+                                <goals><goal>exec</goal></goals>
                                 <configuration>
                                     <executable>jpackage</executable>
                                     <arguments>
@@ -143,15 +209,23 @@
                                         <argument>src/main/resources/app.ico</argument>
                                         <argument>--java-options</argument>
                                         <argument>-Djava.awt.headless=true</argument>
+                                        <argument>--app-content</argument>
+                                        <argument>${mcp.bundle.dir}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
+
                 </plugins>
             </build>
             <properties>
                 <installer.version>1.0.0</installer.version>
+                <nodejs.version>20.19.0</nodejs.version>
+                <nodejs.dir>node-v${nodejs.version}-win-x64</nodejs.dir>
+                <nodejs.zip>${project.build.directory}/${nodejs.dir}.zip</nodejs.zip>
+                <nodejs.extracted>${project.build.directory}/nodejs</nodejs.extracted>
+                <mcp.bundle.dir>${project.build.directory}/mcp-bundle</mcp.bundle.dir>
             </properties>
         </profile>
     </profiles>

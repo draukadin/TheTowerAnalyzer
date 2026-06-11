@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tower-analyzer": {
+      "command": "node",
+      "args": ["C:\\Users\\pphi0\\IdeaProjects\\TheTowerAnlyzer\\mcp\\server.js"]
+    }
+  }
+}

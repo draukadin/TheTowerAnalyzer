@@ -6120,6 +6120,12 @@ async function backupDatabase() {
              display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;">2</div>
         <span id="wizLabel2" style="color:var(--muted)">Drive &amp; Sheets IDs</span>
       </div>
+      <div style="flex:1;height:1px;background:var(--border);margin:0 12px;"></div>
+      <div id="wizInd3" style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;">
+        <div id="wizDot3" style="width:24px;height:24px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);
+             display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;">3</div>
+        <span id="wizLabel3" style="color:var(--muted)">Claude MCP</span>
+      </div>
     </div>
 
     <!-- Step 1: OAuth credentials file -->
@@ -6200,6 +6206,36 @@ async function backupDatabase() {
       </div>
     </div>
 
+    <!-- Step 3: Claude MCP -->
+    <div id="wizardStep3" style="display:none;">
+      <div style="margin-bottom:1.75rem;">
+        <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem;">Set up Claude MCP <span style="font-size:0.85rem;font-weight:500;color:var(--muted)">(optional)</span></div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;">
+          If you use <b style="color:var(--text)">Claude Code</b>, you can connect it directly to The Tower Analyzer.
+          This lets Claude query your currencies, shard rates, module progress, and more — no copy-pasting needed.
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+           padding:1.25rem;margin-bottom:1.5rem;font-size:13px;line-height:1.8;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.75rem;font-weight:600;">What this does</div>
+        <ul style="padding-left:1.25rem;color:var(--text);display:flex;flex-direction:column;gap:4px;margin:0;">
+          <li>Registers this app as an MCP server in your Claude Code config</li>
+          <li>Runs one command: <span style="font-family:var(--mono);color:var(--accent)">claude mcp add tower-analyzer</span></li>
+          <li>Claude Code must already be installed for this to work</li>
+        </ul>
+      </div>
+
+      <div id="mcpResult" style="display:none;font-size:13px;margin-bottom:1rem;border-radius:8px;padding:10px 14px;"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button class="btn" onclick="finishSetup()" style="font-size:13px;">Skip</button>
+        <button id="mcpBtn" class="btn btn-primary" onclick="setupMcp()" style="padding:10px 24px;font-size:14px;">
+          Set up Claude MCP
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -6214,21 +6250,34 @@ function showSetupWizard(step) {
 function goToWizardStep(n) {
   document.getElementById('wizardStep1').style.display = n === 1 ? '' : 'none';
   document.getElementById('wizardStep2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('wizardStep3').style.display = n === 3 ? '' : 'none';
 
   const dot1 = document.getElementById('wizDot1');
   const dot2 = document.getElementById('wizDot2');
+  const dot3 = document.getElementById('wizDot3');
   const lbl2 = document.getElementById('wizLabel2');
+  const lbl3 = document.getElementById('wizLabel3');
+
+  const active  = s => { s.style.background = 'var(--accent)';   s.style.color = '#fff';        s.style.border = 'none'; };
+  const done    = s => { s.style.background = 'var(--green)';    s.style.color = '#fff';        s.style.border = 'none'; s.textContent = '✓'; };
+  const pending = (s, num) => { s.style.background = 'var(--surface2)'; s.style.color = 'var(--muted)'; s.style.border = '1px solid var(--border2)'; s.textContent = num; };
 
   if (n === 1) {
-    dot1.style.background = 'var(--accent)'; dot1.style.color = '#fff'; dot1.style.border = 'none';
-    dot2.style.background = 'var(--surface2)'; dot2.style.color = 'var(--muted)'; dot2.style.border = '1px solid var(--border2)';
-    lbl2.style.color = 'var(--muted)';
+    active(dot1);  dot1.textContent = '1';
+    pending(dot2, '2');  lbl2.style.color = 'var(--muted)';
+    pending(dot3, '3');  lbl3.style.color = 'var(--muted)';
     document.getElementById('wizInd1').querySelector('span').style.color = 'var(--accent)';
-  } else {
-    dot1.textContent = '✓'; dot1.style.background = 'var(--green)'; dot1.style.color = '#fff'; dot1.style.border = 'none';
-    dot2.style.background = 'var(--accent)'; dot2.style.color = '#fff'; dot2.style.border = 'none';
-    lbl2.style.color = 'var(--accent)';
+  } else if (n === 2) {
+    done(dot1);
+    active(dot2);  dot2.textContent = '2';  lbl2.style.color = 'var(--accent)';
+    pending(dot3, '3');  lbl3.style.color = 'var(--muted)';
     document.getElementById('wizInd1').querySelector('span').style.color = 'var(--green)';
+  } else {
+    done(dot1);
+    done(dot2);
+    active(dot3);  dot3.textContent = '3';  lbl3.style.color = 'var(--accent)';
+    document.getElementById('wizInd1').querySelector('span').style.color = 'var(--green)';
+    lbl2.style.color = 'var(--green)';
   }
 }
 
@@ -6295,9 +6344,7 @@ async function submitConfig() {
       btn.disabled = false;
       btn.textContent = 'Complete Setup';
     } else {
-      // Setup complete — hide wizard and proceed to OAuth auth flow
-      document.getElementById('setupWizard').style.display = 'none';
-      checkAuthAndInit();
+      goToWizardStep(3);
     }
   } catch (e) {
     errEl.textContent = 'Could not reach the server.';
@@ -6305,6 +6352,52 @@ async function submitConfig() {
     btn.disabled = false;
     btn.textContent = 'Complete Setup';
   }
+}
+
+async function setupMcp() {
+  const btn    = document.getElementById('mcpBtn');
+  const result = document.getElementById('mcpResult');
+
+  btn.disabled = true;
+  btn.textContent = 'Registering…';
+  result.style.display = 'none';
+
+  try {
+    const res  = await fetch(`${API}/setup/mcp`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      result.style.cssText += ';display:block;color:var(--green);background:rgba(80,200,120,0.1);border:1px solid rgba(80,200,120,0.25);';
+      result.textContent = '✓ MCP server registered successfully. Restart Claude Code to pick it up.';
+      btn.textContent = 'Done';
+      setTimeout(finishSetup, 1800);
+    } else if (data.status === 'claude_not_found') {
+      result.style.cssText += ';display:block;color:var(--gold);background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.25);';
+      result.textContent = 'Claude Code was not found on PATH. Install it first, then run: claude mcp add tower-analyzer';
+      btn.disabled = false;
+      btn.textContent = 'Retry';
+    } else if (data.status === 'not_found') {
+      result.style.cssText += ';display:block;color:var(--muted);background:var(--surface);border:1px solid var(--border);';
+      result.textContent = 'MCP server files were not found. This is expected when running outside the installed app.';
+      btn.disabled = false;
+      btn.textContent = 'Retry';
+    } else {
+      result.style.cssText += ';display:block;color:var(--red);background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);';
+      result.textContent = data.message || 'An error occurred.';
+      btn.disabled = false;
+      btn.textContent = 'Retry';
+    }
+  } catch (e) {
+    result.style.cssText += ';display:block;color:var(--red);background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);';
+    result.textContent = 'Could not reach the server.';
+    btn.disabled = false;
+    btn.textContent = 'Retry';
+  }
+}
+
+function finishSetup() {
+  document.getElementById('setupWizard').style.display = 'none';
+  checkAuthAndInit();
 }
 </script>
 

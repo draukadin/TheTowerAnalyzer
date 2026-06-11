@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -103,6 +104,55 @@ public class SetupController {
         oAuthStateService.reinitialize();
 
         return ResponseEntity.ok(Map.of("step", "complete"));
+    }
+
+    @PostMapping("/mcp")
+    public ResponseEntity<Map<String, String>> setupMcp() {
+        Path mcpDir;
+        try {
+            mcpDir = getMcpDir();
+        } catch (URISyntaxException e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("status", "error", "message", "Could not determine install directory."));
+        }
+
+        Path nodeExe  = mcpDir.resolve("node.exe");
+        Path serverJs = mcpDir.resolve("server.js");
+
+        if (!Files.exists(nodeExe) || !Files.exists(serverJs)) {
+            return ResponseEntity.ok(Map.of("status", "not_found"));
+        }
+
+        try {
+            Process p = new ProcessBuilder(
+                    "cmd.exe", "/c", "claude", "mcp", "add", "tower-analyzer",
+                    "--", nodeExe.toString(), serverJs.toString()
+            ).redirectErrorStream(true).start();
+
+            String output = new String(p.getInputStream().readAllBytes());
+            int exit = p.waitFor();
+
+            if (exit == 0) {
+                return ResponseEntity.ok(Map.of("status", "ok"));
+            }
+            return ResponseEntity.ok(Map.of("status", "error", "message", output.isBlank()
+                    ? "claude mcp add exited with code " + exit
+                    : output.strip()));
+        } catch (IOException e) {
+            return ResponseEntity.ok(Map.of("status", "claude_not_found"));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("status", "error", "message", "Interrupted."));
+        }
+    }
+
+    // jpackage layout: <install>/app/<jar>  →  <install>/mcp
+    private Path getMcpDir() throws URISyntaxException {
+        Path codeSource = Path.of(SetupController.class.getProtectionDomain()
+                .getCodeSource().getLocation().toURI());
+        Path base = Files.isDirectory(codeSource) ? codeSource : codeSource.getParent();
+        return base.getParent().resolve("mcp");
     }
 
     record ConfigRequest(String backupFolderId, String battleReportsFolderId, String playerTrackerSheetId) {}
