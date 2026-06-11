@@ -342,7 +342,9 @@ This section tracks data that would improve personalized recommendations but is 
 **Entire sections not yet present**:
 - `run_active` boolean — needed before any reroll/level/merge recommendation
 - `workshop.*` — per-stat values with contributor breakdown (workshop + relics + module substats + cap)
-- `modules.effect_bans` — which stats are currently banned per type (must ask player)
+- `modules.equipped` — which module in each slot, level, rarity, substats, locked slots
+- `modules.natural_epics` — owned natural epics per type with rarity and star count
+- `modules.effect_bans` — which stats are currently banned per type
 - `labs.*` — current levels of all module-relevant labs
 
 **Resolved gaps** (now available via `modules` in `get_tower_state`):
