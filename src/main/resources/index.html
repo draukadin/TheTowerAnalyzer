@@ -6045,7 +6045,33 @@ function renderAdminView() {
           <span id="backupStatus" style="font-size:13px;color:var(--muted)"></span>
         </div>
       </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-top:1rem">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Setup</div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <button class="btn btn-primary" onclick="showQrModal()">Show Tasker QR Code</button>
+        </div>
+      </div>
+    </div>
+    <!-- QR Code Modal -->
+    <div id="qrModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;
+         align-items:center;justify-content:center;" onclick="if(event.target===this)closeQrModal()">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+           padding:2rem;max-width:360px;width:90%;text-align:center">
+        <div style="font-size:14px;font-weight:600;margin-bottom:1.25rem">Tasker Battle Report QR Code</div>
+        <img src="/taskerBattleReportQrCode.png" alt="Tasker Battle Report QR Code"
+             style="width:100%;height:auto;border-radius:var(--radius-md)">
+        <button class="btn btn-secondary" style="margin-top:1.25rem;width:100%" onclick="closeQrModal()">Close</button>
+      </div>
     </div>`;
+}
+
+function showQrModal() {
+  const modal = document.getElementById('qrModal');
+  modal.style.display = 'flex';
+}
+
+function closeQrModal() {
+  document.getElementById('qrModal').style.display = 'none';
 }
 
 async function backupDatabase() {
