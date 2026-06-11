@@ -10,10 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -108,13 +109,7 @@ public class SetupController {
 
     @PostMapping("/mcp")
     public ResponseEntity<Map<String, String>> setupMcp() {
-        Path mcpDir;
-        try {
-            mcpDir = getMcpDir();
-        } catch (URISyntaxException e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("status", "error", "message", "Could not determine install directory."));
-        }
+        Path mcpDir = getMcpDir();
 
         Path nodeExe  = mcpDir.resolve("node.exe");
         Path serverJs = mcpDir.resolve("server.js");
@@ -123,9 +118,95 @@ public class SetupController {
             return ResponseEntity.ok(Map.of("status", "not_found"));
         }
 
+        // Try Claude Code CLI first, then fall back to Claude Desktop App config file
+        try {
+            String claudeCli = resolveClaudePath();
+            if (claudeCli != null) {
+                return registerViaCli(claudeCli, nodeExe, serverJs);
+            }
+        } catch (IOException e) {
+            // CLI not available — fall through to Desktop config
+        }
+
+        Path desktopConfig = resolveDesktopConfigPath();
+        if (desktopConfig != null) {
+            return registerViaDesktopConfig(desktopConfig, nodeExe, serverJs);
+        }
+
+        return ResponseEntity.ok(Map.of("status", "claude_not_found"));
+    }
+
+    // jpackage bundles the JRE at <install>/runtime, so java.home -> <install>/mcp
+    private Path getMcpDir() {
+        return Path.of(System.getProperty("java.home")).getParent().resolve("mcp");
+    }
+
+    // Resolve the claude CLI path. Checks PATH via where.exe (exit-code gated) then
+    // known install locations, since the jpackage launcher may not inherit full user PATH.
+    private String resolveClaudePath() throws IOException {
+        try {
+            Process where = new ProcessBuilder("where.exe", "claude")
+                    .redirectErrorStream(true).start();
+            String result = new String(where.getInputStream().readAllBytes()).trim();
+            int exit = where.waitFor();
+            if (exit == 0 && !result.isBlank()) {
+                return result.lines().findFirst().orElse(null);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        String appData   = System.getenv("APPDATA");
+        String localData = System.getenv("LOCALAPPDATA");
+        List<Path> candidates = new ArrayList<>();
+        if (appData != null) {
+            candidates.add(Path.of(appData, "npm", "claude.cmd"));
+            candidates.add(Path.of(appData, "npm", "claude"));
+        }
+        if (localData != null) {
+            candidates.add(Path.of(localData, "Programs", "claude", "claude.exe"));
+        }
+        for (Path candidate : candidates) {
+            if (Files.exists(candidate)) return candidate.toString();
+        }
+        return null;
+    }
+
+    // Locate the Claude Desktop App config file. Checks the standard Electron path first,
+    // then MSIX/Windows Store virtualized AppData (AnthropicPBC.Claude_* package family).
+    private Path resolveDesktopConfigPath() {
+        String appData   = System.getenv("APPDATA");
+        String localData = System.getenv("LOCALAPPDATA");
+
+        if (appData != null) {
+            Path standard = Path.of(appData, "Claude");
+            if (Files.exists(standard)) {
+                return standard.resolve("claude_desktop_config.json");
+            }
+        }
+
+        // MSIX/Windows Store: %LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude
+        if (localData != null) {
+            Path packages = Path.of(localData, "Packages");
+            if (Files.exists(packages)) {
+                try {
+                    return Files.list(packages)
+                            .filter(p -> p.getFileName().toString().toLowerCase().contains("claude"))
+                            .map(p -> p.resolve("LocalCache").resolve("Roaming").resolve("Claude"))
+                            .filter(Files::exists)
+                            .findFirst()
+                            .map(p -> p.resolve("claude_desktop_config.json"))
+                            .orElse(null);
+                } catch (IOException ignored) {}
+            }
+        }
+        return null;
+    }
+
+    private ResponseEntity<Map<String, String>> registerViaCli(String claudePath, Path nodeExe, Path serverJs) {
         try {
             Process p = new ProcessBuilder(
-                    "cmd.exe", "/c", "claude", "mcp", "add", "tower-analyzer",
+                    claudePath, "mcp", "add", "tower-analyzer",
                     "--", nodeExe.toString(), serverJs.toString()
             ).redirectErrorStream(true).start();
 
@@ -139,7 +220,7 @@ public class SetupController {
                     ? "claude mcp add exited with code " + exit
                     : output.strip()));
         } catch (IOException e) {
-            return ResponseEntity.ok(Map.of("status", "claude_not_found"));
+            return ResponseEntity.ok(Map.of("status", "claude_not_found", "message", "tried: " + claudePath));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return ResponseEntity.internalServerError()
@@ -147,12 +228,29 @@ public class SetupController {
         }
     }
 
-    // jpackage layout: <install>/app/<jar>  →  <install>/mcp
-    private Path getMcpDir() throws URISyntaxException {
-        Path codeSource = Path.of(SetupController.class.getProtectionDomain()
-                .getCodeSource().getLocation().toURI());
-        Path base = Files.isDirectory(codeSource) ? codeSource : codeSource.getParent();
-        return base.getParent().resolve("mcp");
+    @SuppressWarnings("unchecked")
+    private ResponseEntity<Map<String, String>> registerViaDesktopConfig(Path configFile, Path nodeExe, Path serverJs) {
+        try {
+            Map<String, Object> config;
+            if (Files.exists(configFile)) {
+                config = new HashMap<>(objectMapper.readValue(configFile.toFile(), Map.class));
+            } else {
+                config = new HashMap<>();
+            }
+
+            Map<String, Object> mcpServers = new HashMap<>(
+                    (Map<String, Object>) config.getOrDefault("mcpServers", new HashMap<>()));
+            mcpServers.put("tower-analyzer", Map.of(
+                    "command", nodeExe.toString(),
+                    "args", List.of(serverJs.toString())
+            ));
+            config.put("mcpServers", mcpServers);
+
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(configFile.toFile(), config);
+            return ResponseEntity.ok(Map.of("status", "ok"));
+        } catch (IOException e) {
+            return ResponseEntity.ok(Map.of("status", "error", "message", "Could not write Claude Desktop config: " + e.getMessage()));
+        }
     }
 
     record ConfigRequest(String backupFolderId, String battleReportsFolderId, String playerTrackerSheetId) {}

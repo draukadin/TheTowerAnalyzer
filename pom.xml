@@ -134,7 +134,7 @@
                             <!-- ── Step 3: stage mcp/ + node.exe into mcp-bundle/ ── -->
                             <execution>
                                 <id>stage-mcp-bundle</id>
-                                <phase>prepare-package</phase>
+                                <phase>package</phase>
                                 <goals><goal>run</goal></goals>
                                 <configuration>
                                     <target>
@@ -210,7 +210,7 @@
                                         <argument>--java-options</argument>
                                         <argument>-Djava.awt.headless=true</argument>
                                         <argument>--app-content</argument>
-                                        <argument>${mcp.bundle.dir}</argument>
+                                        <argument>${mcp.bundle.dir}/mcp</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -221,7 +221,7 @@
             </build>
             <properties>
                 <installer.version>1.0.0</installer.version>
-                <nodejs.version>20.19.0</nodejs.version>
+                <nodejs.version>24.16.0</nodejs.version>
                 <nodejs.dir>node-v${nodejs.version}-win-x64</nodejs.dir>
                 <nodejs.zip>${project.build.directory}/${nodejs.dir}.zip</nodejs.zip>
                 <nodejs.extracted>${project.build.directory}/nodejs</nodejs.extracted>

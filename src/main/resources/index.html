@@ -6047,8 +6047,14 @@ function renderAdminView() {
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-top:1rem">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Setup</div>
-        <div style="display:flex;align-items:center;gap:1rem">
-          <button class="btn btn-primary" onclick="showQrModal()">Show Tasker QR Code</button>
+        <div style="display:flex;flex-direction:column;gap:0.75rem">
+          <div style="display:flex;align-items:center;gap:1rem">
+            <button class="btn btn-primary" onclick="showQrModal()">Show Tasker QR Code</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <button class="btn btn-primary" onclick="showMcpSetupModal()">Setup Claude MCP Server</button>
+            <span id="mcpAdminStatus" style="font-size:13px;color:var(--muted)"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -6061,6 +6067,24 @@ function renderAdminView() {
         <img src="/taskerBattleReportQrCode.png" alt="Tasker Battle Report QR Code"
              style="width:100%;height:auto;border-radius:var(--radius-md)">
         <button class="btn btn-secondary" style="margin-top:1.25rem;width:100%" onclick="closeQrModal()">Close</button>
+      </div>
+    </div>
+    <!-- Claude MCP Setup Modal -->
+    <div id="mcpModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;
+         align-items:center;justify-content:center;" onclick="if(event.target===this)closeMcpModal()">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+           padding:2rem;max-width:420px;width:90%;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:0.5rem">Setup Claude MCP Server</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:1.25rem">
+          Registers this app as an MCP server in your Claude Code config by running
+          <span style="font-family:var(--mono);color:var(--accent)">claude mcp add tower-analyzer</span>.
+          Claude Code must already be installed.
+        </div>
+        <div id="mcpModalResult" style="display:none;font-size:13px;margin-bottom:1rem;border-radius:8px;padding:10px 14px;"></div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+          <button class="btn" onclick="closeMcpModal()">Close</button>
+          <button id="mcpModalBtn" class="btn btn-primary" onclick="runMcpSetup('mcpModalBtn','mcpModalResult','mcpAdminStatus')">Register</button>
+        </div>
       </div>
     </div>`;
 }
@@ -6354,9 +6378,21 @@ async function submitConfig() {
   }
 }
 
-async function setupMcp() {
-  const btn    = document.getElementById('mcpBtn');
-  const result = document.getElementById('mcpResult');
+function showMcpSetupModal() {
+  document.getElementById('mcpModalResult').style.display = 'none';
+  const btn = document.getElementById('mcpModalBtn');
+  btn.disabled = false;
+  btn.textContent = 'Register';
+  document.getElementById('mcpModal').style.display = 'flex';
+}
+
+function closeMcpModal() {
+  document.getElementById('mcpModal').style.display = 'none';
+}
+
+async function runMcpSetup(btnId, resultId, statusId) {
+  const btn    = document.getElementById(btnId);
+  const result = document.getElementById(resultId);
 
   btn.disabled = true;
   btn.textContent = 'Registering…';
@@ -6368,12 +6404,12 @@ async function setupMcp() {
 
     if (data.status === 'ok') {
       result.style.cssText += ';display:block;color:var(--green);background:rgba(80,200,120,0.1);border:1px solid rgba(80,200,120,0.25);';
-      result.textContent = '✓ MCP server registered successfully. Restart Claude Code to pick it up.';
+      result.textContent = '✓ MCP server registered successfully. Restart Claude to pick it up.';
       btn.textContent = 'Done';
-      setTimeout(finishSetup, 1800);
+      if (statusId) document.getElementById(statusId).textContent = '✓ Registered';
     } else if (data.status === 'claude_not_found') {
       result.style.cssText += ';display:block;color:var(--gold);background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.25);';
-      result.textContent = 'Claude Code was not found on PATH. Install it first, then run: claude mcp add tower-analyzer';
+      result.textContent = 'Claude was not found. Is the Claude Desktop App or Claude Code installed?';
       btn.disabled = false;
       btn.textContent = 'Retry';
     } else if (data.status === 'not_found') {
@@ -6393,6 +6429,14 @@ async function setupMcp() {
     btn.disabled = false;
     btn.textContent = 'Retry';
   }
+}
+
+// Called from setup wizard step 3
+function setupMcp() {
+  runMcpSetup('mcpBtn', 'mcpResult', null).then(() => {
+    const btn = document.getElementById('mcpBtn');
+    if (btn.textContent === 'Done') setTimeout(finishSetup, 1800);
+  });
 }
 
 function finishSetup() {
