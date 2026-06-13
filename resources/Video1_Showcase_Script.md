@@ -27,7 +27,7 @@ The problem is, The Tower doesn't give you great tools to answer that question. 
 
 That's exactly the problem TheTowerAnalyzer was built to solve.
 
-In this video I'm going to show you everything the app does and why, if you're serious about your Tower progression, this might be one of the most useful tools you add to your setup."
+In this video I'm going to show you everything the app does and why, if you're serious about tracking your Tower performance, this might be one of the most useful tools you add to your setup."
 
 [VISUAL: Transition to the app running with real data loaded.]
 
@@ -69,11 +69,11 @@ The app is organized into six sections across the top: Labs, Upgrades, Modules, 
 
 **NARRATION:**
 
-"Let's start with Battle Reports — the core of the app. After fetching from Google Drive, every run you've submitted shows up in this sidebar. Each entry shows the run type, the wave you reached, your coin total, the cell count, the date, and how the run ended. At a glance you can already see patterns just scrolling through the list.
+"Let's start with Battle Reports — the core of the app. After fetching from Google Drive, every run you've submitted shows up in this sidebar.  They have been downloaded from your google drive, parsed and stored in a local database.  Each entry shows the run type, the wave you reached, your coin total, the cell count, the date, and how the run ended. At a glance you can already see patterns just scrolling through the list.
 
 You can filter by run type at the top — so if you want to look at just your Tournament runs or just your Farming runs in isolation, one click gets you there.
 
-[VISUAL: Click on the T10_Wave7,651 Farming run to open it. Land on the Stats tab.]
+[VISUAL: Click on the T10_Wave7,615 Farming run to open it. Land on the Stats tab.]
 
 Click any report and you get three tabs: Stats, Diagnosis, and Compare. Let's go through each one.
 
@@ -83,25 +83,46 @@ Stats is the full breakdown of the run. Up top you get the headline numbers — 
 
 Then below that you get the full damage breakdown — every damage source ranked by contribution and percentage, and every kill source ranked the same way. And at the bottom, your defense and economy breakdown — what blocked damage and where your coins actually came from.
 
-This is the kind of data The Tower just doesn't surface on its own. You finished a run at wave 7,651 — but do you know that Orbs accounted for 1% of your damage while Chain Lightning accounted for 14%? Or that Golden Tower was your second biggest coin source? You do now.
+This is the kind of data The Tower just doesn't surface on its own. You finished a run at wave 7,615 — but do you know that Orbs accounted for 69% of your damage while Chain Lightning accounted for 20%? Or that Golden Tower was your second biggest coin source? You do now.
 
 [VISUAL: Click the Diagnosis tab.]
 
-The Diagnosis tab is where it gets really interesting. The app doesn't just show you numbers — it actually analyzes the run and tells you what's going on. Here it's flagged an Orb Layer Collapse at medium severity: Orbs only accounted for 24.9% of kills, well below the 25% threshold, with the primary AoE anchor failing to maintain coverage.
+The Diagnosis tab is where it gets really interesting. The app doesn't just show you numbers — it actually analyzes the run and tells you what's going on. Here it's flagged an Orb Layer Collapse at medium confidence: Orbs only accounted for 23.8% of kills, below the 25% threshold, with the primary AoE anchor failing to maintain coverage.
 
 [VISUAL: Scroll down through the Secondary Observations list.]
 
 Below the primary diagnosis there are secondary observations — 26 of them in this run. Kill share breakdown, enemy composition, damage intake split, wall regen architecture, blocking breakdown, regen breakdown. Each one is a specific, actionable insight derived from the data in the battle report about how the run actually played out.
 
-This is the feature that really sets TheTowerAnalyzer apart. It's not just recording your data — it's reading your data and telling you what it means.
+This is the feature that really sets TheTowerAnalyzer apart. It's not just recording your data — it's reading your data and telling you what it means.  However, since a Battle Report isn't a time series report of when things happened there are some limitation to what can be derived from the data and the accuracy of the observations.
 
 [VISUAL: Click the Compare tab. Show the comparison against T10_Wave7,618 — version 3.3.0.]
 
-The Compare tab lets you put any two runs side by side with a delta column showing the difference for every field. Wave, coins, cells, damage, kills, records, every damage source — all compared directly. Here I'm comparing my most recent run against the previous one, and I can immediately see cells earned is up 300, coins per hour is up 5,388, but my Smart Missiles damage is down 39 — which combined with the Orb collapse diagnosis starts to tell a story about what changed between those two runs.
+The Compare tab lets you put any two runs side by side with a delta column showing the difference for every field. Wave, coins, cells, damage, kills, records, every damage source — all compared directly. Here I'm comparing my most recent run against the previous one, and I can immediately see cells earned is down 880, coins per hour is up 390B and in both runs I was killed by a Fast — If we go down to Damage Taken we start to get a clue that maybe the Diagnosis of the Orb Collapse wasn't correct.  In the most recent run 1.42q damage taken.  In the previous run on version 3.3.0, 2.07q damage taken.  650T less despite a 3 wave difference.  This means the tower got hit really hard after the wall failed and didn't have a chance to recover.  If we look down a bit further we see that Life Steal is 0.0 while in the previous run life-steal healed 364.81T.  Tower health regen is also telling the same story.  0.0 healing in the latest run and 6.06T in the previous run.  This is actually starting to look like my tower failed because the boss took out the wall, took out most of the tower health and a fast got the final blow.  Since I don't watch my runs all the time I did n0t see what actually killed me.  But by comparing reports I can see that my latest upgrades have started preventing the chipping from multiple enemies and has revealed that I have a health pool issue since I am getting "killed by bosses".  That leads us nicely to the version tracker where we can verify if the above hypothesis is over the target.
 
 [VISUAL: Show the Version Tracker sub-page briefly.]
 
-And the Version Tracker sub-page maps all your runs to the version of your Tower configuration they were recorded against — so when you make a significant change to your build, you can cleanly separate the data before and after."
+And the Version Tracker sub-page maps all your runs to the version of your Tower configuration they were recorded against — so when you make a significant change to your build, you can cleanly separate the data before and after.
+
+We were looking at versions 3.3.0 vs 3.3.5. and we can see what changed between the two versions.  A large improvement to EALS, Attack Speed lab up a level, Recovery Package chance doesn't really matter since I don't use GComp for farming runs, but I do for tournaments which is why that lab is going.  Attack Speed+ got 4 more levels back on version 3.3.3.  Chrono Field duration got another second which is getting me closer to pCF.  The Cannon and Core modules picked up a level.  The only two or three things that I can point to that indicate my tower's control of normal enemies have improved are the Attack Speed+ and Attack Speed lab improvements the EALS and Chrono Field.  
+
+Now you are probably thinking the version tracking is a pain because you have to manually keep track of what changed.  If we jump over to the Labs section and mark that we have gotten EHLS to 20, Attack Speed to 72 and Chrono Field Duration to 22.  And in the Workshop+ we have enough coins to buy another level of Health+ and Health Regen+  And in the workshop lets buy 2 levels of EHLS.  Now go back to the Version Tracker.
+
+[VISUAL: Point to the 'Process Pending Changes (3)' button in the top right of the Version Tracker page.]
+
+That version history doesn't require any manual tracking either. See this button — Process Pending Changes? The app monitors your Tower state in the background and accumulates a running list of every change it detects when you update something in the labs, workshop, bots, modules, or guardian chips. When you've made a meaningful set of upgrades and you're ready to record them as a new version, you click this.
+
+[VISUAL: Click Process Pending Changes. The modal opens showing three separate LAB Damage rows — 0→1, 1→2, 2→3.]
+
+The modal shows every individual change it caught. Here it detected that I leveled up three labs the two Defense+ enhancements and the two levels of EHLS.  Since it does track every individual change EHLS has two entries.
+
+[VISUAL: Consolidate the two rows into a single row showing 250→252.]
+
+Before saving you can consolidate those down to a single row — EHLS went from 250 to 252, which is the only thing that matters for the history. Give it a version number, choose whether this is a Patch, Minor, or Major change depending on how significant the upgrades are, and click Add Version.
+Since I haven't done anything that is a significant/structural upgrade like pCF or getting my DW/BH/GT in sync this is going to be a patch. And we go to 3.3.6 since the most current version is 3.3.5.
+
+[VISUAL: Modal closes. Version Tracker now shows the new version entry in the list.]
+
+The Google Sheet version updates automatically, the new entry is recorded in your history, and from this point every run you submit via tasker is tagged with this version. That's what makes the Compare tab meaningful over time — you always know exactly what build a given run was recorded against, and you can see cleanly what change and analyze if it helped or not."
 
 ---
 
@@ -117,7 +138,7 @@ Every single workshop upgrade is listed here across three categories: Attack, De
 
 [VISUAL: Click the Utility tab to show the Utility upgrades — highlight Cash Bonus, Coin/Wave, Enemy Level Skip all maxed.]
 
-In the Utility view you can clearly see which upgrades are maxed out — full green progress bars all the way across — and which ones still have a long way to go. Enemy Attack Level Skip sitting at level 258 out of 999 with 556,000 coins to the next level tells you exactly what kind of investment is ahead.
+In the Utility view you can clearly see which upgrades are maxed out — full green progress bars all the way across — and which ones still have a long way to go. Enemy Attack Level Skip sitting at level 258 out of 699 with 556,000 coins to the next level tells you exactly what kind of investment is ahead.
 
 [VISUAL: Click Hide Maxed — the list collapses from the full Utility view down to just Enemy Attack Level Skip and Enemy Health Level Skip.]
 
@@ -137,77 +158,103 @@ And this is what it looks like after. 49 billion coins invested across 18 items,
 
 ---
 
-### 3C — Modules
+### 3C — Upgrades: Ultimate Weapons
+
+[VISUAL: Click Upgrades in the nav. Navigate to UW Tracker. Show the full card grid with all 9 UWs.]
+
+**NARRATION:**
+
+"Still in the Upgrades section — the UW Tracker. If you've ever tried to plan your stone investment across multiple Ultimate Weapons at the same time, you know how quickly that math gets out of hand.
+
+Every UW gets its own card showing every stat — current level, your target level, stones invested so far, and stones remaining to hit your target. Up at the top you get the summary: 7 out of 9 UWs unlocked, 8,546 total stones invested, 4,462 stones left to reach all planned targets, and 346,676 to max everything.
+
+[VISUAL: Point to the Chrono Field card showing Duration at level 82 with target 25, and the stone cost.]
+
+The target system is what makes this actually useful. You set where you want each stat to be, and the app tells you exactly what it costs to get there — not just for one UW but across all of them simultaneously. Instead of juggling this in your head or a separate spreadsheet, you have one view that tells you your total stone budget."
+
+---
+
+### 3D — Modules
 
 [VISUAL: Click Modules in the nav. Show the Modules sub-page with data.]
 
 **NARRATION:**
 
-"The Modules section has two sub-pages. The main Modules view shows [DESCRIBE WHAT'S DISPLAYED — your module inventory, levels, stats, etc.].
+"Modules tracks your full module inventory — every module you own, its level, stats, and where it fits in your build. I'll keep this one brief since the real value in the Modules section is on the next page.
 
 [VISUAL: Navigate to Shard Rate.]
 
-Shard Rate is the one that'll save you a lot of mental math. [DESCRIBE WHAT SHARD RATE SHOWS — expected shard income, time-to-upgrade estimates, etc.]
-
-[VISUAL: Point out a specific data point or calculation.]
-
-[PERSONAL INSIGHT — e.g., 'I used to just guess at whether I had enough shards to hit my next upgrade target. This just tells me.']."
+Shard Rate takes your actual battle report data — the same reports you just saw in the Battle Reports section — and calculates your real shard earning rate per module type. From that it projects exactly how long it'll take to reach any target level you set. No more guessing whether you're a week or three months away from your next module upgrade. The data from your runs tells you."
 
 ---
 
-### 3D — Labs
+### 3E — Labs
 
-[VISUAL: Click Labs in the nav. Show the Labs sub-page.]
+[VISUAL: Click Labs in the nav. Show the Labs sub-page briefly.]
 
 **NARRATION:**
 
-"Labs is where it gets interesting for anyone trying to optimize their research. The main Labs view shows [DESCRIBE WHAT'S SHOWN].
+"The Labs section is where the app starts doing some genuinely heavy lifting on your behalf. There are four sub-pages — Labs, Lab Planner, Cell Income, and Lab Speed. I'll spend a bit more time here because these are the ones I find myself coming back to the most.
 
-[VISUAL: Navigate to Lab Planner.]
+[VISUAL: Navigate to Cell Income Tracker. Show the table with 49 runs analyzed over 30 days.]
 
-Lab Planner is the standout here. [DESCRIBE WHAT LAB PLANNER DOES — planning lab upgrade order, projecting outcomes, etc.]
+Cell Income Tracker pulls from your battle reports and gives you a clear picture of your actual cell earning rate — not a theoretical number, your real rate from real runs. Over the last 30 days: 49 runs analyzed, 5.76K average cells per hour, 2.71 million total cells, 55.22K per run. Every run is listed in the table with its date, tier, wave, cells earned, cells per hour, and duration, plus a relative bar so you can immediately spot which runs were outliers.
 
-[VISUAL: Navigate to Cell Income.]
+[VISUAL: Navigate to Lab Speed Affordability.]
 
-Cell Income tracks [DESCRIBE WHAT THIS SHOWS — lab cell generation rates, income over time, etc.].
+Lab Speed Affordability takes that cell income data and answers a question that comes up constantly: what speed multipliers can I actually afford to run without burning through my cell reserves?  The reason this matters is that cells are the one resource the game gives you no real visibility into. You know you're earning them, but you have no reliable way to project when you can increase your lab speed multipliers.
 
-[VISUAL: Navigate to Lab Speed.]
+[VISUAL: Point to the Dead Time section showing 51.3% dead time.]
 
-And Lab Speed shows [DESCRIBE]. Taken together, these three give you a much clearer picture of how to prioritize your research than just eyeballing it in-game."
+It starts with dead time — the percentage of calendar time when you aren't actively earning cells. Right now 51.3% of calendar time is dead time, which means farming is not running as efficiently as it could.
+
+[VISUAL: Point to the Optimal Combination section showing x3/x3/x3/x2/x2.]
+
+Below that it shows the optimal speed combination across all five lab slots — the highest multipliers you can sustain given your effective cell income. Right now that's x3/x3/x3/x2/x2, costing 2.73K cells per hour with a net of 95.15 cells per hour after the cost. It also shows the farming speeds — what the slots are set to while you're actively running — and flags that the farming configuration draws down reserves at 2.42K cells per hour above what you're earning, so if you enter your cells on hand it'll estimate when you'd run dry.
+
+[VISUAL: Navigate to Lab Planner. Show the five-slot view.]
+
+And Lab Planner is exactly what it sounds like. Each of your five lab slots gets its own column showing the full research queue — what lab, what levels, how much it costs, how long it takes, and the coins per day burn rate for that slot. Total time, total cost, and coins per day are summarized at the top of each slot.
+
+[VISUAL: Point to Slot 3 with its long queue of 9 labs.]
+
+Slot 3 has 9 labs queued taking 115 days at 13 hours. Slot 1 is 120 days. All five slots together are burning 106.60 billion coins per day. That's the kind of forward visibility that lets you actually plan around your lab investment rather than just queuing the next thing and hoping for the best."
 
 ---
 
-### 3E — Collectibles
+### 3F — Collectibles
 
 [VISUAL: Click Collectibles in the nav. Show the Relics sub-page.]
 
 **NARRATION:**
 
-"Collectibles covers the two major collect-and-upgrade systems in The Tower. The Relics page shows [DESCRIBE WHAT'S DISPLAYED — your relic inventory, levels, progress, etc.].
+"Collectibles is a lighter section but worth a quick mention, especially for anyone who's been playing long enough to accumulate relics.
+
+The Relics page tracks every relic you own — which ones you have, their current levels, and the bonuses they provide. As the game introduces new relics over time, you can add them to the app.  In the future I'll be exploring options for a way to get the new relics with just a button click.
 
 [VISUAL: Navigate to Cosmetics.]
 
-Cosmetics is [DESCRIBE — tracking cosmetic progress, completion status, etc.]. [PERSONAL TAKE on whether this is more of a completionist tracker or has gameplay relevance]."
+Cosmetics works the same way — tracks your cosmetic collection with bonus rates per item.  If you're a completionist this is satisfying to have. If you're purely performance-focused, you'll mostly care about the bonus values rather than the collection side.  In the future I'll be exploring options for a way to get the new relics with just a button click."
 
 ---
 
-### 3F — Meta
+### 3G — Meta
 
 [VISUAL: Click Meta in the nav. Show the Currencies sub-page.]
 
 **NARRATION:**
 
-"The Meta section is probably the one that surprises people the most when they first see it. Currencies shows [DESCRIBE — tracking your various currency balances over time, income rates, etc.].
+"Last section — Meta. Three sub-pages, all quick hits.
+
+Currencies tracks your gem, coin, stone, and shard balances.  As you update and click save it will keep a timestamped snapshot that is useful for tracking for shards accumulation over time in the shard rate section under modules.  This is helpful for giving you an estimate of when you will have enough modules to reach your target goal.
 
 [VISUAL: Navigate to Tier Fit.]
 
-Tier Fit is genuinely one of my favorite things in this app. [DESCRIBE WHAT TIER FIT DOES — evaluating how well your current build fits your tier, identifying mismatches, etc.]
+Tier personal best tracks your personal bests per tier for regular tiers and your dissonance runs.  The boost that is applied to tournaments is also calculated and shown here.
 
 [VISUAL: Navigate to Battle Conditions.]
 
-And Battle Conditions shows [DESCRIBE — what modifiers or conditions were active during your runs, how they affected performance, etc.].
-
-[PERSONAL INSIGHT — What does having this meta-level view change about how you approach the game?]"
+And Battle Conditions logs the modifiers that were active during tournaments — useful for understanding why a particular tournament run performed differently.  You can use this to figure out which battle conditions are a hard counter to your tower and then explore what labs or UW or module upgrades/sub-stats will help you mitigate that battle condition."
 
 ---
 
@@ -222,11 +269,11 @@ And Battle Conditions shows [DESCRIBE — what modifiers or conditions were acti
 
 "Let me give you a concrete example of what this actually looks like in practice.
 
-[TELL A SPECIFIC STORY — something like: 'A few weeks ago I was convinced my module setup was optimal. I'd been running the same configuration for a while and I felt like my waves had plateaued. I pulled up TheTowerAnalyzer, looked at my trend data, and compared my last 20 runs against the 20 before that. What I found was that my average wave had actually dropped by about [X] waves since I made a workshop change I thought was an upgrade.']
+I've been trying to figure out why I am going back and forth between Platinum and Champion.  By correlating the battle reports to the battle conditions in effect I was able to determine that Armored Enemies was giving me a hard time.  This prompted me to start devoting some development to Death Wave and the Armor Stripping lab.  It still needs more development, but now I know what I need to improve and I understand why I got 440 waves when before I had gotten 606 waves.  I still haven't solved the Armored enemies problem but the things I have been doing got a new personal best in Champion of 726 waves.
 
 [VISUAL: Show the actual data that illustrates this story if you have it.]
 
-Without this data, I probably would have kept running that configuration for another month. Instead I had a clear signal to go back and re-evaluate.
+Without this data, I probably would have kept researching labs that would only be helping my tower perform under optimal battle conditions instead of making improvements to the areas where my tower has been really under-performing.
 
 That's what TheTowerAnalyzer is really about — it turns your gut feelings into something you can actually verify."
 
@@ -243,21 +290,13 @@ That's what TheTowerAnalyzer is really about — it turns your gut feelings into
 
 "Before I wrap up, there's one more thing I want to show you — and this one is a bit different.
 
-TheTowerAnalyzer ships with an MCP server. If you're not familiar with MCP, it's a protocol that lets AI assistants like Claude connect directly to external tools and data sources. What that means here is that Claude can query your TheTowerAnalyzer data directly — your actual runs, your actual workshop levels, your actual lab state — and use all of it as context when you ask it questions.
+TheTowerAnalyzer ships with an MCP server. If you're not familiar with MCP, it's a protocol that lets AI assistants like Claude connect directly to external tools and data sources. This is powered by 16 tools the MCP server exposes — everything from recent run summaries and diagnosis data, to your full workshop and lab state, to shard rates, cell income, tier personal bests, tournament history, and more. Claude can pull exactly what it needs for a given question without flooding its context with data it doesn't need.
 
 [VISUAL: Type a question into Claude Desktop — something like 'Based on my recent farming runs, what does my damage breakdown tell you about my build?' or 'What should I prioritize in my lab this week?']
 
-So instead of asking Claude a generic question about The Tower and getting a generic answer, you can ask it about your Tower — and it answers with specifics pulled from your data in real time.
+So instead of asking Claude a generic question about The Tower and getting a generic answer, you can ask it about your Tower — and it answers with specifics pulled from your data in real time.  The main TheTowerAnalyzer pipeline works completely without it — the MCP server is an optional layer on top.
 
-[VISUAL: Claude responds with specific insights drawn from the user's actual data — wave numbers, lab levels, module names, diagnosis findings — not generic advice.]
-
-This is powered by 16 tools the MCP server exposes — everything from recent run summaries and diagnosis data, to your full workshop and lab state, to shard rates, cell income, tier personal bests, tournament history, and more. Claude can pull exactly what it needs for a given question without flooding its context with data it doesn't need.
-
-[VISUAL: Show one more example — something like asking Claude to help draft a version history entry based on pending changes.]
-
-There's even a workflow for tracking changes to your Tower configuration over time and having Claude help you draft version history entries — so you always know exactly what changed between your builds and when.
-
-Setting up the MCP server requires a bit of Node.js configuration, so I've dedicated a separate video to it — link is in the description. If you're already comfortable with developer tools, it's not a long setup. And if you're not, the main TheTowerAnalyzer pipeline works completely without it — the MCP server is an optional layer on top."
+I'm also working on creating skills that will give the AI agent specific expertise in how certain facets of the game work such as modules, ultimate weapons, labs, bots, guardian chips, etc.  That way instead of providing kind of correct evaluations based on what it knows from its model training or what it assumes about what words mean, it will be able to provide expert advice.  If you are interested, I would be happy to take your input and incorporate it into an AI skill.  It doesn't require any coding:  It's just a text file with markdown formating that tells the agent what the rules of the game are and how different facets of it interact.  These rules and opinions help it give accurate advice tailored to your tower because the skills tell what are the most optimal things to do and the mcp server gives it your tower's current state what is possible in near and medium term to improve your performance."
 
 ---
 
@@ -276,7 +315,7 @@ There's also a Google Doc reference guide with screenshots for every step of the
 
 [VISUAL: On-screen cards pointing to Video 2 and Video 3.]
 
-If you found this useful, a like helps other Tower players find it. And if you've got questions or you want to show off your own data once you get it set up, drop it in the comments — I'd love to see it."
+If you found this useful, a like helps other Tower players find it. And if you've got questions or you want to show off your own data once you get it set up, drop it in the comments — I'd love to see it.  If you find a bug or have a feature request, use Git Hub to create an issue.  The link to the repository issues page is in the description."  
 
 [VISUAL: Fade out or cut to end screen with Video 2 and Video 3 cards.]
 
@@ -303,18 +342,20 @@ looks like when it's all in one place.
 🔧 Full setup guide (install, Google Drive, make.com, Tasker): [LINK TO VIDEO 2]
 🤖 MCP server setup (Claude AI integration): [LINK TO VIDEO 3]
 📄 Step-by-step reference doc with screenshots: [LINK TO GOOGLE DOC]
-📦 Get TheTowerAnalyzer: https://github.com/draukadin/TheTowerAnlyzer/releases/tag/v0.0.1-beta2
+📦 Get TheTowerAnalyzer: https://github.com/draukadin/TheTowerAnlyzer/releases/
+ Report an Issue or request a feature: https://github.com/draukadin/TheTowerAnlyzer/issues
 
 CHAPTERS:
 0:00 — Introduction
-[X:XX] — How TheTowerAnalyzer works
+[X:XX] — How The Tower Analyzer works
 [X:XX] — Battle Reports: Stats, Diagnosis & Compare
+[X:XX] — Version Tracker & Pending Changes
 [X:XX] — Upgrades: Workshop & Workshop+
-[X:XX] — Modules
-[X:XX] — Labs
+[X:XX] — Upgrades: Ultimate Weapons
+[X:XX] — Modules & Shard Rate
+[X:XX] — Labs: Cell Income, Lab Speed & Lab Planner
 [X:XX] — Collectibles
 [X:XX] — Meta
-[X:XX] — Real-world example
 [X:XX] — MCP Server: Claude AI integration
 [X:XX] — How to get started
 ```
