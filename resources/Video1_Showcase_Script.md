@@ -29,6 +29,8 @@ That's exactly the problem TheTowerAnalyzer was built to solve.
 
 In this video I'm going to show you everything the app does and why, if you're serious about tracking your Tower performance, this might be one of the most useful tools you add to your setup."
 
+[NOTE: Use "The Tower Analyzer" (spaced) consistently throughout the recording — this matches the app's own header.]
+
 [VISUAL: Transition to the app running with real data loaded.]
 
 ---
@@ -97,7 +99,7 @@ This is the feature that really sets TheTowerAnalyzer apart. It's not just recor
 
 [VISUAL: Click the Compare tab. Show the comparison against T10_Wave7,618 — version 3.3.0.]
 
-The Compare tab lets you put any two runs side by side with a delta column showing the difference for every field. Wave, coins, cells, damage, kills, records, every damage source — all compared directly. Here I'm comparing my most recent run against the previous one, and I can immediately see cells earned is down 880, coins per hour is up 390B and in both runs I was killed by a Fast — If we go down to Damage Taken we start to get a clue that maybe the Diagnosis of the Orb Collapse wasn't correct.  In the most recent run 1.42q damage taken.  In the previous run on version 3.3.0, 2.07q damage taken.  650T less despite a 3 wave difference.  This means the tower got hit really hard after the wall failed and didn't have a chance to recover.  If we look down a bit further we see that Life Steal is 0.0 while in the previous run life-steal healed 364.81T.  Tower health regen is also telling the same story.  0.0 healing in the latest run and 6.06T in the previous run.  This is actually starting to look like my tower failed because the boss took out the wall, took out most of the tower health and a fast got the final blow.  Since I don't watch my runs all the time I did n0t see what actually killed me.  But by comparing reports I can see that my latest upgrades have started preventing the chipping from multiple enemies and has revealed that I have a health pool issue since I am getting "killed by bosses".  That leads us nicely to the version tracker where we can verify if the above hypothesis is over the target.
+The Compare tab lets you put any two runs side by side with a delta column showing the difference for every field. Wave, coins, cells, damage, kills, records, every damage source — all compared directly. Here I'm comparing my most recent run against the previous one, and I can immediately see cells earned is down 880, coins per hour is up 390B and in both runs I was killed by a Fast — If we go down to Damage Taken we start to get a clue that maybe the Diagnosis of the Orb Collapse wasn't correct.  In the most recent run 1.42q damage taken.  In the previous run on version 3.3.0, 2.07q damage taken.  650T less despite a 3 wave difference.  This means the tower got hit really hard after the wall failed and didn't have a chance to recover.  If we look down a bit further we see that Life Steal is 0.0 while in the previous run life-steal healed 364.81T.  Tower health regen is also telling the same story.  0.0 healing in the latest run and 6.06T in the previous run.  This is actually starting to look like my tower failed because the boss took out the wall, took out most of the tower health and a fast got the final blow.  Since I don't watch my runs all the time I did not see what actually killed me.  But by comparing reports I can see that my latest upgrades have started preventing the chipping from multiple enemies and has revealed that I have a health pool issue since I am getting "killed by bosses".  That leads us nicely to the version tracker where we can verify if the above hypothesis is over the target.
 
 [VISUAL: Show the Version Tracker sub-page briefly.]
 
@@ -168,7 +170,7 @@ And this is what it looks like after. 49 billion coins invested across 18 items,
 
 Every UW gets its own card showing every stat — current level, your target level, stones invested so far, and stones remaining to hit your target. Up at the top you get the summary: 7 out of 9 UWs unlocked, 8,546 total stones invested, 4,462 stones left to reach all planned targets, and 346,676 to max everything.
 
-[VISUAL: Point to the Chrono Field card showing Duration at level 82 with target 25, and the stone cost.]
+[VISUAL: Point to the Chrono Field card showing Speed at level 80 with target 80, and the stones invested vs stones to max.]
 
 The target system is what makes this actually useful. You set where you want each stat to be, and the app tells you exactly what it costs to get there — not just for one UW but across all of them simultaneously. Instead of juggling this in your head or a separate spreadsheet, you have one view that tells you your total stone budget."
 
@@ -230,11 +232,11 @@ Slot 3 has 9 labs queued taking 115 days at 13 hours. Slot 1 is 120 days. All fi
 
 "Collectibles is a lighter section but worth a quick mention, especially for anyone who's been playing long enough to accumulate relics.
 
-The Relics page tracks every relic you own — which ones you have, their current levels, and the bonuses they provide. As the game introduces new relics over time, you can add them to the app.  In the future I'll be exploring options for a way to get the new relics with just a button click.
+The Relics page tracks every relic you own — which ones you have, their current levels, and the bonuses they provide. As the game introduces new relics over time, you can add them to the app. In the future I'll be exploring options for a way to get new relics added with just a button click.
 
 [VISUAL: Navigate to Cosmetics.]
 
-Cosmetics works the same way — tracks your cosmetic collection with bonus rates per item.  If you're a completionist this is satisfying to have. If you're purely performance-focused, you'll mostly care about the bonus values rather than the collection side.  In the future I'll be exploring options for a way to get the new relics with just a button click."
+Cosmetics works the same way — tracks your cosmetic collection with bonus rates per item. If you're a completionist this is satisfying to have. If you're purely performance-focused, you'll mostly care about the bonus values rather than the collection side.  Similar to relics, I'll be exploring making updating this with new cosmetics with just a button click."
 
 ---
 
@@ -246,7 +248,7 @@ Cosmetics works the same way — tracks your cosmetic collection with bonus rate
 
 "Last section — Meta. Three sub-pages, all quick hits.
 
-Currencies tracks your gem, coin, stone, and shard balances.  As you update and click save it will keep a timestamped snapshot that is useful for tracking for shards accumulation over time in the shard rate section under modules.  This is helpful for giving you an estimate of when you will have enough modules to reach your target goal.
+Currencies tracks your gem, coin, stone, and shard balances. Each time you update your balances in the app and save, it records a timestamped snapshot — useful for tracking shard accumulation over time, which feeds into the shard rate projections under Modules to give you an estimate of when you'll have enough to reach your target module level.
 
 [VISUAL: Navigate to Tier Fit.]
 
@@ -275,7 +277,7 @@ I've been trying to figure out why I am going back and forth between Platinum an
 
 Without this data, I probably would have kept researching labs that would only be helping my tower perform under optimal battle conditions instead of making improvements to the areas where my tower has been really under-performing.
 
-That's what TheTowerAnalyzer is really about — it turns your gut feelings into something you can actually verify."
+That's what The Tower Analyzer is really about — it turns your gut feelings into something you can actually verify or highlight facets about your tower that are being neglected."
 
 ---
 
@@ -290,13 +292,13 @@ That's what TheTowerAnalyzer is really about — it turns your gut feelings into
 
 "Before I wrap up, there's one more thing I want to show you — and this one is a bit different.
 
-TheTowerAnalyzer ships with an MCP server. If you're not familiar with MCP, it's a protocol that lets AI assistants like Claude connect directly to external tools and data sources. This is powered by 16 tools the MCP server exposes — everything from recent run summaries and diagnosis data, to your full workshop and lab state, to shard rates, cell income, tier personal bests, tournament history, and more. Claude can pull exactly what it needs for a given question without flooding its context with data it doesn't need.
+The Tower Analyzer ships with an MCP server. If you're not familiar with MCP, it's a protocol that lets AI assistants like Claude connect directly to external tools and data sources. This is powered by 16 tools the MCP server exposes — everything from recent run summaries and diagnosis data, to your full workshop and lab state, to shard rates, cell income, tier personal bests, tournament history, and more. Claude can pull exactly what it needs for a given question without flooding its context with data it doesn't need.
 
 [VISUAL: Type a question into Claude Desktop — something like 'Based on my recent farming runs, what does my damage breakdown tell you about my build?' or 'What should I prioritize in my lab this week?']
 
-So instead of asking Claude a generic question about The Tower and getting a generic answer, you can ask it about your Tower — and it answers with specifics pulled from your data in real time.  The main TheTowerAnalyzer pipeline works completely without it — the MCP server is an optional layer on top.
+So instead of asking Claude a generic question about The Tower and getting a generic answer, you can ask it about your Tower — and it answers with specifics pulled from your data in real time. The main The Tower Analyzer pipeline works completely without it — the MCP server is an optional layer on top.
 
-I'm also working on creating skills that will give the AI agent specific expertise in how certain facets of the game work such as modules, ultimate weapons, labs, bots, guardian chips, etc.  That way instead of providing kind of correct evaluations based on what it knows from its model training or what it assumes about what words mean, it will be able to provide expert advice.  If you are interested, I would be happy to take your input and incorporate it into an AI skill.  It doesn't require any coding:  It's just a text file with markdown formating that tells the agent what the rules of the game are and how different facets of it interact.  These rules and opinions help it give accurate advice tailored to your tower because the skills tell what are the most optimal things to do and the mcp server gives it your tower's current state what is possible in near and medium term to improve your performance."
+I'm also working on creating skills that will give the AI agent specific expertise in how certain facets of the game work — modules, ultimate weapons, labs, bots, guardian chips, and more. That way instead of providing broadly correct evaluations based on general model training, it will be able to provide expert advice tailored to your tower. If you're interested in contributing, I'd be happy to take your input and incorporate it into an AI skill. It doesn't require any coding — it's just a text file with markdown formatting that tells the agent what the rules of the game are and how different facets interact. These rules and opinions help it give accurate, personalized advice because the skills define what optimal play looks like, and the MCP server gives it your tower's current state."
 
 ---
 
@@ -315,7 +317,7 @@ There's also a Google Doc reference guide with screenshots for every step of the
 
 [VISUAL: On-screen cards pointing to Video 2 and Video 3.]
 
-If you found this useful, a like helps other Tower players find it. And if you've got questions or you want to show off your own data once you get it set up, drop it in the comments — I'd love to see it.  If you find a bug or have a feature request, use Git Hub to create an issue.  The link to the repository issues page is in the description."  
+If you found this useful, a like helps other Tower players find it. If you find a bug or have a feature request, the link to the GitHub issues page is in the description. And if you've got questions or you want to show off your own data once you get it set up, drop it in the comments — I'd love to see it."  
 
 [VISUAL: Fade out or cut to end screen with Video 2 and Video 3 cards.]
 
@@ -343,7 +345,7 @@ looks like when it's all in one place.
 🤖 MCP server setup (Claude AI integration): [LINK TO VIDEO 3]
 📄 Step-by-step reference doc with screenshots: [LINK TO GOOGLE DOC]
 📦 Get TheTowerAnalyzer: https://github.com/draukadin/TheTowerAnlyzer/releases/
- Report an Issue or request a feature: https://github.com/draukadin/TheTowerAnlyzer/issues
+🐛 Report an issue or request a feature: https://github.com/draukadin/TheTowerAnlyzer/issues
 
 CHAPTERS:
 0:00 — Introduction
@@ -354,8 +356,9 @@ CHAPTERS:
 [X:XX] — Upgrades: Ultimate Weapons
 [X:XX] — Modules & Shard Rate
 [X:XX] — Labs: Cell Income, Lab Speed & Lab Planner
-[X:XX] — Collectibles
-[X:XX] — Meta
+[X:XX] — Collectibles - Relics & Cosmetics
+[X:XX] — Meta - Currencies, Tier Personal Best & Battle Conditions 
+[X:XX] — Real-world example
 [X:XX] — MCP Server: Claude AI integration
 [X:XX] — How to get started
 ```
