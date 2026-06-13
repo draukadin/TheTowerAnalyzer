@@ -22,6 +22,8 @@ public final class BattleReportDriveFile extends DriveFile {
         return String.join(System.lineSeparator(), lines);
     }
 
+    //TODO add handling here to default to 1.0.0 if the file name doesn't contain a version
+    //TODO verify if the sheet doesn't have a version in B2 it the file name format is _Battle_Report_2026-05-21_21-58-09.txt
     private static String getTowerEra(String name) {
         return String.format("Tower Era\t%s", name.split("_")[0].replace("v", ""));
     }
