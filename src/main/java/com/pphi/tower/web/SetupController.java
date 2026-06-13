@@ -6,6 +6,7 @@ import com.pphi.tower.config.DriveProperties;
 import com.pphi.tower.config.OAuthStateService;
 import com.pphi.tower.config.SetupStateService;
 import com.pphi.tower.config.SheetProperties;
+import com.pphi.tower.service.ClaudeSkillsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,15 +27,17 @@ public class SetupController {
     private final SheetProperties sheets;
     private final OAuthStateService oAuthStateService;
     private final ObjectMapper objectMapper;
+    private final ClaudeSkillsService claudeSkillsService;
 
     public SetupController(SetupStateService setupState, DriveProperties drive,
                            SheetProperties sheets, OAuthStateService oAuthStateService,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper, ClaudeSkillsService claudeSkillsService) {
         this.setupState = setupState;
         this.drive = drive;
         this.sheets = sheets;
         this.oAuthStateService = oAuthStateService;
         this.objectMapper = objectMapper;
+        this.claudeSkillsService = claudeSkillsService;
     }
 
     @GetMapping("/status")
@@ -122,7 +125,11 @@ public class SetupController {
         try {
             String claudeCli = resolveClaudePath();
             if (claudeCli != null) {
-                return registerViaCli(claudeCli, nodeExe, serverJs);
+                ResponseEntity<Map<String, String>> result = registerViaCli(claudeCli, nodeExe, serverJs);
+                if ("ok".equals(result.getBody() != null ? result.getBody().get("status") : null)) {
+                    claudeSkillsService.installBundledSkills();
+                }
+                return result;
             }
         } catch (IOException e) {
             // CLI not available — fall through to Desktop config
@@ -130,7 +137,11 @@ public class SetupController {
 
         Path desktopConfig = resolveDesktopConfigPath();
         if (desktopConfig != null) {
-            return registerViaDesktopConfig(desktopConfig, nodeExe, serverJs);
+            ResponseEntity<Map<String, String>> result = registerViaDesktopConfig(desktopConfig, nodeExe, serverJs);
+            if ("ok".equals(result.getBody() != null ? result.getBody().get("status") : null)) {
+                claudeSkillsService.installBundledSkills();
+            }
+            return result;
         }
 
         return ResponseEntity.ok(Map.of("status", "claude_not_found"));
