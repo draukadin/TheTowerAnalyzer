@@ -4040,7 +4040,9 @@ function wsPlusStatusHtml(item) {
 function renderPlusUnlockCard(p) {
   const pct = p.threshold > 0 ? Math.min(100, Math.round((p.spent / p.threshold) * 100)) : 0;
   const done = pct >= 100;
-  const labDoneHtml = `<div class="gate${p.labCompleted?' done':''}">🔬 Lab: ${p.labCompleted ? '✓ Done' : 'Not yet'}</div>`;
+  const labDoneHtml = p.hasLabRequirement
+    ? `<div class="gate${p.labCompleted?' done':''}">🔬 Lab: ${p.labCompleted ? '✓ Done' : 'Not Completed'}</div>`
+    : '';
   const spendHtml = `
     <div class="ws-plus-spend-bar-wrap">
       <div class="ws-plus-spend-bar">

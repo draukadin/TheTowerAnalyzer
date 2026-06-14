@@ -56,6 +56,7 @@ public class WorkshopRepository {
             double threshold,
             double spent,
             double remaining,
+            boolean hasLabRequirement,
             boolean labCompleted
     ) {}
 
@@ -207,6 +208,7 @@ public class WorkshopRepository {
                     COALESCE(wi.plus_unlock_cumulative_spend, 0) AS threshold,
                     COALESCE(cat_spend.total_spent, 0) AS spent,
                     MAX(0.0, COALESCE(wi.plus_unlock_cumulative_spend, 0) - COALESCE(cat_spend.total_spent, 0)) AS remaining,
+                    CASE WHEN wi.plus_unlock_lab_name IS NOT NULL THEN 1 ELSE 0 END AS has_lab_requirement,
                     CASE WHEN wi.plus_unlock_lab_name IS NULL THEN 1
                          WHEN lab_state.current_level > 0    THEN 1
                          ELSE 0 END AS lab_completed
@@ -243,6 +245,7 @@ public class WorkshopRepository {
                         rs.getDouble("threshold"),
                         rs.getDouble("spent"),
                         rs.getDouble("remaining"),
+                        rs.getInt("has_lab_requirement") == 1,
                         rs.getInt("lab_completed") == 1));
     }
 
