@@ -15,7 +15,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-installer:
+  build-windows:
     runs-on: windows-latest
     permissions:
       contents: write
@@ -49,7 +49,6 @@ jobs:
       - name: Create Windows installer
         shell: pwsh
         run: |
-          $ver = "${{ steps.version.outputs.APP_VERSION }}"
           jpackage `
             --input target `
             --dest target/installer `
@@ -66,25 +65,107 @@ jobs:
             --icon src/main/resources/app.ico `
             --java-options "-Djava.awt.headless=true"
 
-      - name: Upload installer artifact
+      - name: Upload Windows installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}-installer
+          name: TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}-windows
           path: target/installer/*.exe
 
+  build-mac:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            ver="${{ github.ref_name }}"
+            ver="${ver#v}"
+          else
+            ver="${{ github.event.inputs.version }}"
+          fi
+          echo "APP_VERSION=$ver" >> $GITHUB_OUTPUT
+          installer_ver="${ver%%-*}"
+          echo "INSTALLER_VERSION=$installer_ver" >> $GITHUB_OUTPUT
+
+      - name: Build fat JAR
+        run: mvn package -DskipTests "-Drevision=${{ steps.version.outputs.APP_VERSION }}"
+
+      - name: Create Mac installer
+        run: |
+          jpackage \
+            --input target \
+            --dest target/installer \
+            --name "TheTowerAnalyzer" \
+            --main-jar the-tower-analyzer.jar \
+            --type dmg \
+            --app-version "${{ steps.version.outputs.INSTALLER_VERSION }}" \
+            --description "The Tower Analyzer" \
+            --vendor "Draukadin" \
+            --icon src/main/resources/app.icns \
+            --java-options "-Djava.awt.headless=true"
+
+      - name: Upload Mac installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}-mac
+          path: target/installer/*.dmg
+
+  release:
+    needs: [build-windows, build-mac]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Resolve version
+        id: version
+        run: |
+          ver="${{ github.ref_name }}"
+          echo "APP_VERSION=${ver#v}" >> $GITHUB_OUTPUT
+
+      - name: Download Windows installer
+        uses: actions/download-artifact@v4
+        with:
+          name: TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}-windows
+          path: installers
+
+      - name: Download Mac installer
+        uses: actions/download-artifact@v4
+        with:
+          name: TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}-mac
+          path: installers
+
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           name: TheTowerAnalyzer ${{ steps.version.outputs.APP_VERSION }}
           body: |
             ## Installation
 
-            1. Download and run `TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}.exe`
-            2. The app will open your browser automatically to `http://localhost:8080`
-            3. On first launch a setup wizard will guide you through:
-               - Pasting your Google OAuth 2.0 credentials (from Google Cloud Console)
-               - Entering your Google Drive folder IDs and Sheets spreadsheet ID
-            4. After setup the app is ready to use — no manual file editing required
-          files: target/installer/*.exe
+            - **Windows:** Download and run `TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}.exe`
+            - **Mac:** Download and open `TheTowerAnalyzer-${{ steps.version.outputs.APP_VERSION }}.dmg`
+
+            > **Mac users:** If Gatekeeper blocks the app, right-click the app and choose **Open** to bypass the warning.
+
+            The app will open your browser automatically to `http://localhost:8080`
+
+            On first launch a setup wizard will guide you through:
+            - Pasting your Google OAuth 2.0 credentials (from Google Cloud Console)
+            - Entering your Google Drive folder IDs and Sheets spreadsheet ID
+
+            After setup the app is ready to use — no manual file editing required
+          files: installers/*
           generate_release_notes: true
