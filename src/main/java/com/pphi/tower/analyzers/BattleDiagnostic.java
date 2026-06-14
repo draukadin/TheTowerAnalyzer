@@ -217,7 +217,35 @@ public class BattleDiagnostic {
         // Ordered: most-specific / highest-evidence first. First match wins.
         // =========================================================================
 
-        // ── CHECK 1: Vampire Drain Lock ───────────────────────────────────────
+        // ── CHECK 1a: Vampire Active at Run End (healing fully suppressed) ────
+        // When both life steal AND tower regen are zero the Vampire's healing-suppression aura
+        // was active at the moment the run ended. Vampires suppress all tower healing (life steal
+        // + passive regen) while attacking, but wall regen is unaffected — so zero on both
+        // tower-side sources is a HIGH-confidence signal independent of the killedBy value.
+        // Requires totals.vampires() > 0 to rule out Glass Cannon builds (common at T14+) that
+        // legitimately carry near-zero tower regen and life steal and die to a non-Vampire enemy.
+        // Also requires wallRegenRaw > 0 to exclude Defense Dissonance runs where all regen is zero.
+        boolean vampiresSpawned = totals != null && totals.vampires() > 0;
+        if (lifeStealRaw == 0.0 && towerRegenRaw == 0.0 && wallRegenRaw > 0.0 && vampiresSpawned) {
+            return result(
+                    FailureType.VAMPIRE_DRAIN_LOCK, Confidence.MEDIUM,
+                    String.format(
+                            "Life Steal and Tower Regen were both fully suppressed to zero — the "
+                                    + "hallmark of an active Vampire aura at the time the run ended. "
+                                    + "Vampires nullify all tower-side healing (life steal + passive regen) "
+                                    + "while attacking; only Wall Regen (%s) remained. "
+                                    + "With recovery eliminated the tower's effective health decayed until "
+                                    + "collapse was inevitable, regardless of what enemy landed the final blow. "
+                                    + "Confidence is MEDIUM rather than HIGH because Glass Cannon and Hybrid "
+                                    + "builds (common at T14+) can legitimately carry zero tower-side regen — "
+                                    + "without baseline Glass Cannon battle reports for comparison, a one-shot "
+                                    + "death while a Vampire was on the field cannot be fully ruled out.",
+                            formatRaw(wallRegenRaw)),
+                    swarmShare, heavyShare, lifeStealRaw, totalDmgTaken,
+                    blockEfficiency, vampireDensity, rangedDensity, observations);
+        }
+
+        // ── CHECK 1b: Vampire Drain Lock ──────────────────────────────────────
         // Core signals: killed by Vampire + life steal suppressed below survival threshold.
         // Confidence raised by: vampire density (more frequent drain events) and elite-killer
         // share (low projDmg + CL = Vampire outlasted the tower's ability to burn it down).
