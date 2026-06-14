@@ -182,7 +182,7 @@ public class GuardianRepository {
                     JOIN guardian_chip c ON c.id = s.chip_id WHERE s.id = ?
                     """, chipStatId);
             String entity = row.get("name") + " " + row.get("label");
-            pendingRepo.record("GUARDIAN", entity, String.valueOf(oldLevel), String.valueOf(level), null);
+            pendingRepo.record("CHIP", entity, String.valueOf(oldLevel), String.valueOf(level), null);
         }
     }
 
