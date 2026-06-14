@@ -505,6 +505,18 @@
   .ver-chip.cat-relic .cat{color:#c878f0;}
   .ver-chip.cat-other{border-color:var(--border);background:transparent;}
   .ver-chip.cat-other .cat{color:var(--muted);}
+  .ver-chip.cat-workshop{border-color:rgba(245,158,66,.25);background:rgba(245,158,66,.07);}
+  .ver-chip.cat-workshop .cat{color:var(--orange);}
+  .ver-chip.cat-workshop_plus{border-color:rgba(245,158,66,.4);background:rgba(245,158,66,.13);}
+  .ver-chip.cat-workshop_plus .cat{color:var(--orange);}
+  .ver-chip.cat-bot{border-color:rgba(45,212,191,.25);background:rgba(45,212,191,.07);}
+  .ver-chip.cat-bot .cat{color:#2dd4bf;}
+  .ver-chip.cat-chip{border-color:rgba(242,107,107,.25);background:rgba(242,107,107,.07);}
+  .ver-chip.cat-chip .cat{color:var(--red);}
+  .ver-chip.cat-cards{border-color:rgba(52,211,153,.25);background:rgba(52,211,153,.07);}
+  .ver-chip.cat-cards .cat{color:#34d399;}
+  .ver-chip.cat-masteries{border-color:rgba(232,121,249,.25);background:rgba(232,121,249,.07);}
+  .ver-chip.cat-masteries .cat{color:#e879f9;}
 
   /* ── Cards ──────────────────────────────── */
   .cards-summary-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1.25rem;}
@@ -3367,10 +3379,11 @@ function closeAddVersionModal() {
 function addVerChangeRow(existing) {
   const id = Date.now() + Math.random();
   verChangeRows.push(id);
-  const cats = ['LAB','UW','MODULE','RELIC','OTHER'];
-  const catOptions = cats.map(c => `<option${existing && existing.category===c?' selected':''}>${c}</option>`).join('');
+  const cats = ['LAB','UW','MODULE','RELIC','WORKSHOP','WORKSHOP_PLUS','BOT','CHIP','CARDS','MASTERIES','OTHER'];
+  const catDisplay = {'WORKSHOP_PLUS':'WORKSHOP+'};
+  const catOptions = cats.map(c => `<option value="${c}"${existing && existing.category===c?' selected':''}>${catDisplay[c]||c}</option>`).join('');
   document.getElementById('verChangeRowsEl').insertAdjacentHTML('beforeend', `
-    <div id="vcr-${id}" style="display:grid;grid-template-columns:90px 1fr 80px 80px 1fr auto;gap:6px;align-items:center;margin-bottom:6px">
+    <div id="vcr-${id}" style="display:grid;grid-template-columns:110px 1fr 80px 80px 1fr auto;gap:6px;align-items:center;margin-bottom:6px">
       <select class="form-input" id="vcr-cat-${id}" style="font-size:12px;padding:5px 6px">${catOptions}</select>
       <input class="form-input" id="vcr-name-${id}" type="text" placeholder="Entity name" style="font-size:12px;padding:5px 8px" value="${existing ? existing.entityName : ''}">
       <input class="form-input" id="vcr-old-${id}"  type="text" placeholder="Old" style="font-size:12px;padding:5px 8px" value="${existing && existing.oldValue != null ? existing.oldValue : ''}">
@@ -3497,11 +3510,12 @@ async function renderVersionTrackerView() {
     const tbody = document.getElementById('verTbody');
     versions.forEach((v, idx) => {
       const catClass = c => 'cat-' + c.toLowerCase();
+      const catLabel = c => c === 'WORKSHOP_PLUS' ? 'WORKSHOP+' : c;
       const changeChips = v.changes.map(ch => {
         const arrow = ch.oldValue != null ? `${ch.oldValue} → ${ch.newValue}` : ch.newValue;
         const notes = ch.notes ? ` <span style="color:var(--muted);font-size:10px">(${ch.notes})</span>` : '';
         return `<span class="ver-chip ${catClass(ch.category)}">
-          <span class="cat">${ch.category}</span>
+          <span class="cat">${catLabel(ch.category)}</span>
           <span>${ch.entityName}: ${arrow}${notes}</span>
         </span>`;
       }).join('');
@@ -3616,7 +3630,7 @@ checkSetupThenAuth();
 </script>
 
 <div id="addVersionModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddVersionModal()">
-  <div class="modal" style="max-width:700px;width:95vw">
+  <div class="modal" style="max-width:800px;width:95vw">
     <div class="modal-title" id="verModalTitle">Add New Version</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div class="form-group" style="margin:0">
@@ -3634,7 +3648,7 @@ checkSetupThenAuth();
       <label class="form-label" style="margin:0">Changes</label>
       <button class="btn" style="font-size:11px;padding:3px 10px" onclick="addVerChangeRow()">+ Add Row</button>
     </div>
-    <div style="font-size:10px;color:var(--muted);display:grid;grid-template-columns:90px 1fr 80px 80px 1fr auto;gap:6px;padding:0 0 4px 0;letter-spacing:.5px;text-transform:uppercase">
+    <div style="font-size:10px;color:var(--muted);display:grid;grid-template-columns:110px 1fr 80px 80px 1fr auto;gap:6px;padding:0 0 4px 0;letter-spacing:.5px;text-transform:uppercase">
       <span>Category</span><span>Entity Name</span><span>Old</span><span>New</span><span>Notes</span><span></span>
     </div>
     <div id="verChangeRowsEl" style="max-height:300px;overflow-y:auto"></div>
