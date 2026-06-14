@@ -335,32 +335,31 @@ If you found this useful, a like helps other Tower players find it. If you find 
 ### Suggested YouTube Description Template
 
 ```
-TheTowerAnalyzer automatically tracks and analyzes your battle report data so you can actually 
+The Tower Analyzer automatically tracks and analyzes your battle report data so you can actually 
 see your progression over time — no manual spreadsheets required.
 
 In this video I walk through every feature of the app and show you what your Tower data 
 looks like when it's all in one place.
 
-🔧 Full setup guide (install, Google Drive, make.com, Tasker): [LINK TO VIDEO 2]
-🤖 MCP server setup (Claude AI integration): [LINK TO VIDEO 3]
-📄 Step-by-step reference doc with screenshots: [LINK TO GOOGLE DOC]
+🔧 Full setup guide (install, Google Drive, make.com, Tasker): https://youtu.be/v3OYoIjikTg
+🤖 MCP server setup (Claude AI integration): TBD
+📄 Step-by-step reference doc with screenshots: https://docs.google.com/document/d/13f9vEJNlJCbV6_4pJ_Q6r4jHB-ok3OSPMVXlYRhQ7zk/copy
 📦 Get TheTowerAnalyzer: https://github.com/draukadin/TheTowerAnlyzer/releases/
 🐛 Report an issue or request a feature: https://github.com/draukadin/TheTowerAnlyzer/issues
 
 CHAPTERS:
 0:00 — Introduction
-[X:XX] — How The Tower Analyzer works
-[X:XX] — Battle Reports: Stats, Diagnosis & Compare
-[X:XX] — Version Tracker & Pending Changes
-[X:XX] — Upgrades: Workshop & Workshop+
-[X:XX] — Upgrades: Ultimate Weapons
-[X:XX] — Modules & Shard Rate
-[X:XX] — Labs: Cell Income, Lab Speed & Lab Planner
-[X:XX] — Collectibles - Relics & Cosmetics
-[X:XX] — Meta - Currencies, Tier Personal Best & Battle Conditions 
-[X:XX] — Real-world example
-[X:XX] — MCP Server: Claude AI integration
-[X:XX] — How to get started
+[0:44] — How The Tower Analyzer works
+[2:03] — Battle Reports: Stats, Diagnosis & Compare
+[8:45] — Version Tracker & Pending Changes
+[11:25] — Upgrades: Workshop & Workshop+
+[14:55] — Upgrades: Ultimate Weapons
+[16:30] — Modules & Shard Rate
+[18:17] — Labs: Cell Income, Lab Speed & Lab Planner
+[21:57] — Collectibles - Relics & Cosmetics
+[24:11] — Meta - Currencies, Tier Personal Best & Battle Conditions 
+[26:42] — MCP Server: Claude AI integration
+[31:30] — How to get started
 ```
 
 ---
