@@ -406,7 +406,7 @@
     border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);}
   .ws-table th{background:var(--surface2);padding:7px 12px;text-align:left;
     font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
-  .ws-table th.r{text-align:right;}
+  .ws-table th.r,.ws-table td.r{text-align:right;}
   .ws-table td{padding:7px 12px;border-top:1px solid var(--border);}
   .ws-table tr:hover td{background:var(--surface2);}
   .ws-table tr.ws-maxed td{opacity:.45;}
@@ -3973,11 +3973,13 @@ function renderWorkshopBody() {
       </div>
       <table class="ws-table">
         <thead><tr>
-          <th style="width:35%">Item</th>
-          <th>Level</th>
+          <th style="width:30%">Item</th>
+          <th class="r">Next Cost</th>
+          <th class="r">Level</th>
+          <th class="r">Target</th>
+          <th class="r">Cost to Target</th>
           <th class="r">Max</th>
           <th style="min-width:90px">Progress</th>
-          <th class="r">Next Cost</th>
           <th>Status</th>
         </tr></thead>
         <tbody>${catItems.map(item => renderWsRow(item, isPlus)).join('')}</tbody>
@@ -4006,20 +4008,34 @@ function renderWsRow(item, isPlus) {
 
   const rowClass = maxed ? 'ws-maxed' : locked ? 'ws-locked' : '';
 
+  const targetLevel = item.targetLevel ?? item.currentLevel;
+  const costToTarget = targetLevel !== '' && targetLevel > item.currentLevel
+    ? wsCostToTarget(item, disc, targetLevel)
+    : null;
+  const costToTargetHtml = costToTarget == null || costToTarget === 0
+    ? '<span style="color:var(--muted);font-size:11px">—</span>'
+    : `<span style="font-family:var(--mono);color:var(--gold)">${fmtCoins(costToTarget)}</span>`;
+
   return `<tr class="${rowClass}">
     <td style="font-weight:500">${escHtml(item.name)}</td>
-    <td>
+    <td class="r">${nextCostHtml}</td>
+    <td class="r">
       <input class="ws-level-input" type="number" min="0" max="${item.maxLevel}"
         value="${item.currentLevel}" ${locked ? 'disabled' : ''}
         onchange="wsUpdateLevel(${item.id}, +this.value)">
     </td>
+    <td class="r">
+      <input class="ws-level-input" type="number" min="${item.currentLevel + 1}" max="${item.maxLevel}"
+        value="${targetLevel}" placeholder="—" ${locked || maxed ? 'disabled' : ''}
+        onchange="wsSetTarget(${item.id}, this.value)">
+    </td>
+    <td class="r">${costToTargetHtml}</td>
     <td class="r" style="font-family:var(--mono);color:var(--muted)">${item.maxLevel}</td>
     <td>
       <div class="ws-progress">
         <div class="ws-progress-fill${maxed?' maxed':''}" style="width:${pct}%"></div>
       </div>
     </td>
-    <td class="r">${nextCostHtml}</td>
     <td>${statusHtml}</td>
   </tr>`;
 }
@@ -4119,6 +4135,36 @@ function wsNextCost(item, disc) {
   return entry ? entry.baseCost * disc : null;
 }
 
+function wsCostToTarget(item, disc, targetLevel) {
+  const costs = wsCostCache[item.id];
+  if (!costs || targetLevel <= item.currentLevel) return 0;
+  return costs
+    .filter(c => c.level > item.currentLevel && c.level <= targetLevel)
+    .reduce((s, c) => s + c.baseCost * disc, 0);
+}
+
+async function wsSetTarget(id, rawVal) {
+  const val = rawVal === '' ? null : Math.max(0, +rawVal);
+
+  // Optimistic update so the cost column refreshes immediately
+  const item = wsData.find(i => i.id === id);
+  if (item) item.targetLevel = val;
+
+  if (val !== null && !wsCostCache[id]) {
+    try {
+      const res = await fetch(`${API}/workshop/${id}/costs`);
+      wsCostCache[id] = await res.json();
+    } catch(_) {}
+  }
+
+  renderWorkshopBody();
+
+  fetch(`${API}/workshop/${id}/target-level`, {
+    method: 'PUT', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({targetLevel: val})
+  });
+}
+
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 function saveWsScroll() { sessionStorage.setItem('ws-scroll', document.getElementById('mainContent').scrollTop); }
@@ -4176,7 +4222,7 @@ function wsToggleHideMaxed() {
   renderWorkshopBody();
 }
 
-// Pre-fetch costs for Workshop+ items on first load so next-cost column populates
+// Pre-fetch costs for all items on first load so target-cost column populates immediately
 async function wsPrefetchAllCosts() {
   if (!wsData) return;
   await Promise.all(wsData.map(async item => {

@@ -541,6 +541,13 @@ public class DatabaseInitializer {
                 )
                 """);
 
+        // Migration: add target_level column for persisting per-item upgrade goals.
+        try {
+            jdbc.execute("ALTER TABLE workshop_item_state ADD COLUMN target_level INTEGER");
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
+
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS workshop_preset_unlock (
                     is_plus     INTEGER NOT NULL CHECK (is_plus IN (0, 1)) PRIMARY KEY,
