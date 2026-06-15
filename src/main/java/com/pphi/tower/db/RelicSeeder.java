@@ -305,10 +305,10 @@ public class RelicSeeder {
 
     private void relic(String name, String rarity, String type, String bonusStat,
                        double bonusValue, String obtainCondition, int owned) {
-        Long id = jdbc.queryForObject(
+        jdbc.update(
             "INSERT OR IGNORE INTO relic (name, rarity, type, bonus_stat, bonus_value, obtain_condition) " +
-            "VALUES (?,?,?,?,?,?) RETURNING id",
-            Long.class, name, rarity, type, bonusStat, bonusValue, obtainCondition);
+            "VALUES (?,?,?,?,?,?)", name, rarity, type, bonusStat, bonusValue, obtainCondition);
+        Long id = jdbc.queryForObject("SELECT id FROM relic WHERE name = ?", Long.class, name);
         if (id != null) {
             jdbc.update("INSERT OR IGNORE INTO relic_player_state (relic_id, owned) VALUES (?,?)", id, owned);
         }
