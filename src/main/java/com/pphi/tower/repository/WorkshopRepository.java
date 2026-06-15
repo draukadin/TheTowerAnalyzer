@@ -29,6 +29,7 @@ public class WorkshopRepository {
             int sortOrder,
             int maxLevel,
             int currentLevel,
+            Integer targetLevel,
             // Workshop (non-plus) unlock
             Long unlockGroupId,
             Double unlockGroupCost,
@@ -79,6 +80,7 @@ public class WorkshopRepository {
                     wi.id, wi.name, wc.name AS category, wi.is_plus,
                     wi.sort_order, wi.max_level,
                     COALESCE(wis.current_level, 0) AS current_level,
+                    wis.target_level,
                     wi.unlock_group_id,
                     wug.unlock_cost AS unlock_group_cost,
                     COALESCE(wugs.is_purchased, 0) AS unlock_group_purchased,
@@ -99,6 +101,7 @@ public class WorkshopRepository {
                         rs.getInt("sort_order"),
                         rs.getInt("max_level"),
                         rs.getInt("current_level"),
+                        rs.getObject("target_level") != null ? rs.getInt("target_level") : null,
                         rs.getObject("unlock_group_id") != null ? rs.getLong("unlock_group_id") : null,
                         rs.getObject("unlock_group_cost") != null ? rs.getDouble("unlock_group_cost") : null,
                         rs.getInt("unlock_group_purchased") == 1,
@@ -106,6 +109,15 @@ public class WorkshopRepository {
                         rs.getObject("plus_unlock_cumulative_spend") != null
                                 ? rs.getDouble("plus_unlock_cumulative_spend") : null
                 ));
+    }
+
+    /** Set (or clear) the target level for a Workshop item. */
+    @CacheEvict(value = "workshop", allEntries = true)
+    public void updateTargetLevel(long workshopItemId, Integer targetLevel) {
+        jdbc.update("""
+                INSERT INTO workshop_item_state (workshop_item_id, target_level) VALUES (?,?)
+                ON CONFLICT(workshop_item_id) DO UPDATE SET target_level = excluded.target_level
+                """, workshopItemId, targetLevel);
     }
 
     /** Level costs for a single item, ordered by level. */

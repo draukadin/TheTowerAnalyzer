@@ -36,6 +36,13 @@ public class WorkshopController {
         repo.updateLevel(id, req.level());
     }
 
+    record TargetLevelRequest(Integer targetLevel) {}
+
+    @PutMapping("/{id}/target-level")
+    public void updateTargetLevel(@PathVariable long id, @RequestBody TargetLevelRequest req) {
+        repo.updateTargetLevel(id, req.targetLevel());
+    }
+
     // ── Workshop (non-plus) unlock groups ─────────────────────────────────────
 
     @PostMapping("/unlock-groups/{groupId}/purchase")
