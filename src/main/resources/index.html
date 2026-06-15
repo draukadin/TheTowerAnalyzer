@@ -1960,9 +1960,7 @@ function renderUwStatRow(stat,uwUnlocked,isLocked,isUwPlus=false){
   const nextPreview=(!disabled&&!atMax&&stat.nextValue!=null&&stat.stonesToNext!=null)
     ?`<span class="uw-next-preview">${fmtStatVal(stat.label,stat.currentValue)} → ${fmtStatVal(stat.label,stat.nextValue)}</span> · ${stat.stonesToNext} stones`
     :'';
-  const lvlCell=atMax
-    ?`<span class="uw-max-label">${stat.maxLevel} ★</span>`
-    :mkSpin(stat.currentLevel,0,stat.maxLevel,disabled,`setStatLevelSpin(${stat.statId},__V__)`);
+  const lvlCell=mkSpin(stat.currentLevel,0,stat.maxLevel,disabled,`setStatLevelSpin(${stat.statId},__V__)`);
   const tgtCell=atMax
     ?`<span class="uw-max-label">—</span>`
     :mkSpin(stat.targetLevel,0,stat.maxLevel,disabled,`setTargetLevelSpin(${stat.statId},__V__)`);
@@ -4961,9 +4959,7 @@ function botCardHtml(bot) {
     const rowClass = (s.isBotPlus ? ' bot-plus-row' : '') + (locked ? ' bot-row-locked' : atMax ? ' bot-row-maxed' : '');
     const valClass = `bot-val${s.isBotPlus?' plus':''}`;
     const label    = `${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}`;
-    const lvlCell  = atMax
-      ? `<span class="bot-max-label">${s.maxLevel} ★</span>`
-      : mkSpin(curLvl,0,s.maxLevel,locked,`botSpinChange(${s.statId},__V__,${bot.id})`);
+    const lvlCell  = mkSpin(curLvl,0,s.maxLevel,locked,`botSpinChange(${s.statId},__V__,${bot.id})`);
     const nextCostCell = atMax
       ? `<span class="bot-max-label">—</span>`
       : (curEntry?.medalsToNext != null ? `${curEntry.medalsToNext.toLocaleString()} 🏅` : 'Max');
@@ -5135,9 +5131,7 @@ function renderBotsPresetsTab() {
         const atMax    = !locked && curLvl >= s.maxLevel;
         const rowClass = (s.isBotPlus?' bot-plus-row':'') + (locked?' bot-row-locked':(atMax?' bots-preset-row-maxed':''));
         const label    = `${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}`;
-        const lvlCell  = atMax
-          ? `<span class="bots-preset-max-label">${s.maxLevel} ★</span>`
-          : mkSpin(curLvl,0,s.maxLevel,locked,`botsPresetSetStatLevel(${preset.id},${s.statId},__V__)`);
+        const lvlCell  = mkSpin(curLvl,0,s.maxLevel,locked,`botsPresetSetStatLevel(${preset.id},${s.statId},__V__)`);
         const nextPreview = (!locked && !atMax && nextEntry)
           ? `<tr class="bots-preset-next-row${s.isBotPlus?' bot-plus-row':''}"><td></td>
                <td colspan="2"><span class="bots-preset-next-preview">${val} → ${fmtBotVal(nextEntry.value, s.valueUnit)}</span></td></tr>`
