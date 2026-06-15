@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="LOG_DIR" value="${APPDATA}/TheTowerAnalyzer/logs"/>
+    <!-- Windows: %APPDATA%\TheTowerAnalyzer\logs, Mac: ~/Library/Application Support/TheTowerAnalyzer/logs -->
+    <if condition='property("os.name").toLowerCase().contains("win")'>
+        <then><property name="LOG_DIR" value="${APPDATA}/TheTowerAnalyzer/logs"/></then>
+        <else><property name="LOG_DIR" value="${user.home}/Library/Application Support/TheTowerAnalyzer/logs"/></else>
+    </if>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>

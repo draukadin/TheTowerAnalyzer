@@ -71,6 +71,10 @@
             <artifactId>google-api-services-sheets</artifactId>
             <version>v4-rev20241203-2.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
