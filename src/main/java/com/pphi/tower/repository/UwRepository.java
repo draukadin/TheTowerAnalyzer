@@ -31,6 +31,7 @@ public class UwRepository {
             int currentLevel,
             int targetLevel,
             double currentValue,
+            Double nextValue,
             Integer stonesToNext,
             int stonesInvested,
             int stonesToMax,
@@ -67,6 +68,9 @@ public class UwRepository {
                     COALESCE(pl.current_level, 0)     AS current_level,
                     lv.value       AS current_value,
                     lv.stones_to_next,
+                    (SELECT lv5.value FROM uw_stat_level_value lv5
+                     WHERE lv5.uw_stat_id = s.id
+                       AND lv5.level = COALESCE(pl.current_level, 0) + 1) AS next_value,
                     COALESCE(tl.target_level, 0) AS target_level,
                     (SELECT COALESCE(SUM(lv2.stones_to_next), 0)
                      FROM uw_stat_level_value lv2
@@ -116,6 +120,9 @@ public class UwRepository {
             Integer stonesToNext = row.get("stones_to_next") != null
                     ? ((Number) row.get("stones_to_next")).intValue()
                     : null;
+            Double nextValue = row.get("next_value") != null
+                    ? ((Number) row.get("next_value")).doubleValue()
+                    : null;
 
             statsByUwId.get(uwId).add(new UwStatPlayerData(
                     ((Number) row.get("stat_id")).intValue(),
@@ -125,6 +132,7 @@ public class UwRepository {
                     ((Number) row.get("current_level")).intValue(),
                     ((Number) row.get("target_level")).intValue(),
                     ((Number) row.get("current_value")).doubleValue(),
+                    nextValue,
                     stonesToNext,
                     ((Number) row.get("stones_invested")).intValue(),
                     ((Number) row.get("stones_to_max")).intValue(),

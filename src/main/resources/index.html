@@ -204,10 +204,19 @@
   .uw-val{font-family:var(--mono);color:var(--accent);font-weight:600;min-width:70px;}
   .uw-stones{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;}
   .uw-lvl-cell{text-align:right;}
-  .uw-level-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;
-    color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:52px;}
-  .uw-level-select:disabled{opacity:0.4;cursor:not-allowed;}
+  .uw-level-spin{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;
+    color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);width:52px;text-align:center;}
+  .uw-level-spin:disabled{opacity:0.4;cursor:not-allowed;}
   .uw-row-locked td{opacity:0.38;}
+  .uw-next-row td{padding:1px 10px 5px;font-size:10px;color:var(--muted);font-family:var(--mono);}
+  .uw-next-row .uw-next-preview{color:var(--accent);opacity:0.75;}
+  .uw-row-maxed td{color:#f5c842;}
+  .uw-max-label{font-family:var(--mono);font-size:11px;color:#f5c842;font-weight:600;padding:2px 5px;}
+  .uw-filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
+  .uw-filter-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
+    border:1px solid var(--border2);font-size:11px;cursor:pointer;user-select:none;transition:opacity .15s;}
+  .uw-filter-pill.hidden-uw{opacity:0.38;text-decoration:line-through;}
+  .uw-filter-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);white-space:nowrap;}
   .uw-stones-total{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:1.25rem;}
   .uw-stones-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;
     padding:8px 14px;font-size:12px;}
@@ -1792,6 +1801,18 @@ const UW_FMT={
 function fmtUwN(v){return Number.isInteger(v)?v.toLocaleString():v;}
 function fmtStatVal(label,val){const f=UW_FMT[label];return f?f(val):String(val);}
 
+let uwHidden=new Set(JSON.parse(localStorage.getItem('uw-hidden')||'[]'));
+function uwToggleHidden(code){
+  if(uwHidden.has(code))uwHidden.delete(code);else uwHidden.add(code);
+  localStorage.setItem('uw-hidden',JSON.stringify([...uwHidden]));
+  document.querySelectorAll('.uw-filter-pill').forEach(p=>{
+    p.classList.toggle('hidden-uw',uwHidden.has(p.dataset.code));
+  });
+  document.querySelectorAll('.uw-card-wrap').forEach(w=>{
+    w.style.display=uwHidden.has(w.dataset.code)?'none':'';
+  });
+}
+
 async function renderUwView(){
   document.getElementById('mainContent').innerHTML=
     '<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading UW data…</div>';
@@ -1803,6 +1824,13 @@ async function renderUwView(){
     const totalNextAll=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesToMax,0);
     const totalToTargets=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesToTarget,0);
     const unlocked=uws.filter(u=>u.unlocked).length;
+    const filterPills=uws.map(u=>{
+      const color=UW_COLORS[u.code]||'var(--accent)';
+      const hidden=uwHidden.has(u.code);
+      return `<span class="uw-filter-pill${hidden?' hidden-uw':''}" data-code="${u.code}"
+        style="border-color:${color};color:${color}" onclick="uwToggleHidden('${u.code}')">
+        ${u.name}</span>`;
+    }).join('');
     document.getElementById('mainContent').innerHTML=`
       <div class="report-title" style="margin-bottom:1rem">Ultimate Weapons</div>
       <div class="uw-stones-total">
@@ -1811,7 +1839,8 @@ async function renderUwView(){
         <div class="uw-stones-chip"><div class="lbl">Stones to Planned Targets</div><div class="val" style="color:var(--orange)">${totalToTargets.toLocaleString()}</div></div>
         <div class="uw-stones-chip"><div class="lbl">Stones to Max Everything</div><div class="val">${totalNextAll.toLocaleString()}</div></div>
       </div>
-      <div class="uw-grid">${uws.map(renderUwCard).join('')}</div>`;
+      <div class="uw-filter-bar"><span class="uw-filter-lbl">Show:</span>${filterPills}</div>
+      <div class="uw-grid">${uws.map(u=>`<div class="uw-card-wrap" data-code="${u.code}" style="${uwHidden.has(u.code)?'display:none':''}">${renderUwCard(u)}</div>`).join('')}</div>`;
   }catch(e){
     document.getElementById('mainContent').innerHTML=
       `<div class="empty-state"><div class="icon">⚠️</div><h2>Failed to load</h2><p>${e.message}</p></div>`;
@@ -1864,27 +1893,32 @@ function renderUwStatRow(stat,uwUnlocked,isLocked,isUwPlus=false){
     :(stat.targetLevel>0&&stat.targetLevel<=stat.currentLevel
       ?'<span style="color:var(--green);font-size:10px">Met</span>'
       :'—'));
-  const lvlOpts=Array.from({length:stat.maxLevel+1},(_,i)=>
-    `<option value="${i}"${i===stat.currentLevel?' selected':''}>${String(i).padStart(2,'0')}</option>`
-  ).join('');
-  const tgtOpts=Array.from({length:stat.maxLevel+1},(_,i)=>
-    `<option value="${i}"${i===stat.targetLevel?' selected':''}>${String(i).padStart(2,'0')}</option>`
-  ).join('');
-  return `<tr class="${disabled?'uw-row-locked':''}${isUwPlus?' uw-plus-row':''}">
+  const atMax=!disabled&&stat.currentLevel>=stat.maxLevel;
+  const rowClass=`${disabled?'uw-row-locked':atMax?'uw-row-maxed':''}${isUwPlus?' uw-plus-row':''}`;
+  const nextRowClass=`uw-next-row${isUwPlus?' uw-plus-row':''}`;
+  const nextPreview=(!disabled&&!atMax&&stat.nextValue!=null&&stat.stonesToNext!=null)
+    ?`<span class="uw-next-preview">${fmtStatVal(stat.label,stat.currentValue)} → ${fmtStatVal(stat.label,stat.nextValue)}</span> · ${stat.stonesToNext} stones`
+    :'';
+  const lvlCell=atMax
+    ?`<span class="uw-max-label">${stat.maxLevel} ★</span>`
+    :`<input type="number" class="uw-level-spin" ${disabled?'disabled':''}
+        min="0" max="${stat.maxLevel}" value="${stat.currentLevel}"
+        onchange="setStatLevel(${stat.statId},Math.min(Math.max(parseInt(this.value)||0,0),${stat.maxLevel}))">`;
+  const tgtCell=atMax
+    ?`<span class="uw-max-label">—</span>`
+    :`<input type="number" class="uw-level-spin" ${disabled?'disabled':''}
+        min="0" max="${stat.maxLevel}" value="${stat.targetLevel}"
+        onchange="setTargetLevel(${stat.statId},Math.min(Math.max(parseInt(this.value)||0,0),${stat.maxLevel}))">`;
+  return `<tr class="${rowClass}">
     <td>${stat.label}</td>
     <td class="uw-val">${valDisplay}</td>
-    <td class="uw-lvl-cell">
-      <select class="uw-level-select" ${disabled?'disabled':''}
-        onchange="setStatLevel(${stat.statId},parseInt(this.value))">${lvlOpts}</select>
-    </td>
-    <td class="uw-lvl-cell">
-      <select class="uw-level-select" ${disabled?'disabled':''}
-        onchange="setTargetLevel(${stat.statId},parseInt(this.value))">${tgtOpts}</select>
-    </td>
+    <td class="uw-lvl-cell">${lvlCell}</td>
+    <td class="uw-lvl-cell">${tgtCell}</td>
     <td class="uw-stones">${toTargetDisplay}</td>
     <td class="uw-stones">${investedDisplay}</td>
     <td class="uw-stones">${toMaxDisplay}</td>
-  </tr>`;
+  </tr>
+  ${nextPreview?`<tr class="${nextRowClass}"><td></td><td colspan="6">${nextPreview}</td></tr>`:''}`;
 }
 
 function saveUwScroll(){sessionStorage.setItem('uw-scroll',document.getElementById('mainContent').scrollTop);}
