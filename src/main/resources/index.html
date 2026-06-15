@@ -204,9 +204,13 @@
   .uw-val{font-family:var(--mono);color:var(--accent);font-weight:600;min-width:70px;}
   .uw-stones{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;}
   .uw-lvl-cell{text-align:right;}
-  .uw-level-spin{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;
-    color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);width:52px;text-align:center;}
-  .uw-level-spin:disabled{opacity:0.4;cursor:not-allowed;}
+  .spin-wrap{display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;overflow:hidden;}
+  .spin-wrap.spin-disabled{opacity:0.4;pointer-events:none;}
+  .spin-btn{background:none;border:none;border-radius:0;color:var(--muted);font-size:13px;line-height:1;padding:1px 5px;cursor:pointer;font-family:var(--mono);flex-shrink:0;}
+  .spin-btn:hover{color:var(--text);background:var(--surface3);}
+  .spin-val{background:transparent;border:none;color:var(--text);font-size:11px;font-family:var(--mono);width:26px;text-align:center;padding:2px 0;}
+  .spin-val:focus{outline:none;}
+  .spin-val::-webkit-inner-spin-button,.spin-val::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
   .uw-row-locked td{opacity:0.38;}
   .uw-next-row td{padding:1px 10px 5px;font-size:10px;color:var(--muted);font-family:var(--mono);}
   .uw-next-row .uw-next-preview{color:var(--accent);opacity:0.75;}
@@ -624,8 +628,15 @@
   .bot-val.plus{color:var(--accent2);}
   .bot-cost{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;}
   .bot-lvl-cell{text-align:right;}
-  .bot-level-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:56px;}
-  .bot-level-select:disabled{opacity:.4;cursor:not-allowed;}
+  .bot-row-maxed td{color:#f5c842;}
+  .bot-max-label{font-family:var(--mono);font-size:11px;color:#f5c842;font-weight:600;padding:2px 5px;}
+  .bot-next-row td{padding:1px 10px 5px;font-size:10px;color:var(--muted);font-family:var(--mono);}
+  .bot-next-row .bot-next-preview{color:var(--accent);opacity:0.75;}
+  .bots-filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
+  .bots-filter-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
+    border:1px solid var(--border2);font-size:11px;cursor:pointer;user-select:none;transition:opacity .15s;}
+  .bots-filter-pill.hidden-bot{opacity:0.38;text-decoration:line-through;}
+  .bots-filter-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);white-space:nowrap;}
   .bots-medals-total{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:1.25rem;}
   .bots-medals-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;}
   .bots-medals-chip .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;}
@@ -651,8 +662,10 @@
   .bots-preset-stats td{padding:5px 10px;border-top:1px solid var(--border);vertical-align:middle;}
   .bots-preset-stats tr.bot-plus-row td{border-top:2px solid var(--border2);}
   .bots-preset-stats tr.bot-row-locked td{opacity:.35;}
-  .bots-preset-lvl-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:56px;}
-  .bots-preset-lvl-select:disabled{opacity:.4;cursor:not-allowed;}
+  .bots-preset-row-maxed td{color:#f5c842;}
+  .bots-preset-max-label{font-family:var(--mono);font-size:11px;color:#f5c842;font-weight:600;padding:2px 5px;}
+  .bots-preset-next-row td{padding:1px 10px 5px;font-size:10px;color:var(--muted);font-family:var(--mono);}
+  .bots-preset-next-row .bots-preset-next-preview{color:var(--accent);opacity:0.75;}
   .bots-preset-val{font-family:var(--mono);color:var(--accent);font-weight:600;text-align:right;}
   .bots-preset-val.plus{color:var(--accent2);}
   .bots-preset-medals{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;}
@@ -1800,8 +1813,56 @@ const UW_FMT={
 };
 function fmtUwN(v){return Number.isInteger(v)?v.toLocaleString():v;}
 function fmtStatVal(label,val){const f=UW_FMT[label];return f?f(val):String(val);}
+// callTpl: a string like 'setStatLevel(42,__V__)' — __V__ is replaced with the value
+function mkSpin(val,min,max,disabled,callTpl){
+  const w=disabled?'spin-wrap spin-disabled':'spin-wrap';
+  const call=v=>callTpl.replace('__V__',v);
+  const decClick=`var i=this.nextElementSibling,v=Math.max(${min},(parseInt(i.value)||0)-1);i.value=v;${call('v')}`;
+  const incClick=`var i=this.previousElementSibling,v=Math.min(${max},(parseInt(i.value)||0)+1);i.value=v;${call('v')}`;
+  return `<div class="${w}">
+    <button class="spin-btn" tabindex="-1" onclick="${decClick}">−</button>
+    <input type="text" inputmode="numeric" class="spin-val" value="${val}"
+      onblur="${call(`Math.min(Math.max(parseInt(this.value)||0,${min}),${max})`)}"
+      onkeydown="if(event.key==='Enter')this.blur()">
+    <button class="spin-btn" tabindex="-1" onclick="${incClick}">+</button>
+  </div>`;
+}
 
 let uwHidden=new Set(JSON.parse(localStorage.getItem('uw-hidden')||'[]'));
+let uwCache=null;
+function updateUwSummaryChips(uws){
+  const totalInvested=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesInvested,0);
+  const totalNextAll=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesToMax,0);
+  const totalToTargets=uws.flatMap(u=>u.stats).reduce((s,st)=>s+st.stonesToTarget,0);
+  const unlocked=uws.filter(u=>u.unlocked).length;
+  const el=id=>document.getElementById(id);
+  if(el('uw-chip-unlocked'))el('uw-chip-unlocked').textContent=`${unlocked} / 9`;
+  if(el('uw-chip-invested'))el('uw-chip-invested').textContent=totalInvested.toLocaleString();
+  if(el('uw-chip-to-targets'))el('uw-chip-to-targets').textContent=totalToTargets.toLocaleString();
+  if(el('uw-chip-to-max'))el('uw-chip-to-max').textContent=totalNextAll.toLocaleString();
+}
+async function setStatLevelSpin(statId,level){
+  saveUwScroll();
+  await fetch(`${API}/uw/stat/${statId}/level`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
+  const res=await fetch(`${API}/uw`);
+  const uws=await res.json();
+  uwCache=uws;
+  const uw=uws.find(u=>u.stats.some(s=>s.statId===statId));
+  if(uw){const wrap=document.querySelector(`.uw-card-wrap[data-code="${uw.code}"]`);if(wrap)wrap.innerHTML=renderUwCard(uw);}
+  updateUwSummaryChips(uws);
+  restoreUwScroll();
+}
+async function setTargetLevelSpin(statId,level){
+  saveUwScroll();
+  await fetch(`${API}/uw/stat/${statId}/target-level`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
+  const res=await fetch(`${API}/uw`);
+  const uws=await res.json();
+  uwCache=uws;
+  const uw=uws.find(u=>u.stats.some(s=>s.statId===statId));
+  if(uw){const wrap=document.querySelector(`.uw-card-wrap[data-code="${uw.code}"]`);if(wrap)wrap.innerHTML=renderUwCard(uw);}
+  updateUwSummaryChips(uws);
+  restoreUwScroll();
+}
 function uwToggleHidden(code){
   if(uwHidden.has(code))uwHidden.delete(code);else uwHidden.add(code);
   localStorage.setItem('uw-hidden',JSON.stringify([...uwHidden]));
@@ -1834,10 +1895,10 @@ async function renderUwView(){
     document.getElementById('mainContent').innerHTML=`
       <div class="report-title" style="margin-bottom:1rem">Ultimate Weapons</div>
       <div class="uw-stones-total">
-        <div class="uw-stones-chip"><div class="lbl">UWs Unlocked</div><div class="val">${unlocked} / 9</div></div>
-        <div class="uw-stones-chip"><div class="lbl">Total Stones Invested</div><div class="val">${totalInvested.toLocaleString()}</div></div>
-        <div class="uw-stones-chip"><div class="lbl">Stones to Planned Targets</div><div class="val" style="color:var(--orange)">${totalToTargets.toLocaleString()}</div></div>
-        <div class="uw-stones-chip"><div class="lbl">Stones to Max Everything</div><div class="val">${totalNextAll.toLocaleString()}</div></div>
+        <div class="uw-stones-chip"><div class="lbl">UWs Unlocked</div><div class="val" id="uw-chip-unlocked">${unlocked} / 9</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Total Stones Invested</div><div class="val" id="uw-chip-invested">${totalInvested.toLocaleString()}</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Stones to Planned Targets</div><div class="val" style="color:var(--orange)" id="uw-chip-to-targets">${totalToTargets.toLocaleString()}</div></div>
+        <div class="uw-stones-chip"><div class="lbl">Stones to Max Everything</div><div class="val" id="uw-chip-to-max">${totalNextAll.toLocaleString()}</div></div>
       </div>
       <div class="uw-filter-bar"><span class="uw-filter-lbl">Show:</span>${filterPills}</div>
       <div class="uw-grid">${uws.map(u=>`<div class="uw-card-wrap" data-code="${u.code}" style="${uwHidden.has(u.code)?'display:none':''}">${renderUwCard(u)}</div>`).join('')}</div>`;
@@ -1901,14 +1962,10 @@ function renderUwStatRow(stat,uwUnlocked,isLocked,isUwPlus=false){
     :'';
   const lvlCell=atMax
     ?`<span class="uw-max-label">${stat.maxLevel} ★</span>`
-    :`<input type="number" class="uw-level-spin" ${disabled?'disabled':''}
-        min="0" max="${stat.maxLevel}" value="${stat.currentLevel}"
-        onchange="setStatLevel(${stat.statId},Math.min(Math.max(parseInt(this.value)||0,0),${stat.maxLevel}))">`;
+    :mkSpin(stat.currentLevel,0,stat.maxLevel,disabled,`setStatLevelSpin(${stat.statId},__V__)`);
   const tgtCell=atMax
     ?`<span class="uw-max-label">—</span>`
-    :`<input type="number" class="uw-level-spin" ${disabled?'disabled':''}
-        min="0" max="${stat.maxLevel}" value="${stat.targetLevel}"
-        onchange="setTargetLevel(${stat.statId},Math.min(Math.max(parseInt(this.value)||0,0),${stat.maxLevel}))">`;
+    :mkSpin(stat.targetLevel,0,stat.maxLevel,disabled,`setTargetLevelSpin(${stat.statId},__V__)`);
   return `<tr class="${rowClass}">
     <td>${stat.label}</td>
     <td class="uw-val">${valDisplay}</td>
@@ -4828,22 +4885,60 @@ function renderBotsBody() {
 
 // ── Tracker ───────────────────────────────────────────────────────────────────
 
+let botsHidden = new Set(JSON.parse(localStorage.getItem('bots-hidden') || '[]'));
+function botsToggleHidden(code) {
+  if (botsHidden.has(code)) botsHidden.delete(code); else botsHidden.add(code);
+  localStorage.setItem('bots-hidden', JSON.stringify([...botsHidden]));
+  document.querySelectorAll('.bots-filter-pill').forEach(p => {
+    p.classList.toggle('hidden-bot', botsHidden.has(p.dataset.code));
+  });
+  document.querySelectorAll('.bot-card-wrap').forEach(w => {
+    w.style.display = botsHidden.has(w.dataset.code) ? 'none' : '';
+  });
+}
+
 function renderBotsTracker() {
-  const unlockedBots = botsData.filter(b => b.unlocked).sort((a,b) => (a.unlockOrder||99)-(b.unlockOrder||99));
   const medalChips = `
     <div class="bots-medals-total">
       <div class="bots-medals-chip">
         <div class="lbl">Unlock Medals</div>
-        <div class="val">${botsUnlockMedalsSpent().toLocaleString()}</div>
+        <div class="val" id="bots-chip-unlock">${botsUnlockMedalsSpent().toLocaleString()}</div>
       </div>
       <div class="bots-medals-chip">
         <div class="lbl">Upgrade Medals</div>
-        <div class="val">${botsUpgradeMedalsSpent().toLocaleString()}</div>
+        <div class="val" id="bots-chip-upgrade">${botsUpgradeMedalsSpent().toLocaleString()}</div>
       </div>
     </div>`;
 
-  const cards = botsData.map(bot => botCardHtml(bot)).join('');
-  document.getElementById('botsBody').innerHTML = `${medalChips}<div class="bots-grid">${cards}</div>`;
+  const filterPills = botsData.map(bot => {
+    const hidden = botsHidden.has(bot.code);
+    return `<span class="bots-filter-pill${hidden?' hidden-bot':''}" data-code="${bot.code}"
+      onclick="botsToggleHidden('${bot.code}')">${escHtml(bot.name)}</span>`;
+  }).join('');
+
+  const cards = botsData.map(bot =>
+    `<div class="bot-card-wrap" data-code="${bot.code}" style="${botsHidden.has(bot.code)?'display:none':''}">${botCardHtml(bot)}</div>`
+  ).join('');
+
+  document.getElementById('botsBody').innerHTML =
+    `${medalChips}<div class="bots-filter-bar"><span class="bots-filter-lbl">Show:</span>${filterPills}</div><div class="bots-grid">${cards}</div>`;
+}
+
+function updateBotsMedalChips(){
+  const u=document.getElementById('bots-chip-unlock');
+  const g=document.getElementById('bots-chip-upgrade');
+  if(u)u.textContent=botsUnlockMedalsSpent().toLocaleString();
+  if(g)g.textContent=botsUpgradeMedalsSpent().toLocaleString();
+}
+function botSpinChange(statId,level,botId){
+  const bot=botsData.find(b=>b.id===botId);
+  const stat=bot?.stats.find(s=>s.statId===statId);
+  if(!bot||!stat)return;
+  stat.currentLevel=level;
+  const wrap=document.querySelector(`.bot-card-wrap[data-code="${bot.code}"]`);
+  if(wrap)wrap.innerHTML=botCardHtml(bot);
+  updateBotsMedalChips();
+  fetch(`${API}/bots/stats/${statId}/level`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
 }
 
 function botCardHtml(bot) {
@@ -4856,26 +4951,32 @@ function botCardHtml(bot) {
   const costLabel = unlockCost != null ? `${unlockCost.toLocaleString()} 🏅` : '';
 
   const rows = bot.stats.map(s => {
-    const lvls    = botsLevelValues[s.statId] || [];
-    const curLvl  = s.currentLevel;
+    const lvls     = botsLevelValues[s.statId] || [];
+    const curLvl   = s.currentLevel;
     const curEntry = lvls.find(e => e.level === curLvl);
-    const val     = curEntry ? fmtBotVal(curEntry.value, s.valueUnit) : '—';
-    const nextCost = curEntry?.medalsToNext != null ? `${curEntry.medalsToNext.toLocaleString()} 🏅` : 'Max';
+    const nextEntry= lvls.find(e => e.level === curLvl + 1);
+    const val      = curEntry ? fmtBotVal(curEntry.value, s.valueUnit) : '—';
     const locked   = s.isBotPlus && !bot.botPlusUnlocked;
-    const opts     = Array.from({length: s.maxLevel + 1}, (_,i) =>
-      `<option value="${i}"${i===curLvl?' selected':''}>${i}</option>`).join('');
-    const rowClass = (s.isBotPlus ? ' bot-plus-row' : '') + (locked ? ' bot-row-locked' : '');
+    const atMax    = !locked && curLvl >= s.maxLevel;
+    const rowClass = (s.isBotPlus ? ' bot-plus-row' : '') + (locked ? ' bot-row-locked' : atMax ? ' bot-row-maxed' : '');
     const valClass = `bot-val${s.isBotPlus?' plus':''}`;
+    const label    = `${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}`;
+    const lvlCell  = atMax
+      ? `<span class="bot-max-label">${s.maxLevel} ★</span>`
+      : mkSpin(curLvl,0,s.maxLevel,locked,`botSpinChange(${s.statId},__V__,${bot.id})`);
+    const nextCostCell = atMax
+      ? `<span class="bot-max-label">—</span>`
+      : (curEntry?.medalsToNext != null ? `${curEntry.medalsToNext.toLocaleString()} 🏅` : 'Max');
+    const nextPreview = (!locked && !atMax && nextEntry)
+      ? `<tr class="bot-next-row${s.isBotPlus?' bot-plus-row':''}"><td></td>
+           <td colspan="3"><span class="bot-next-preview">${val} → ${fmtBotVal(nextEntry.value, s.valueUnit)}</span></td></tr>`
+      : '';
     return `<tr class="${rowClass}">
-      <td>${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}</td>
-      <td class="bot-lvl-cell">
-        <select class="bot-level-select"${locked?' disabled':''} onchange="botSetStatLevel(${s.statId},+this.value,${bot.id})">
-          ${opts}
-        </select>
-      </td>
+      <td>${label}</td>
+      <td class="bot-lvl-cell">${lvlCell}</td>
       <td class="${valClass}">${val}</td>
-      <td class="bot-cost">${nextCost}</td>
-    </tr>`;
+      <td class="bot-cost">${nextCostCell}</td>
+    </tr>${nextPreview}`;
   }).join('');
 
   const checkedU  = bot.unlocked ? ' checked' : '';
@@ -5024,23 +5125,28 @@ function renderBotsPresetsTab() {
       const unlockEntry = unlocks.find(u => u.botId === bot.id) || {unlocked:false, botPlusUnlocked:false};
       const botPlus = unlockEntry.botPlusUnlocked;
       const rows = bot.stats.map(s => {
-        const entry  = statLevels.find(l => l.botStatId === s.statId);
-        const curLvl = entry ? entry.targetLevel : 0;
-        const lvls   = botsLevelValues[s.statId] || [];
+        const entry    = statLevels.find(l => l.botStatId === s.statId);
+        const curLvl   = entry ? entry.targetLevel : 0;
+        const lvls     = botsLevelValues[s.statId] || [];
         const curEntry = lvls.find(e => e.level === curLvl);
-        const val    = curEntry ? fmtBotVal(curEntry.value, s.valueUnit) : '—';
-        const locked = s.isBotPlus && !botPlus;
-        const opts   = Array.from({length: s.maxLevel + 1}, (_,i) =>
-          `<option value="${i}"${i===curLvl?' selected':''}>${i}</option>`).join('');
-        const rowClass = (s.isBotPlus?' bot-plus-row':'') + (locked?' bot-row-locked':'');
+        const nextEntry= lvls.find(e => e.level === curLvl + 1);
+        const val      = curEntry ? fmtBotVal(curEntry.value, s.valueUnit) : '—';
+        const locked   = s.isBotPlus && !botPlus;
+        const atMax    = !locked && curLvl >= s.maxLevel;
+        const rowClass = (s.isBotPlus?' bot-plus-row':'') + (locked?' bot-row-locked':(atMax?' bots-preset-row-maxed':''));
+        const label    = `${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}`;
+        const lvlCell  = atMax
+          ? `<span class="bots-preset-max-label">${s.maxLevel} ★</span>`
+          : mkSpin(curLvl,0,s.maxLevel,locked,`botsPresetSetStatLevel(${preset.id},${s.statId},__V__)`);
+        const nextPreview = (!locked && !atMax && nextEntry)
+          ? `<tr class="bots-preset-next-row${s.isBotPlus?' bot-plus-row':''}"><td></td>
+               <td colspan="2"><span class="bots-preset-next-preview">${val} → ${fmtBotVal(nextEntry.value, s.valueUnit)}</span></td></tr>`
+          : '';
         return `<tr class="${rowClass}">
-          <td>${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}</td>
-          <td style="text-align:right">
-            <select class="bots-preset-lvl-select"${locked?' disabled':''}
-              onchange="botsPresetSetStatLevel(${preset.id},${s.statId},+this.value)">${opts}</select>
-          </td>
+          <td>${label}</td>
+          <td style="text-align:right">${lvlCell}</td>
           <td class="bots-preset-val${s.isBotPlus?' plus':''}">${val}</td>
-        </tr>`;
+        </tr>${nextPreview}`;
       }).join('');
 
       return `<div class="bots-preset-card">
