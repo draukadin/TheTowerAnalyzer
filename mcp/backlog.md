@@ -36,6 +36,18 @@ comparison table across key duration milestones.
 
 ---
 
+### `get_sl_coverage_efficiency`
+Given the player's current SL Angle level, Quantity level, and stone costs at those levels,
+compute coverage-per-stone for the next Angle level vs. the next Quantity level. Effective
+coverage = Angle × Quantity; each Angle level gained is worth `current_quantity` degrees.
+
+Should return: current effective coverage, coverage gain from next Angle level, coverage gain
+from next Quantity level, stone cost of each, and coverage-per-stone comparison.
+
+**Needed for**: deciding whether to invest next stone in Angle vs. Quantity.
+
+---
+
 ### `get_lab_plan`
 Returns the current state of each lab slot: what's being researched, target level, coin cost, time remaining, and what's queued next once the current target is reached.
 
