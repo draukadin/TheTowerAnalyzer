@@ -77,6 +77,11 @@ public class VersionHistoryController {
         return pendingRepo.getAll();
     }
 
+    @DeleteMapping("/pending/{id}")
+    public void deletePendingById(@PathVariable long id) {
+        pendingRepo.deleteById(id);
+    }
+
     @DeleteMapping("/pending")
     public void clearPending() {
         pendingRepo.deleteAll();

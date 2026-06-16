@@ -41,6 +41,10 @@ public class PendingVersionChangeRepository {
                 """, category, entityName, oldValue, newValue, notes);
     }
 
+    public void deleteById(long id) {
+        jdbc.update("DELETE FROM pending_version_change WHERE id=?", id);
+    }
+
     public void deleteAll() {
         jdbc.update("DELETE FROM pending_version_change");
     }

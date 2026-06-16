@@ -3429,7 +3429,7 @@ async function openPendingVersionModal() {
     oldValue:   ch.oldValue,
     newValue:   ch.newValue,
     notes:      ch.notes,
-  }));
+  }, ch.id));
 }
 
 function openAddVersionModal() {
@@ -3465,14 +3465,15 @@ function openEditVersionModal(v) {
 function closeAddVersionModal() {
   document.getElementById('addVersionModal').style.display = 'none';
 }
-function addVerChangeRow(existing) {
+function addVerChangeRow(existing, pendingId) {
   const id = Date.now() + Math.random();
   verChangeRows.push(id);
   const cats = ['LAB','UW','MODULE','RELIC','WORKSHOP','WORKSHOP_PLUS','BOT','CHIP','CARDS','MASTERIES','OTHER'];
   const catDisplay = {'WORKSHOP_PLUS':'WORKSHOP+'};
   const catOptions = cats.map(c => `<option value="${c}"${existing && existing.category===c?' selected':''}>${catDisplay[c]||c}</option>`).join('');
+  const pendingAttr = pendingId != null ? ` data-pending-id="${pendingId}"` : '';
   document.getElementById('verChangeRowsEl').insertAdjacentHTML('beforeend', `
-    <div id="vcr-${id}" style="display:grid;grid-template-columns:110px 1fr 80px 80px 1fr auto;gap:6px;align-items:center;margin-bottom:6px">
+    <div id="vcr-${id}"${pendingAttr} style="display:grid;grid-template-columns:110px 1fr 80px 80px 1fr auto;gap:6px;align-items:center;margin-bottom:6px">
       <select class="form-input" id="vcr-cat-${id}" style="font-size:12px;padding:5px 6px">${catOptions}</select>
       <input class="form-input" id="vcr-name-${id}" type="text" placeholder="Entity name" style="font-size:12px;padding:5px 8px" value="${existing ? existing.entityName : ''}">
       <input class="form-input" id="vcr-old-${id}"  type="text" placeholder="Old" style="font-size:12px;padding:5px 8px" value="${existing && existing.oldValue != null ? existing.oldValue : ''}">
@@ -3481,8 +3482,17 @@ function addVerChangeRow(existing) {
       <button class="btn" style="padding:4px 8px;font-size:12px;color:var(--red)" onclick="removeVerChangeRow(${id})">✕</button>
     </div>`);
 }
-function removeVerChangeRow(id) {
-  document.getElementById('vcr-' + id)?.remove();
+async function removeVerChangeRow(id) {
+  const el = document.getElementById('vcr-' + id);
+  const pendingId = el?.dataset.pendingId;
+  if (pendingId) {
+    await fetch(`${API}/versions/pending/${pendingId}`, { method: 'DELETE' });
+    window.verPending = (window.verPending ?? []).filter(p => String(p.id) !== String(pendingId));
+    const btn = document.getElementById('verPendingBtn');
+    if (btn && window.verPending.length > 0) btn.textContent = `⏳ Process Pending Changes (${window.verPending.length})`;
+    else if (btn && window.verPending.length === 0) btn.style.display = 'none';
+  }
+  el?.remove();
   verChangeRows = verChangeRows.filter(r => r !== id);
 }
 async function saveNewVersion() {
