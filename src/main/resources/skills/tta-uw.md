@@ -53,6 +53,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - Smite (CL+) has niche value — it scales with wave HP rather than tower damage, which can be strong at high waves, but the proc rate is low; don't over-invest early
 - CL is a **support DPS** UW, not a primary damage source at endgame
 
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-chain-lightning.md`.
+
 ---
 
 ### Smart Missiles (SM)
@@ -74,6 +76,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - Cover Fire (SM+) enables near-permanent SM uptime at max investment, but the damage output still underperforms other UWs
 - GC (Galaxy Compressor) module can reduce SM CD further, but stones and modules are better spent elsewhere
 - SM is a trap for newer players — it looks strong early but falls off hard at endgame
+
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-smart-missiles.md`.
 
 ---
 
@@ -97,6 +101,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - DW+KW is one of the core farming engines; the "kills" it generates hit orbs and multiply coin income
 - DW Quantity is less impactful per stone than Cooldown — reduce CD first
 - Syncs naturally with GT and BH in farming runs (see UW Sync section)
+
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-death-wave.md`.
 
 ---
 
@@ -143,6 +149,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - CF synergizes with OC (Om Chip), SD (Space Displacer), and MH (Magnetic Hook) for extended CC chains
 - At max CF+ + high –Speed + slow enemy: enemies can orbit indefinitely, making wave progression essentially zero
 
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-chrono-field.md`.
+
 ---
 
 ### Inner Land Mines (ILM)
@@ -164,6 +172,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - Charged Mines at high investment creates massive burst windows, especially against boss waves
 - ILM is not a meta-defining UW but fills a role in builds that lack single-target burst
 - Cooldown reduction gives more mine placement cycles per run
+
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-inner-land-mines.md`.
 
 ---
 
@@ -188,6 +198,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - Golden Combo (GT+) generates a post-GT income burst — the more enemies killed in the window after GT ends, the more coins; pairs well with DW Kill Wall which generates large kill counts
 - **GT has no effect in tournaments** — tournaments are about clearing waves, not earning coins; GT's multiplier is irrelevant outside of farming
 
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-golden-tower.md`.
+
 ---
 
 ### Poison Swamp (PS)
@@ -209,6 +221,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - Death Creep (PS+) is a **damage amplifier** — increases PS's per-tick ramp rate, compounding PS's already-exponential damage output
 - PS + DW + Kill Wall is a potent combo: KW generates high kill counts, PS's exponential damage and CC keep enemies in range longer
 - PS is lower priority than DW/GT for tournament play but valuable in farming-optimized builds
+
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-poison-swamp.md`.
 
 ---
 
@@ -233,6 +247,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - BH Duration investment amplifies Consume: longer BH = more enemies pulled in before the end-of-activation nuke fires
 - Perma-BH (via GC module + CD reduction) is a tournament-viable strategy: near-permanent enemy clustering
 
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-black-hole.md`.
+
 ---
 
 ### Spotlight (SL)
@@ -256,6 +272,8 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - In endgame builds, SL + BH is a top-tier combo: BH clusters, SL amplifies all damage dealt to the cluster
 - **SL+ Light Range** scales with tower range — players who have invested heavily in range get significantly more value from it; this makes SL+ priority dependent on range investment
 - Angle has 61 upgrade levels — the longest upgrade track of any single stat in the game; budget carefully
+
+For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-spotlight.md`.
 
 ---
 

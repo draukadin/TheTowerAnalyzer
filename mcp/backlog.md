@@ -55,6 +55,23 @@ Returns the current state of each lab slot: what's being researched, target leve
 
 ---
 
+---
+
+### `skill_content_injection` (RAG / context injection layer)
+Currently all skill files (top-level and references) are installed flat to `~/.claude/skills/`
+via a glob pattern. A proper reference model would keep only entrypoint skills (`tta-uw.md`,
+`tta-modules.md`) installed and inject reference file content into tool results or the system
+prompt on demand — similar to RAG.
+
+Requires: a service that reads reference files from the classpath, a trigger mechanism to decide
+which references are relevant to a given query, and an injection point in the MCP response
+pipeline.
+
+**Needed for**: cleaner skill hierarchy where references are data-only and not exposed as
+independently-triggerable skills.
+
+---
+
 ## Missing Fields
 
 ### `get_tower_state`

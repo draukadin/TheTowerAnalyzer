@@ -29,7 +29,7 @@ public class ClaudeSkillsService {
 
     private static final Logger log = LoggerFactory.getLogger(ClaudeSkillsService.class);
 
-    private static final String CLASSPATH_PATTERN = "classpath:skills/*.md";
+    private static final String CLASSPATH_PATTERN = "classpath:skills/**/*.md";
 
     /**
      * Installs all bundled skill files to {@code ~/.claude/skills/}.
