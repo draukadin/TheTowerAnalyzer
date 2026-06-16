@@ -174,39 +174,19 @@ Module labs are unlocked progressively from Tier 4 through Tier 19. For full cos
 
 **Labs Coin Discount** (T1 W30): Reduces coin cost of all labs. Low priority — research time, not coins, is usually the bottleneck.
 
-### Acquisition Labs (T4 W70)
+For full lab data and unlock tiers, see `references/tta-module-labs.md`.
 
-- **Common Drop Chance** (10 levels, +1% max): Raises base 2% → 3%. Cheap early investment.
-- **Reroll Shards** (100 levels, +100 shards): Long grind but reroll shards are the sub-stat optimization bottleneck. Start early and run continuously.
-- **Daily Mission Shards** (50 levels, +50/mission): Reliable passive shard income.
+### Priority Rationale
 
-### Cost Reduction Labs (T10 W40)
+- **Reroll Shards**: sub-stat optimization bottleneck — start early and run continuously
+- **Module Shard/Coin Cost**: invest immediately on unlock; 163K+ shards needed to reach level 161 and coin costs above level 101 are brutal. After each lab level, restore the module to level 1 (all shards and coins are fully refunded) and re-upgrade at the discounted rate to immediately recoup the savings.
+- **Rare Drop Chance**: triples base rate (0.5% → 1.5%), critical for sustaining the fodder pipeline
+- **Unmerge Module**: trivial cost, crucial safety net — get it immediately
+- **Core Effect Bans L1**: largest pool (7 slots), cheapest first level — highest priority first ban lab
+- **Shatter Shards**: queue passively when slots are available; not urgent
+- **Assist Module Labs**: strictly endgame (Quadrille coin costs)
 
-- **Module Shard Cost** (30 levels, -30%): High priority — invest immediately on unlock. With 163K+ shards needed to reach level 161, every percent off adds up.
-- **Module Coin Cost** (30 levels, -30%): Pair with shard cost. Coin costs above level 101 are brutal (8B/level); above 141 they're catastrophic (500B/level).
-- **Rare Drop Chance** (10 levels, +1% max): Triples base rate (0.5% → 1.5%). Critical for the fodder pipeline — Rares from boss drops feed the entire Epic→Legendary→Mythic merge chain.
-
-### Utility Labs
-
-- **Unmerge Module** (T8 W20, 1 level, 10M coins, 2 days): Unlocks the ability to unmerge modules, recovering the primary module and epic+ material (or shards for wildcard merges). Get it immediately — trivial cost, provides crucial safety net.
-- **Shatter Shards** (T16 W40, 5 levels, +100% shards from shattering): Level 1 is ~37 days/10T coins — reasonable to queue passively. Full 5 levels takes ~382 days total. Not urgent but worth running when lab slots are available.
-
-### Effect Ban Labs (T10 W40)
-
-Ban specific sub-stats from appearing in rerolls permanently. Dramatically improves sub-stat optimization efficiency.
-
-- Cannon: 4 ban slots (levels take 37d → 204d each)
-- Armor: 4 ban slots (same cost curve as Cannon)
-- Generator: 3 ban slots (62d → 204d)
-- **Core: 7 ban slots** — largest pool, most bans available. Level 1 is cheap (50B, 16d) — highest priority first ban lab.
-
-### Assist Module Labs (T19 W50)
-
-- 30 levels, +1% to assist module main effect and sub-effects per level (max +30%)
-- Costs are in **Quadrille coins** (0.25Q → 7.5Q) — strictly endgame progression
-- As of v27.1, assist module multiplier stats are multiplicative
-
-### Lab Priority Order (Quick Reference)
+### Lab Priority Order
 
 Early (T4-T8): Common Drop Chance → Reroll Shards → Daily Mission Shards → Unmerge Module
 Mid (T10-T15): Module Shard Cost → Module Coin Cost → Rare Drop Chance → Core Effect Bans L1
