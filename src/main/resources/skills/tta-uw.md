@@ -65,7 +65,7 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - **Quantity**: x5 → x20 (16 levels) — missiles per volley
 - **Cooldown**: 180s → 20s (16 levels)
 
-**UW+ — Cover Fire**: Reduces cooldown by an additional 2s–13s after firing SM (additive with base cooldown). At max, Cover Fire adds 2s of reduced CD (on top of the base 20s CD). Enables near-permanent SM uptime at high investment.
+**UW+ — Cover Fire**: Fires an additional SM volley on an independent cooldown separate from the main SM cooldown. Cover Fire cooldown starts at 13s at unlock and reduces to 2s at max level — acting as a continuously firing second missile salvo alongside the main SM cycle.
 
 **Strategic notes**:
 
