@@ -69,7 +69,7 @@ Key level milestones unlock additional sub-effect slots. Max level is determined
 - Rare → Legendary+: higher cap
 - Epic → Ancestral (5 stars): highest cap, up to level 200
 
-Leveling costs scale steeply — see `references/tta-module-leveling-costs.md` for the full table. Notable inflection points: costs jump hard at level 61 (25M coins), 101 (8B coins), 141 (500B coins), and 171+ (510T+ coins).
+Leveling costs scale steeply — see `references/tta-module-level-costs.md` for the full table. Notable inflection points: costs jump hard at level 61 (25M coins), 101 (8B coins), 141 (500B coins), and 171+ (510T+ coins).
 
 **Modules can be fully reset** ("restore" button) at no cost — all shards and coins returned. Reroll shards and gems are NOT returned on restore.
 
@@ -328,7 +328,7 @@ If a required data point is unavailable from MCP tools, state what's missing, as
 
 - `references/tta-module-substats.md` — Full sub-stat tables for all 4 module types across all rarities
 - `references/tta-natural-epics.md` — Complete natural epic roster (all 24) with full effect scaling across Epic → Ancestral
-- `references/tta-module-leveling-costs.md` — Full shard and coin cost table from level 1 to 200
+- `references/tta-module-level-costs.md` — Full shard and coin cost table from level 1 to 200
 - `references/tta-module-labs.md` — All module labs with unlock tiers, full cost tables, and priority guidance
 - `references/strategy.md` — Extended strategic notes, build synergies, and situational advice
 
