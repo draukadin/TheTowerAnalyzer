@@ -227,6 +227,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description: 'Get all 5 lab slot configurations: cell-speed multiplier, queued plan list, total queue cost and duration, and current coins-per-day burn rate.',
       inputSchema: { type: 'object', properties: {} },
     },
+    {
+      name: 'get_lab_costs',
+      description: 'Get the per-level coin cost and duration for a specific lab by name.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Lab name (case-insensitive)',
+          },
+        },
+        required: ['name'],
+      },
+    },
   ],
 }));
 
@@ -491,6 +505,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get_lab_slots':
         return distillLabSlots(await fetchApi('/api/lab-slots'));
+
+      // ── Lab costs ─────────────────────────────────────────────────────────
+
+      case 'get_lab_costs': {
+        const allLabs = await fetchApi('/api/labs');
+        const lab = allLabs.find(l => l.name.toLowerCase() === args.name.toLowerCase());
+        if (!lab) throw new Error(`Unknown lab: ${args.name}`);
+        return distillLabCosts(await fetchApi(`/api/labs/${lab.id}/costs`));
+      }
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -1129,6 +1152,16 @@ function distillLabSlots(slots) {
     };
     return entry;
   }));
+}
+
+// ── Distillation: lab costs ───────────────────────────────────────────────────
+
+function distillLabCosts(costs) {
+  return result(costs.map(c => ({
+    level:    c.level,
+    coins_T:  c.coinCost != null ? round(c.coinCost / 1e12, 3) : null,
+    days:     c.durationSeconds != null ? round(c.durationSeconds / 86400, 2) : null,
+  })));
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

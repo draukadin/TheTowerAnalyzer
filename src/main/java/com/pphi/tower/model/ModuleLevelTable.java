@@ -7,7 +7,6 @@ package com.pphi.tower.model;
 public final class ModuleLevelTable {
 
     public static final int MAX_LEVEL = 300;
-    public static final int TARGET_LEVEL = 161;
 
     private ModuleLevelTable() {}
 
@@ -55,5 +54,43 @@ public final class ModuleLevelTable {
     public static long shardsRemainingTo(int currentLevel, int targetLevel) {
         if (currentLevel >= targetLevel) return 0;
         return cumulativeShardsTo(targetLevel) - cumulativeShardsTo(currentLevel);
+    }
+
+    /** Coins required to upgrade FROM (level-1) TO level. Level 1 = 0. */
+    public static long coinsForLevel(int level) {
+        if (level <= 1)   return 0;
+        if (level <= 5)   return 10_000;
+        if (level <= 10)  return 25_000;
+        if (level <= 15)  return 45_000;
+        if (level <= 20)  return 60_000;
+        if (level <= 25)  return 120_000;
+        if (level <= 30)  return 180_000;
+        if (level <= 35)  return 350_000;
+        if (level <= 40)  return 500_000;
+        if (level <= 50)  return 1_000_000;
+        if (level <= 60)  return 3_000_000;
+        if (level <= 70)  return 25_000_000;
+        if (level <= 80)  return 100_000_000;
+        if (level <= 100) return 350_000_000;
+        if (level <= 120) return 8_000_000_000L;
+        if (level <= 140) return 32_000_000_000L;
+        if (level <= 160) return 500_000_000_000L;
+        if (level == 161) return 10_000_000_000_000L;
+        return 60_000_000_000_000L + (long)(level - 162) * 50_000_000_000_000L;
+    }
+
+    /** Total coins spent to reach the given level (from level 1). */
+    public static long cumulativeCoinsTo(int level) {
+        long total = 0;
+        for (int l = 2; l <= level; l++) {
+            total += coinsForLevel(l);
+        }
+        return total;
+    }
+
+    /** Coins still needed to go from currentLevel to targetLevel. */
+    public static long coinsRemainingTo(int currentLevel, int targetLevel) {
+        if (currentLevel >= targetLevel) return 0;
+        return cumulativeCoinsTo(targetLevel) - cumulativeCoinsTo(currentLevel);
     }
 }

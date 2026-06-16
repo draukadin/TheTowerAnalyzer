@@ -281,6 +281,14 @@ public class DatabaseInitializer {
             // Column already gone — safe to continue.
         }
 
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_level_cost (
+                    level      INTEGER NOT NULL PRIMARY KEY,
+                    shard_cost INTEGER NOT NULL,
+                    coin_cost  REAL    NOT NULL
+                )
+                """);
+
         // ── Relics ────────────────────────────────────────────────────────────
 
         jdbc.execute("""
