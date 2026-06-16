@@ -110,6 +110,21 @@ recommendations.
 
 ---
 
+## Module Synergies
+
+**Om Chip (OC)** — Core module that causes Spotlight to snap instantly to a Boss when one
+enters the field, rather than waiting for the rotating beam to sweep to it. The Boss also
+reflects the light to nearby enemies, increasing damage dealt to them by ×2 (Epic) → ×15
+(Ancestral).
+
+OC effectively gives SL 100% uptime on Bosses regardless of current beam angle — eliminating
+the coverage lottery for the highest-priority target. The reflected light bonus additionally
+amplifies damage to all enemies near the Boss. SL is a supporting UW rather than a primary
+damage source, but OC significantly increases its contribution against Bosses in any build that
+runs SL. See `references/tta-natural-epics.md` for full scaling values.
+
+---
+
 ## BH Synergy
 
 BH + SL is the primary damage combo for the economy trio builds and beyond:

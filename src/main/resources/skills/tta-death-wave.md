@@ -98,3 +98,29 @@ inconsistent. Three options to consider:
 When advising on cooldown investment, always check GT and BH cooldown levels via `get_tower_state`
 first. Establish the player's priority (CPH, permanent BH, or sync integrity) before recommending
 a cooldown target — the right answer depends on what they value most.
+
+---
+
+## Module Synergies
+
+**Multiverse Nexus (MVN)** — Core module that replaces manual sync entirely. MVN synchronizes
+DW, GT, and BH so they always activate at the same time, stacking their coin bonuses
+automatically. The shared cooldown is the average of the three UW cooldowns, adjusted by the
+module's offset:
+
+| Rarity | CD Offset | Effect |
+|:------:|:---------:|:-------|
+| Epic | +20s | Penalty above natural average |
+| Legendary | +10s | Moderate penalty |
+| Mythic | +1s | Near-neutral |
+| Ancestral | −10s | Net reduction below natural average |
+
+With MVN, the three-way sync decision described above becomes moot — the module handles
+alignment automatically. Stone investment in DW, GT, and BH cooldowns still reduces the shared
+average, but the sub-100s drift problem and save-and-jump tradeoffs no longer apply.
+
+**Galaxy Compressor (GC)** — Generator module that reduces the cooldown of all UWs except
+Poison Swamp by a fixed amount each time a recovery package is collected (10s at Epic → 20s at
+Ancestral). In a farming run with frequent package pickups, GC can meaningfully accelerate the
+rate at which DW fires — supplementing stone-based CD investment and helping reach sync targets
+sooner.

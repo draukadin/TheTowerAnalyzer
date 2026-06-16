@@ -127,7 +127,9 @@ worth it for most players.
 **Quantity** — only 4 levels (3 → 6 mines). Max it early; cheap relative to other investments.
 
 **Cooldown** — bring down to ~120–150s to align with boss wave intervals. Do not prioritize
-pushing to max (50s) — the practical benefit plateaus around 120s.
+pushing to max (50s) — the practical benefit plateaus around 120s. The Galaxy Compressor (GC)
+Generator module reduces all UW cooldowns (except PS) per recovery package collected, which
+can help reach this target without additional stone investment.
 
 **Rotation Speed lab** — enables mines to sweep the path rather than sitting fixed. Important
 for increasing detonation frequency and SD mine synergy.

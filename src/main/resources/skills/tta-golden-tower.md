@@ -136,3 +136,18 @@ count. This is a niche interaction rather than a general-purpose tournament inve
 GT's cooldown floors at 100s (cannot be reduced further). For full sync strategy with DW and BH,
 see `tta-death-wave.md`. The short version: GT fires every other DW/BH cycle at the 50s/50s/100s
 end-state, and all three align every 100s at max investment.
+
+---
+
+## Module Synergies
+
+**Multiverse Nexus (MVN)** — Core module that automatically synchronizes DW, GT, and BH,
+replacing manual sync entirely. The shared cooldown is the average of the three UW cooldowns
+adjusted by the module's rarity offset (Epic +20s penalty → Ancestral −10s net reduction). With
+MVN, all three fire together every activation without any cooldown alignment investment. See
+`tta-death-wave.md` for the full rarity table.
+
+**Galaxy Compressor (GC)** — Generator module that reduces all UW cooldowns (except PS) each
+time a recovery package is collected (10s at Epic → 20s at Ancestral). In farming runs with
+frequent packages, GC meaningfully increases GT activation frequency — supplementing stone CD
+investment and increasing income windows per run.

@@ -129,7 +129,7 @@ Black Hole:
 |--------|:---------:|:------|
 | BH UW | 1 | Base |
 | Extra Black Hole lab | +1 | Spawns opposite side of tower |
-| Primordial Collapse (PC) module | +1 | Third BH |
+| Primordial Collapse (PC) module | +1 | Requires Extra BH lab for three total |
 | **Total** | **3** | ~120° separation around the tower |
 
 Three-BH coverage is especially effective on curved paths or in runs where enemy clustering across
@@ -144,3 +144,22 @@ every 100s. All three align every 100s.
 
 For full sync strategy, sub-100s trade-offs, and whether to save-and-jump vs. accept drift, see
 `tta-death-wave.md`.
+
+---
+
+## Module Synergies
+
+**Primordial Collapse (PC)** — Adds one additional simultaneous Black Hole and reduces damage
+taken from enemies within any BH by 50% (Epic) → 80% (Ancestral). PC alone gives you two BHs;
+combined with the Extra Black Hole lab you get three. See Coverage section above.
+
+**Multiverse Nexus (MVN)** — Core module that automatically synchronizes DW, GT, and BH,
+eliminating the need for manual cooldown alignment. The shared cooldown is the average of the
+three UW cooldowns adjusted by rarity offset (Epic +20s → Ancestral −10s). With MVN, the
+sub-100s drift problem and save-and-jump tradeoffs described in `tta-death-wave.md` no longer
+apply — all three fire together every activation.
+
+**Galaxy Compressor (GC)** — Generator module that reduces all UW cooldowns (except PS) each
+time a recovery package is collected (10s at Epic → 20s at Ancestral). Relevant to both pBH
+strategy and DW/GT/BH sync — frequent package pickups with a high-rarity GC can reduce the
+effective BH cooldown significantly below what stone investment alone achieves.
