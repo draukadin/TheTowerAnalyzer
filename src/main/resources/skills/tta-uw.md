@@ -200,14 +200,14 @@ For full stat scaling tables, see `references/uw-stats.md`.
 - **Duration**: 30s → 100s (15 levels)
 - **Cooldown**: 125s → 50s (17 levels)
 
-**UW+ — Death Creep**: Enemies that die in the Poison Swamp have a 120% → 1110% increased chance to spawn as a "Death Creep" (an additional kill credit that generates coins/orb hits). At max, 1110% bonus spawn chance.
+**UW+ — Death Creep**: Increases the per-tick damage ramp rate of Poison Swamp. At PS+0, adds +70% per tick, bringing the base 150%-per-tick ramp to 220%. This accelerates the exponential damage compounding every game second an enemy remains poisoned.
 
 **Strategic notes**:
 
 - PS has the **shortest base cooldown** (125s) of the area-effect UWs — high natural uptime
 - PS Duration investment is key — longer swamps = more enemies get full DoT ticks
-- Death Creep (PS+) is a **farming multiplier** — stacks with DW Kill Wall for massive coin output
-- PS + DW + Kill Wall is a potent farming trio: KW generates kills, PS generates Death Creep kills, all converting to coins
+- Death Creep (PS+) is a **damage amplifier** — increases PS's per-tick ramp rate, compounding PS's already-exponential damage output
+- PS + DW + Kill Wall is a potent combo: KW generates high kill counts, PS's exponential damage and CC keep enemies in range longer
 - PS is lower priority than DW/GT for tournament play but valuable in farming-optimized builds
 
 ---
@@ -298,7 +298,7 @@ For full stat scaling tables, see `references/uw-stats.md`.
 2. **CF+ (Chrono Loop)** — rotation + hidden slow; enormously increases CC effectiveness
 3. **Consume (BH+)** — wave-HP-scaling nuke on the entire BH cluster; scales extremely well at high waves
 4. **Golden Combo (GT+)** — post-GT income burst per kill; pairs well with Kill Wall's high kill counts
-5. **Death Creep (PS+)** — farming multiplier; pairs with Kill Wall
+5. **Death Creep (PS+)** — damage amplifier; increases PS per-tick ramp rate
 6. **Light Range (SL+)** — scales with tower range; priority increases with range investment
 7. **Smite (CL+)** — wave-HP damage on CL proc; niche but scales with wave HP at high waves
 8. **Charged Mines (ILM+)** — niche; only invest after core UWs are developed
@@ -320,7 +320,7 @@ For full stat scaling tables, see `references/uw-stats.md`.
 
 **SM + GC Module**: Galaxy Compressor module reduces UW cooldowns. SM + GC can enable near-permanent SM firing, making SM one of the highest sustained DPS options in the game.
 
-**PS + DW Kill Wall**: Kill Wall generates kill credits → PS Death Creep generates more kills from those → multiplicative coin output.
+**PS + DW Kill Wall**: Kill Wall generates kill credits; PS's CC (slow + stun) keeps enemies in range longer, amplifying DW's kill-credit output and letting PS damage ramp further.
 
 ### UW Sync (Manual)
 
@@ -488,7 +488,7 @@ During a run, each UW can be individually toggled on or off. This is a deliberat
 
 **Why you might turn a UW off**:
 
-- **Enemies are dying too fast**: If enemies are being killed before they reach DW range or get pulled into BH, those UWs aren't generating kills/coins. Turning off high-damage UWs temporarily lets enemies accumulate, so DW and BH can tag more of them and generate more kill events (orb hits, Kill Wall credits, Death Creep procs).
+- **Enemies are dying too fast**: If enemies are being killed before they reach DW range or get pulled into BH, those UWs aren't generating kills/coins. Turning off high-damage UWs temporarily lets enemies accumulate, so DW and BH can tag more of them and generate more kill events (orb hits, Kill Wall credits).
 - **Preventing unwanted interference**: A UW firing at the wrong time can disrupt a sync window or waste its CD outside of a GT multiplier window.
 - **Deliberate staging**: Letting enemies stack up before enabling a UW maximizes the number of targets hit when it fires.
 
