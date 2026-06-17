@@ -350,6 +350,16 @@ public class DatabaseInitializer {
                 )
                 """);
 
+        // Migrations: add description and unlock columns introduced after initial lab table creation.
+        for (String col : new String[]{
+                "ADD COLUMN description TEXT",
+                "ADD COLUMN unlock      TEXT"
+        }) {
+            try {
+                jdbc.execute("ALTER TABLE lab " + col);
+            } catch (Exception ignored) {}
+        }
+
         // ── Lab Slot Planner ──────────────────────────────────────────────────
 
         jdbc.execute("""

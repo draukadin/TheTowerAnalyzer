@@ -22,8 +22,13 @@ public class LabController {
     record StateRequest(int currentLevel, Integer targetLevel) {}
 
     @GetMapping
-    public List<LabData> getAll() {
-        return repo.getAll();
+    public List<LabData> getAll(@RequestParam(required = false) String category) {
+        return category != null ? repo.getByCategory(category) : repo.getAll();
+    }
+
+    @GetMapping("/search")
+    public List<LabData> search(@RequestParam String q) {
+        return repo.search(q);
     }
 
     @PutMapping("/{id}/state")

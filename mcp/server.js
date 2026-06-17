@@ -241,6 +241,33 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['name'],
       },
     },
+    {
+      name: 'get_labs',
+      description: 'Get the lab catalog: name, category, description, unlock requirement, max level, and current player level. Use to browse all labs or filter by category. Prefer search_labs when the user names a specific lab.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          category: {
+            type: 'string',
+            description: 'Filter to a specific category (e.g. "Main", "Attack", "Defense", "Utility", "Ultimate Weapons", "Cards", "Perks", "Bots", "Enemies", "Modules", "Battle Condition")',
+          },
+        },
+      },
+    },
+    {
+      name: 'search_labs',
+      description: 'Search labs by name or description using a partial, case-insensitive query. Use this whenever the user names a specific lab and you are not certain of the exact DB name — it handles typos and word-order differences. Returns matching labs with full catalog detail and current player level.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          q: {
+            type: 'string',
+            description: 'Search query — matched against lab name and description',
+          },
+        },
+        required: ['q'],
+      },
+    },
   ],
 }));
 
@@ -514,6 +541,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!lab) throw new Error(`Unknown lab: ${args.name}`);
         return distillLabCosts(await fetchApi(`/api/labs/${lab.id}/costs`));
       }
+
+      // ── Lab catalog ───────────────────────────────────────────────────────
+
+      case 'get_labs': {
+        const qs = args.category ? `?category=${encodeURIComponent(args.category)}` : '';
+        return distillLabCatalog(await fetchApi(`/api/labs${qs}`));
+      }
+
+      // ── Lab search ────────────────────────────────────────────────────────
+
+      case 'search_labs':
+        return distillLabCatalog(await fetchApi(`/api/labs/search?q=${encodeURIComponent(args.q)}`));
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -1152,6 +1191,33 @@ function distillLabSlots(slots) {
     };
     return entry;
   }));
+}
+
+// ── Distillation: lab catalog ─────────────────────────────────────────────────
+
+function distillLabCatalog(labs) {
+  const byCategory = {};
+  for (const l of labs) {
+    if (!byCategory[l.category]) byCategory[l.category] = [];
+    const unlock = parseUnlock(l.unlock);
+    const entry = {
+      id:          l.id,
+      name:        l.name,
+      level:       l.currentLevel,
+      max:         l.maxLevel,
+      description: l.description ?? null,
+      unlock,
+    };
+    if (l.targetLevel != null) entry.target = l.targetLevel;
+    byCategory[l.category].push(entry);
+  }
+  return result(byCategory);
+}
+
+function parseUnlock(unlock) {
+  if (!unlock) return null;
+  const m = unlock.match(/T(\d+),W(\d+)/);
+  return m ? { tier: parseInt(m[1]), wave: parseInt(m[2]) } : unlock;
 }
 
 // ── Distillation: lab costs ───────────────────────────────────────────────────
