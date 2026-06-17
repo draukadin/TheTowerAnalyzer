@@ -71,11 +71,11 @@ For detailed mechanics, labs, stone investment, and module synergies, see `refer
 
 **Strategic notes**:
 
-- **SM is widely considered useless by top-end players** — it does not scale competitively at endgame and is generally not worth significant stone investment
+- SM is **pure raw DPS** — no economy, no CC, no coin multiplier. Every other UW provides at least one of those alongside damage, which is why SM loses the priority contest in early and mid game
+- **Full utility requires ~24,000 stones** to max — far more expensive than other UWs that contribute more to a build at lower investment levels
 - If you do invest, Cooldown is the most impactful stat — without CD reduction SM rarely fires often enough to matter
-- Cover Fire (SM+) enables near-permanent SM uptime at max investment, but the damage output still underperforms other UWs
-- GC (Galaxy Compressor) module can reduce SM CD further, but stones and modules are better spent elsewhere
-- SM is a trap for newer players — it looks strong early but falls off hard at endgame
+- Cover Fire (SM+) enables near-permanent SM uptime at max investment, but the damage output still underperforms other UWs at that investment level
+- GC (Galaxy Compressor) module can reduce SM CD further, but stones and modules deliver better returns elsewhere at most stages
 
 For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-smart-missiles.md`.
 
@@ -336,7 +336,7 @@ For detailed mechanics, labs, stone investment, and module synergies, see `refer
 
 **SP + BH**: BH clusters enemies into SL's cone. SL multiplier applies to all clustered enemies hit — enormous burst output.
 
-**SM + GC Module**: Galaxy Compressor module reduces UW cooldowns. SM + GC can enable near-permanent SM firing, making SM one of the highest sustained DPS options in the game.
+**SM + GC Module**: Galaxy Compressor module reduces UW cooldowns, which can push SM toward near-permanent firing at high investment. SM's value ceiling is high but the stone cost to reach it is steep — other UWs deliver more impact per stone earlier in progression.
 
 **PS + DW Kill Wall**: Kill Wall generates kill credits; PS's CC (slow + stun) keeps enemies in range longer, amplifying DW's kill-credit output and letting PS damage ramp further.
 

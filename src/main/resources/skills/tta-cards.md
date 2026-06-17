@@ -145,10 +145,13 @@ are the primary threat, when your UWs or Thorns already kill bosses comfortably,
 standard farming where bosses aren't the run-ender. **Important**: Plasma Cannon is a locked
 card — you cannot add or remove it mid-run. Decide before the run starts.
 
-**Critical Coin** — Farming staple. Pairs with Critical Chance — more crits means more proc
-chances. Works well in devo and orb builds where orbs trigger the effect automatically. The
-multiplier from coins drops scales with global coin modifiers, making it increasingly strong
-at high waves. Drop in tournaments and during late-game push runs where survival takes priority.
+**Critical Coin** — Pairs with Critical Chance. Whether it's worth equipping depends on your
+kill source: the card only procs on **basic enemies** killed by crits, not tanks or elites
+(which provide ×8 base coins and are the primary income source). In **eHP / Blender builds**
+(wall + orbs) where orbs sweep through all enemy types indiscriminately, Critical Coin is a
+key part of the coin strategy. In **devo orb builds**, you want to keep tanks alive for
+multiplier stacking — killing them off with crits for coin procs undermines the strategy, so
+Critical Coin is less valuable there. In tournament, drop it for survivability cards.
 
 **Wave Skip** — Accelerates CPH by compressing run time and grants ×1.10 on the previous
 wave's cash and coins per skip. **Strong when UWs like GT or BH are active** — a skip during
