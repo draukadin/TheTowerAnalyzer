@@ -48,10 +48,12 @@ nothing left to upgrade, and the stun buys time to kill enemies before they reac
 
 ## Common Cards
 
-**Damage** — Always-in for virtually every build. The only deliberate exclusion is **devo
-(de-evolved) orb builds**, where tower damage is intentionally nerfed so enemies survive long
-enough to be killed by orbs inside the BH during the GT/DW/BH coin window. Equipping Damage
-in a devo build undermines the entire strategy.
+**Damage** — Always-in for virtually every build. Early game it also accelerates **DW health
+bonus stacking** — higher damage means enemies die faster to the Death Wave, building the
+health bonus sooner. The only deliberate exclusion is **devo (de-evolved) orb builds**, where
+tower damage is intentionally nerfed so enemies survive long enough to be killed by orbs inside
+the BH during the GT/DW/BH coin window. Equipping Damage in a devo build undermines the entire
+strategy.
 
 **Attack Speed** — A proc and control generator: more shots means more knockback procs, more
 CL procs, and more triggers of workshop abilities (crit, super crit, rapid fire, bounce shot).
@@ -105,11 +107,14 @@ damage or economy card.
 more Critical Coin procs. Also has late-game value for UW damage, especially **Chain Lightning**
 which procs frequently and benefits significantly from crit chance. Weak without Critical Coin
 equipped. Low priority in eHP builds or tournaments where survivability cards are more valuable.
+**Exceeding 100% crit chance is not wasted** — going over 100% provides an additive crit damage
+bonus on top of the crit factor, so there is no reason to stop at 99%.
 
 **Enemy Balance** — Farming and early-game staple. More enemies means more kill opportunities,
-more coin drops, and faster DW health bonus accumulation. Drop it during **milestone pushes**
-if the extra enemy volume overwhelms your CC, and in **late-game tournaments** if your workshop
-is already maxed and you need the slot for defense.
+more coin drops, and faster **DW health bonus accumulation** (more targets = more Death Wave
+hits per wave). Drop it during **milestone pushes** if the extra enemy volume overwhelms your
+CC, and in **late-game tournaments** if your workshop is already maxed and you need the slot
+for defense.
 
 **Extra Defense** — Useful early through mid-game and in **tournaments without perks**, where
 the non-perk defense cap is 73% and every percentage point matters. Retire it permanently once
@@ -146,12 +151,15 @@ standard farming where bosses aren't the run-ender. **Important**: Plasma Cannon
 card — you cannot add or remove it mid-run. Decide before the run starts.
 
 **Critical Coin** — Pairs with Critical Chance. Whether it's worth equipping depends on your
-kill source: the card only procs on **basic enemies** killed by crits, not tanks or elites
-(which provide ×8 base coins and are the primary income source). In **eHP / Blender builds**
-(wall + orbs) where orbs sweep through all enemy types indiscriminately, Critical Coin is a
-key part of the coin strategy. In **devo orb builds**, you want to keep tanks alive for
-multiplier stacking — killing them off with crits for coin procs undermines the strategy, so
-Critical Coin is less valuable there. In tournament, drop it for survivability cards.
+kill source: the card only procs on **basic enemies** killed by critical damage, not tanks or
+elites (which provide ×8 base coins and are the primary income source). Critically important:
+**"critical damage" is broader than weapon crits** — Thorns kills and Orb kills both qualify
+as critical damage for this card. This means the card is valuable even without high crit
+chance or crit factor, as long as thorns or orbs are killing enemies. In **eHP / Blender
+builds** (wall + orbs) where orbs sweep through all enemy types indiscriminately, Critical
+Coin is a key part of the coin strategy. In **devo orb builds**, you want to keep tanks alive
+for multiplier stacking — killing them off for coin procs undermines the strategy, so Critical
+Coin is less valuable there. In tournament, drop it for survivability cards.
 
 **Wave Skip** — Accelerates CPH by compressing run time and grants ×1.10 on the previous
 wave's cash and coins per skip. **Strong when UWs like GT or BH are active** — a skip during
@@ -204,11 +212,13 @@ meaningful tournament damage tool. Without mastery, weak in early game and irrel
 farming or tank builds.
 
 **Second Wind** — Revives once per run at half health and creates an invincibility shield for
-up to 40s. Tournament and milestone safety net. **Interaction with Energy Shield**: Energy
-Shield procs first on a fatal hit; Second Wind only activates if the Energy Shield has no
-charges. Running both is only worth it if you are deliberately stacking death-prevention
-layers. In long farming runs the second chance typically just delays the inevitable — not
-worth the slot.
+up to 40s. **Wall interaction**: when Second Wind triggers, the wall is also fully restored if
+unlocked — a significant survival boost for wall-based builds. Tournament and milestone safety
+net. **Recharge lab** (300 waves to recharge, enabling multiple triggers per deep run).
+**Interaction with Energy Shield**: Energy Shield procs first on a fatal hit; Second Wind only
+activates if the Energy Shield has no charges. Running both is only worth it if you are
+deliberately stacking death-prevention layers. In long farming runs the second chance typically
+just delays the inevitable — not worth the slot.
 
 **Demon Mode** — Grants 300× projectile damage and invincibility, once per run. **Manual
 trigger only** — useless AFK. Use for **milestone pushes and tournaments** by activating just
@@ -250,7 +260,8 @@ survivability card for this in farming.
 for milestone pushes and deep tournament runs. The late-game unlock that makes it passive:
 the Smart Nuke automation triggers it on a killing blow, giving 15s of invincibility. Useless
 in farming — one-shot manual use doesn't justify the slot. Not effective at low levels (25%
-clear at level 1). See Demon Mode event mission combo above.
+clear at level 1). **Recharge lab** (300 waves to recharge, enabling multiple activations per
+deep run). See Demon Mode event mission combo above.
 
 **Area of Effect** — Increases AoE damage and radius for ILM, PS, SM, Flame Bot, and Land
 Mine. The **PS radius increase** is the primary value — a larger swamp holds more enemies in
