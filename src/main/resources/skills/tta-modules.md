@@ -40,12 +40,15 @@ One module of each type can be equipped (a second "assist" slot unlocks at Tier 
 
 ## Acquiring Modules
 
+For full banner pull rates, pity systems, the Ancestral duplicate protection rule, natural
+epic targeting, and gem budget strategy, see `references/tta-modules-buying.md`.
+
 **Gacha draws**: 20 gems (x1) or 200 gems (x10). Pull rates:
 
 - Common: 68.5%
 - Rare: 29%
 - Epic: 2.5%
-- Bad luck protection: guaranteed Epic after 150 purchases without one
+- Epic pity: guaranteed after 150 pulls without one; Rare pity: guaranteed every 10 pulls
 
 **Boss drops**: Bosses can drop reroll shards and modules:
 
@@ -136,13 +139,51 @@ modules is a meaningful long-term investment for this reason.
 
 ## Module Shattering System
 
-Shattering destroys a module and returns shards:
+### Inventory Cap
 
-- Common: 5 shards
-- Rare: 10 shards
-- After merging: shards returned reflect the cumulative value of all modules consumed in the merge chain
+Total module inventory is capped at **300 modules** across all types. Managing this cap
+is an active part of the game — pulling on the banner without clearing inventory space
+will block you once you hit 300.
 
-**Strategic use**: Shatter Commons immediately — they cannot be merged and have no use as fodder. For Rares, it's a judgment call: you need a sustained supply of Rares to build the fodder pipeline (Rare→Rare+→Epic→Epic+→Legendary+) that feeds natural epic upgrades. Only shatter Rares once you have a healthy surplus or don't yet have a natural epic to push toward Legendary+.
+### Shard Values
+
+Shard yield per module depends on the **Shatter Shards lab** level (5 levels total,
+expensive in coins and research time):
+
+| Rarity | Lab Lv 0 | Lab Lv 1 | Lab Lv 5 |
+|--------|----------|----------|----------|
+| Common | 5 shards | 6 shards | 10 shards |
+| Rare | 10 shards | 12 shards | 20 shards |
+
+Each lab level adds 20% to the base shard yield. Prioritize completing this lab before
+shattering large numbers of modules — the compounding difference is significant over time.
+
+### Shattering a Merged Epic = Same Value as Its Rares
+
+A fodder epic built from rares returns the **same total shard value** as shattering all
+the rares that went into it. Merging does not create or destroy shard value — it only
+compresses inventory slots. This makes merging rares up to epic a useful strategy when
+approaching the 300-module inventory cap: you preserve the shard value in fewer slots,
+freeing room for more pulls without discarding anything.
+
+**After epic, you cannot shatter directly.** To shatter a module at epic or above, you
+must first **unmerge** it (costs gems), which restores the component modules. Factor in
+the unmerge cost when deciding whether to merge-to-store vs. shatter-now.
+
+### What to Shatter
+
+**Commons**: Shatter immediately. No merge value, no shard benefit from holding. If the
+Shatter Shards lab is not yet at level 5, consider waiting — but commons will accumulate
+fast enough that clearing them is generally better than capping out.
+
+**Rares**: Hold as fodder pipeline material until you have a healthy surplus. Once your
+pipeline is stable or you do not yet have a natural epic to push, rares can be shatted
+or merged-to-epic for inventory compression. When the Shatter Shards lab is complete,
+rares at 20 shards each become meaningful shard income.
+
+**Stockpiling rares as epics**: while researching the Shatter Shards lab, merge excess
+rares up to epic to compress inventory. Once the lab completes, shatter at
+the improved rate.
 
 ---
 
