@@ -96,6 +96,24 @@ independently-triggerable skills.
 
 ---
 
+---
+
+## Skill File Backlog
+
+### Lab category reference files
+`tta-labs.md` is the strategic entrypoint covering stage-based priority across all lab
+categories. Each category should eventually get its own `references/tta-labs-<category>.md`
+with per-lab detail: exact level counts, unlock tiers, stat values per level, retirement
+triggers, and build-specific nuances.
+
+Categories to cover: Main, Attack, Defense, Utility, Ultimate Weapons, Cards, Perks,
+Bots, Enemies, Modules, Battle Condition.
+
+**Approach**: interview per-category the same way cards were done — source material or
+user walkthrough one lab at a time.
+
+---
+
 ## Missing Fields
 
 ### `get_tower_state`
