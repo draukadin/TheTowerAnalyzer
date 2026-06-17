@@ -22,7 +22,7 @@ Modules are equippable upgrades unlocked at Tier 2 Wave 90. There are 4 types:
 - **Generator** — utility/economy
 - **Core** — ultimate weapons (UWs)
 
-One module of each type can be equipped (a second "assist" slot unlocks at Tier 19 Wave 50 for 1000 stones each, providing a unique Epic-quality effect and 1% main/sub effect bonus — improved with stones and labs).
+One module of each type can be equipped (a second "assist" slot unlocks at Tier 19 Wave 50 for 1000 stones each — see Assist Module System section below for full detail).
 
 ---
 
@@ -66,13 +66,22 @@ epic targeting, and gem budget strategy, see `references/tta-modules-buying.md`.
 
 Modules are leveled using **type-specific shards** and **coins**. Leveling increases the **main stat only** (damage, health, coin bonus, or UW damage depending on type).
 
-Key level milestones unlock additional sub-effect slots. Max level is determined by rarity:
+Key level milestones unlock additional sub-effect slots:
+
+- **Level 1**: slots 1–2 open by default
+- **Level 41**: slot 3 unlocks
+- **Level 101**: slot 4 unlocks
+- **Level 141**: slot 5 unlocks (also the assist module leveling pause point — see Assist Module section)
+
+Max level is determined by rarity:
 
 - Common: lowest max level
 - Rare → Legendary+: higher cap
 - Epic → Ancestral (5 stars): highest cap, up to level 200
 
 Leveling costs scale steeply — see `references/tta-module-level-costs.md` for the full table. Notable inflection points: costs jump hard at level 61 (25M coins), 101 (8B coins), 141 (500B coins), and 171+ (510T+ coins).
+
+**Main stat bonus also scales non-linearly.** The bonus gained per level increases dramatically at high levels — going from 165 to 166 gives roughly 200× more main stat than going from level 1 to 2. This means each level becomes more valuable as you progress, and it is the core reason investing in the main module beyond level 141 outperforms continuing to level the assist module.
 
 **Modules can be fully reset** ("restore" button) at no cost — all shards and coins returned. Reroll shards and gems are NOT returned on restore.
 
@@ -88,6 +97,8 @@ Merging increases a module's rarity, raising its main stat, stat scaling, and ma
 - **Wildcard (orb icon)**: any module of the same type at the shown rarity
 
 **Critical rule**: Rare modules keep their original name forever. A merged Rare-to-Epic will never match a natural Epic of the same name and will never gain a unique ability. It can still serve as wildcard merge material for a natural epic later.
+
+**Rare rarity hard cap**: Modules originating as Rare can never reach Mythic or Ancestral, regardless of how many merges are applied. The fodder path stops at Legendary+. This is an absolute ceiling — there is no workaround.
 
 ### Natural Epic Upgrade Path
 
@@ -145,6 +156,10 @@ Total module inventory is capped at **300 modules** across all types. Managing t
 is an active part of the game — pulling on the banner without clearing inventory space
 will block you once you hit 300.
 
+**Favorite/pin flag**: Mark any module as a favorite to prevent it from being accidentally shattered or merged. Use this to protect your dedicated tournament module set — it's easy to lose a carefully rerolled module if you're clearing inventory quickly.
+
+**5-star Ancestral shatter yield**: If you pull a module already at Ancestral 5-star (which becomes possible once the drop rate reduction kicks in — see `references/tta-modules-buying.md`), shattering it yields **1,000 shards** of that type. With the Shatter Shards lab at max, this increases to **2,000 shards**. Never discard these pulls carelessly — they are a major shard windfall.
+
 ### Shard Values
 
 Shard yield per module depends on the **Shatter Shards lab** level (5 levels total,
@@ -199,9 +214,13 @@ Every module has sub-effect slots unlocked at level milestones. Sub-stats are **
 
 - 0 locks: 10 shards | 1 lock: 40 | 2 locks: 160 | 3 locks: 500 | 4 locks: 1000 | 5 locks: 1600
 
+**Reroll target sizing**: Set auto-reroll targets to no more than half your open slots. With 4–5 sub-stat slots open, only target your top 2 stats — chasing more dilutes rolls and wastes shards on marginal results. With 6 slots, targeting 3 is acceptable. Lock your highest-priority stat first at the best quality available, then decide whether the cost jump to lock a second is worth it.
+
 **Locking strategy**: Lock desirable sub-stats before rerolling to protect them. Cost increases per lock, so prioritize locking your best sub first, then decide if the second slot is worth the cost jump.
 
 **Auto-ban**: Spotlight Angle subs are auto-banned when angle is maxed via workshop/lab. Chrono Field Duration/Cooldown subs are auto-banned when those stats are maxed. This removes those slots from roll pool for free.
+
+**Thorn damage 101% tip (EHP builds)**: The Armor sub-stat Thorn Damage at Epic quality gives +2%. If your base thorn damage is at or near 99%, adding one epic Thorn Damage sub pushes it to 101%+, causing any normal enemy that touches the tower to die instantly. Bosses die in 2 hits (1 hit combined with Plasma Cannon). Highly effective for early EHP players — worth targeting even though it loses value at endgame when glass cannon takes over.
 
 For full sub-stat tables by type, see `references/tta-module-substats.md`.
 
@@ -276,24 +295,24 @@ For detailed strategic notes and build interactions, see `references/strategy.md
 - MH (Magnetic Hook) — synergizes with AOE mastery + assist mods for near-perma fleet stun
 - SD (Space Displacer) — enables major stall/CC setups with the right build
 - SH (Singularity Harness) — second-best farming mod; bot range + Flame Bot double damage
-- AS (Amplifying Strike) — near-perma 5x damage multiplier with Enemy Balance Mastery card
+- AS (Amplifying Strike) — near-perma 5x damage multiplier with Enemy Balance Mastery card; endgame cannon pick once damage output is high enough to get consistent value (see DP→AS transition below)
 - HC (Harmony Conductor) — mediocre alone; strong in CC builds; can stun overcharge enemies
-- GC (Galaxy Compressor) — niche value for Smart Missiles and perma Black Hole setups
+- GC (Galaxy Compressor) — best farming generator for early and mid game (reduces all UW cooldowns per package); only transitions to secondary role once DVO builds mature and BHD becomes viable; also has niche Smart Missiles / perma Black Hole value endgame
+- SF (Sharp Fortitude) — best Armor module for EHP and DVO/wall builds; boosts wall effect and makes the transition to wall-DVO significantly smoother; not competing with PC (Armor vs. Core slot)
 
 **C Tier**
 
 - OC (Om Chip) — situational; useful with CF+ for boss-focused damage; ~16 activations per run
 - AD (Astral Deliverance) — only viable in specific bounce-web strategies
-- PC (Primordial Collapse) — reduces overcharge damage in Legends tournament; extra BH coverage in farming
+- PC (Primordial Collapse) — reduces overcharge damage in Legends tournament; extra BH coverage in farming; note that perma-BH via PC can reduce coin income by killing enemies outside GT/DW windows
+- RB (Restorative Bonus) — solid cannon pick for silver/gold/platinum tournament (attack speed scaling, works even at Epic); falls off hard at champion once PF is viable
 
 **D Tier**
 
 - BA (Being Annihilator) — minimal value; supercrit chance already >50% endgame
 - NMP (Negative Mass Projector) — some CC use cases but outclassed by OA
-- MVN (Multiverse Nexus) — poor man's UW sync for farming; increases DW cooldown (makes DW worse); only situational use is slowing enemy death to hit orbs
-- SF (Sharp Fortitude) — best EHP mod but outshined by PC for countering overcharge
+- MVN (Multiverse Nexus) — **early/mid game**: recommended sync tool before stones are invested to manually align DW with BH/GT; keep BH+GT together via stone investment, use MVN to pull DW into sync; **endgame**: net negative at Epic/Legendary (averages cooldowns up), neutral at Mythic, beneficial at Ancestral; only situational endgame use is slowing enemy death to hit orbs
 - SR (Shrink Ray) — very limited use case
-- RB (Restorative Bonus) — early game or niche web/KB strategy use only; not a lategame pick
 - HB (Havoc Bringer) — no reason to use in current meta; possibly marginal in AD+bounce+range builds
 
 **F Tier**
@@ -310,9 +329,63 @@ For detailed strategic notes and build interactions, see `references/strategy.md
 
 **Tournament runs**: Conditions vary. GC shines when UW cooldown reduction matters. DP is strong because CC (especially fleet one-shots) is king. Check whether any battle condition directly counters or amplifies a module's effect before locking in a loadout. No modules are hard-banned in tournaments — it's situational.
 
+**DP → AS cannon transition**: DP is the default tournament cannon pick from early game through high champion (15% one-shot chance vs. fleets at Ancestral). AS takes over at high champion/legend, where damage output is high enough to reliably trigger the 5× multiplier. Don't swap early — AS underperforms without the damage foundation to back it.
+
 **CC builds**: OA + SD + MH + HC + DP + perma BH can create near-perma fleet stun. CC is increasingly the dominant endgame strategy.
 
 **UW sync**: MVN forces DW/GT/BH to fire together but averages the cooldowns (net negative at Epic/Legendary). Only becomes neutral at Mythic and beneficial at Ancestral. Don't use MVN to replace proper manual sync or a Dimension Core setup.
+
+---
+
+## Assist Module System
+
+Unlocks at **Tier 19 Wave 50**. Each assist slot costs **1,000 stones**. There are 4 slots (one per module type). This is one of the largest single power spikes in the late game — comparable in impact to card masteries.
+
+### How Assist Modules Work
+
+An assist module equipped in a slot provides two things:
+
+1. **A fraction of its sub-stats** (multiplicative to the main module's sub-stats) — determined by the Sub-stat Efficiency stone investment
+2. **Its unique effect** at a quality determined by the module's actual rarity — boosted by the Unique Effect Boost stone investment
+
+The sub-stat contribution is **multiplicative**, not additive. A 20% sub-stat efficiency means the assist module adds 20% of its sub-stat values on top of what the main module already provides — so a good assist module sub-stat compounds with the main module rather than merely adding to it.
+
+### Unique Effect Quality vs. Unique Effect Boost — Critical Distinction
+
+The assist module's unique effect quality is set by the **rarity of the module itself** (higher rarity = stronger base effect). The stone investment in **Unique Effect Boost** (the lab) only scales the quality-scaling portion of the effect from 20% up to 40%.
+
+**The critical implication**: some modules have a fixed (non-scaling) component that delivers most of their value regardless of the boost level. For those modules — for example, Astral Deliverance, where the fixed stat is what matters — the Unique Effect Boost investment has zero impact. Identify which part of the assist module ability you care about before spending stones on the effect boost.
+
+### Stone Investment Priority (Assist Module)
+
+| Investment | What It Does | Priority |
+|---|---|---|
+| Sub-stat Efficiency | % of assist module sub-stats applied to main module (multiplicative) | **Highest** for UW/core assist |
+| Unique Effect Boost | Scales the quality-varying portion of the unique effect 20%→40% | Only if the effect's scaling portion matters |
+
+**Sub-stat efficiency ROI**: Getting sub-stat efficiency to 20% costs approximately **800 stones**. For the UW/core module assist slot, the resulting multiplicative sub-stat bonuses (chain lightning chance, spotlight stats, UW cooldown reductions) are equivalent to roughly **3,000 stones** of direct upgrades. This is one of the best stone-efficiency investments in the game once assist slots are unlocked. The same logic applies less strongly to cannon assist — the individual sub-stat gains there are smaller.
+
+### Assist Module Leveling Strategy
+
+**Target level 141, then pause.** Level 141 unlocks the 5th sub-stat slot — the point of maximum sub-stat value per shard invested. Beyond 141, the main module's non-linear stat scaling makes reinvesting in the main module significantly more efficient than continuing to level the assist module. Resume leveling the assist module only after the main module is comfortably past 161.
+
+The assist module does not need to be leveled to the same depth as the main module. Its value comes primarily from its sub-stats and unique effect, not from the main stat contribution (which is a fraction of what the main module provides at equivalent level).
+
+### Which Modules to Use as Assist
+
+**Core/UW assist**: DC and OA are the most common picks. DC as an assist provides chain lightning and CC contributions; OA brings % health damage that still hits fleets. The Om Chip (OC) is a viable assist specifically for boss-heavy scenarios — it focuses spotlight on the boss and boosts boss damage, useful for players without DC who struggle with bosses.
+
+**Cannon assist**: DP is a strong assist pick for tournaments — the fleet one-shot chance scales with rarity and still applies from the assist slot. AS can also serve as an assist.
+
+**Pulsar Harvester (PH) as tournament assist**: PH's passive enemy level scaling applies from the assist slot and reduces effective enemy health per wave, making enemies easier to kill and bosses deal less tower damage than expected for their level. Strong assist pick for tournament runs.
+
+### Assist Module and Shard Demand
+
+Unlocking assist modules doubles the shard demand. Both the main and assist module need leveling, and the assist module's sub-stats must be rerolled independently. This makes the following investments significantly more valuable once assist slots are unlocked:
+
+- **Recovery Package card mastery** — increases shard income and becomes a high-priority target at this stage
+- **Shatter Shards lab** — long research time but meaningful shard yield improvement; queue it when slots allow
+- **Daily Mission Shards lab** — consistently underrated; per-day shard income compounds over time
 
 ---
 
