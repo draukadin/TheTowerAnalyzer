@@ -399,7 +399,7 @@ If a required data point is unavailable from MCP tools, state what's missing, as
 
 | Tool | Call when |
 |---|---|
-| `get_tower_state` | Need module loadout, rarity, stars, substats, or presets |
+| `get_tower_state` | Need module loadout, rarity, stars, substats, presets, or effect bans |
 | `get_currencies` | Before any reroll, leveling, or merge affordability question |
 | `get_shard_rates` | Projecting time to a target level |
 | `get_module_leveling_cost` | Exact total shards and coins to level a module from any level to any target (max 300) |
@@ -408,6 +408,8 @@ If a required data point is unavailable from MCP tools, state what's missing, as
 | `get_lab_state` | Checking current level of any lab before making priority recommendations |
 
 **`get_tower_state` response shape** — `modules` is grouped by type (`Cannon`, `Armor`, `Generator`, `Core`). Each entry includes: `id`, `code`, `name`, `owned`, `rarity`, `stars`, `level`, `ability_values` (map of rarity → effect value), `substats` (array with `slot`, `key`, `rarity`, `locked`), `copies` (array of copy rarities), `shattered_epics`, `presets` (array of `{ preset, slot }` assignments — use this to determine which preset a module is equipped in).
+
+**`effect_bans` section** — Pass `sections: ["effect_bans"]` to get the current ban configuration per module type. Returns an object keyed by type (`Cannon`, `Armor`, `Generator`, `Core`) with `max_bans` (total ban slots unlocked), `bans_used` (how many are active), and `banned` (array of sub-stat keys currently banned). Use this whenever advising on bans: check available slots before recommending a new ban, and verify the current bans before suggesting changes. Note that `max_bans` grows as the Module Effect Ban lab is leveled — always fetch live data rather than assuming capacity.
 
 ### Critical Personalization Rules
 

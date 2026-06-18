@@ -2,8 +2,15 @@ package com.pphi.tower.web;
 
 import com.pphi.tower.model.ModuleLevelTable;
 import com.pphi.tower.repository.ModuleRepository;
+import com.pphi.tower.repository.ModuleRepository.BanState;
 import com.pphi.tower.repository.ModuleRepository.ModulePlayerData;
+import com.pphi.tower.repository.ModuleRepository.SubstatDef;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Map;
 
 import java.util.List;
 
@@ -84,5 +91,42 @@ public class ModuleController {
     @DeleteMapping("/{id}/preset/{preset}/{slot}")
     public void removePreset(@PathVariable int id, @PathVariable String preset, @PathVariable String slot) {
         repo.removePreset(id, preset, slot);
+    }
+
+    // ── Substat catalog ───────────────────────────────────────────────────────
+
+    @GetMapping("/substats")
+    public Map<String, List<SubstatDef>> getSubstats() {
+        return repo.getAllSubstatDefs();
+    }
+
+    // ── Effect bans ───────────────────────────────────────────────────────────
+
+    @GetMapping("/bans")
+    public List<BanState> getBans() {
+        return repo.getAllBanStates();
+    }
+
+    @PutMapping("/bans/{moduleType}/{substatKey}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addBan(@PathVariable String moduleType, @PathVariable String substatKey) {
+        BanState state = repo.getAllBanStates().stream()
+                .filter(b -> b.moduleType().equalsIgnoreCase(moduleType))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Unknown module type: " + moduleType));
+        if (state.banned().contains(substatKey)) return;
+        if (state.banned().size() >= state.maxBans()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    moduleType + " Effect Bans lab is level " + state.maxBans()
+                            + "; all " + state.maxBans() + " ban slot(s) are used");
+        }
+        repo.addBan(moduleType, substatKey);
+    }
+
+    @DeleteMapping("/bans/{moduleType}/{substatKey}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeBan(@PathVariable String moduleType, @PathVariable String substatKey) {
+        repo.removeBan(moduleType, substatKey);
     }
 }

@@ -947,6 +947,31 @@ public class DatabaseInitializer {
                 )
                 """);
 
+        // ── Module Substat Catalog & Bans ─────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_substat_def (
+                    module_type TEXT NOT NULL,
+                    key         TEXT NOT NULL,
+                    label       TEXT NOT NULL,
+                    PRIMARY KEY (module_type, key)
+                )
+                """);
+
+        try {
+            jdbc.execute("ALTER TABLE module_substat_def ADD COLUMN min_rarity TEXT NOT NULL DEFAULT 'Common'");
+        } catch (Exception ignored) {}
+
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_substat_ban (
+                    module_type  TEXT NOT NULL,
+                    substat_key  TEXT NOT NULL,
+                    PRIMARY KEY (module_type, substat_key),
+                    FOREIGN KEY (module_type, substat_key) REFERENCES module_substat_def(module_type, key)
+                )
+                """);
+
         // ── Tournament Battle Conditions ──────────────────────────────────────
 
         jdbc.execute("""

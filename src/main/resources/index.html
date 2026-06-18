@@ -292,6 +292,36 @@
   .mod-preset-chip.active.Testing{background:rgba(245,158,66,0.15);border-color:rgba(245,158,66,0.5);color:var(--orange);}
   .mod-preset-chip.taken{opacity:0.3;cursor:not-allowed;}
 
+  /* ── Effect Bans ─────────────────────────── */
+  .eb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:1rem;}
+  .eb-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    border-top-width:3px;padding:16px;}
+  .eb-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .eb-slots{font-size:11px;color:var(--muted);margin-left:auto;font-family:var(--mono);}
+  .eb-slots.full{color:var(--orange);}
+  .eb-banned-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;min-height:24px;}
+  .eb-banned-row{display:flex;align-items:center;gap:8px;background:rgba(242,107,107,0.08);
+    border:1px solid rgba(242,107,107,0.2);border-radius:6px;padding:5px 10px;}
+  .eb-banned-label{flex:1;font-size:12px;color:var(--text);}
+  .eb-remove-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;
+    line-height:1;padding:0 2px;opacity:0.7;transition:opacity 0.12s;}
+  .eb-remove-btn:hover{opacity:1;}
+  .eb-add-row{display:flex;gap:8px;align-items:center;}
+  .eb-add-select{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;
+    color:var(--text);font-size:12px;padding:5px 8px;font-family:var(--font);}
+  .eb-add-btn{background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.3);border-radius:6px;
+    color:var(--accent);font-size:12px;padding:5px 12px;cursor:pointer;transition:all 0.12s;white-space:nowrap;}
+  .eb-add-btn:hover:not(:disabled){background:rgba(79,142,247,0.22);border-color:var(--accent);}
+  .eb-add-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .eb-empty{font-size:11px;color:var(--muted);font-style:italic;}
+  .eb-rarity{font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 5px;border-radius:3px;white-space:nowrap;}
+  .eb-rarity.Common{background:rgba(122,128,153,0.15);color:var(--muted);}
+  .eb-rarity.Rare{background:rgba(79,142,247,0.15);color:var(--accent);}
+  .eb-rarity.Epic{background:rgba(124,92,252,0.15);color:var(--accent2);}
+  .eb-rarity.Legendary{background:rgba(245,158,66,0.15);color:var(--orange);}
+  .eb-rarity.Mythic{background:rgba(61,214,140,0.15);color:var(--green);}
+  .eb-rarity.Ancestral{background:rgba(245,200,66,0.2);color:var(--gold);}
+
   /* ── Relics ──────────────────────────────── */
   .relic-dashboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:1.5rem;}
   .relic-dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;}
@@ -836,6 +866,7 @@
       <button class="nav-group-btn" id="grp-modules" onclick="navToggle('grp-modules')">Modules</button>
       <div class="nav-dropdown">
         <button class="nav-btn" onclick="showView('modules')">Modules</button>
+        <button class="nav-btn" onclick="showView('effectbans')">Effect Bans</button>
         <button class="nav-btn" onclick="showView('shards')">Shard Rate</button>
       </div>
     </div>
@@ -901,6 +932,7 @@ const API='http://localhost:8080/api';
 let allReports=[],activeId=null,activePayload=null,activeView='reports',currentTab='stats';
 
 async function init(){
+  await loadModSubstats();
   try{
     const res=await fetch(`${API}/reports`);
     if(!res.ok)throw new Error(res.statusText);
@@ -1046,6 +1078,7 @@ function showView(view){
   else if(view==='shards')renderShardsView();
   else if(view==='uw')renderUwView();
   else if(view==='modules')renderModulesView();
+  else if(view==='effectbans')renderEffectBansView();
   else if(view==='relics')renderRelicsView();
   else if(view==='labs')renderLabsView();
   else if(view==='cosmetics')renderCosmeticsView();
@@ -2015,54 +2048,14 @@ const MOD_RARITIES=['Epic','Epic+','Legendary','Legendary+','Mythic','Mythic+','
 const MOD_COPY_RARITIES=['Epic','Epic+','Legendary','Legendary+','Mythic','Mythic+'];
 const MOD_SUB_RARITIES=['Common','Rare','Epic','Legendary','Mythic','Ancestral'];
 
-const MOD_SUBSTATS={
-  Cannon:[
-    {key:'attack_speed',label:'Attack Speed'},{key:'critical_chance',label:'Critical Chance'},
-    {key:'critical_factor',label:'Critical Factor'},{key:'attack_range',label:'Attack Range'},
-    {key:'damage_per_meter',label:'Damage / Meter'},{key:'multishot_chance',label:'Multishot Chance'},
-    {key:'multishot_targets',label:'Multishot Targets'},{key:'rapid_fire_chance',label:'Rapid Fire Chance'},
-    {key:'rapid_fire_duration',label:'Rapid Fire Duration'},{key:'bounce_shot_chance',label:'Bounce Shot Chance'},
-    {key:'bounce_shot_targets',label:'Bounce Shot Targets'},{key:'bounce_shot_range',label:'Bounce Shot Range'},
-    {key:'super_crit_chance',label:'Super Crit Chance'},{key:'super_crit_multi',label:'Super Crit Multi'},
-    {key:'rend_armor_chance',label:'Rend Armor Chance'},{key:'rend_armor_multi',label:'Rend Armor Multi'},
-    {key:'max_rend_armor_multi',label:'Max Rend Armor Multi'}
-  ],
-  Generator:[
-    {key:'cash_bonus',label:'Cash Bonus'},{key:'cash_per_wave',label:'Cash / Wave'},
-    {key:'coins_kill_bonus',label:'Coins / Kill Bonus'},{key:'coins_per_wave',label:'Coins / Wave'},
-    {key:'free_attack_upgrade',label:'Free Attack Upgrade'},{key:'free_defense_upgrade',label:'Free Defense Upgrade'},
-    {key:'free_utility_upgrade',label:'Free Utility Upgrade'},{key:'interest_per_wave',label:'Interest / Wave'},
-    {key:'recovery_amount',label:'Recovery Amount'},{key:'max_recovery',label:'Max Recovery'},
-    {key:'package_chance',label:'Package Chance'},{key:'enemy_health_level_skip',label:'Enemy Health Level Skip'},
-    {key:'enemy_attack_level_skip',label:'Enemy Attack Level Skip'}
-  ],
-  Armor:[
-    {key:'health_regen',label:'Health Regen'},{key:'defense_pct',label:'Defense %'},
-    {key:'defense_absolute',label:'Defense Absolute'},{key:'thorns_damage',label:'Thorns Damage'},
-    {key:'lifesteal',label:'Lifesteal'},{key:'knockback_chance',label:'Knockback Chance'},
-    {key:'knockback_force',label:'Knockback Force'},{key:'orb_speed',label:'Orb Speed'},
-    {key:'orbs',label:'Orbs'},{key:'shockwave_size',label:'Shockwave Size'},
-    {key:'shockwave_frequency',label:'Shockwave Frequency'},{key:'land_mine_damage',label:'Land Mine Damage'},
-    {key:'land_mine_chance',label:'Land Mine Chance'},{key:'land_mine_radius',label:'Land Mine Radius'},
-    {key:'death_defy',label:'Death Defy'},{key:'wall_health',label:'Wall Health'},
-    {key:'wall_rebuild',label:'Wall Rebuild'}
-  ],
-  Core:[
-    {key:'chain_lightning_damage',label:'Chain Lightning - Damage'},{key:'chain_lightning_quantity',label:'Chain Lightning - Quantity'},
-    {key:'chain_lightning_chance',label:'Chain Lightning - Chance'},{key:'smart_missiles_damage',label:'Smart Missiles - Damage'},
-    {key:'smart_missiles_quantity',label:'Smart Missiles - Quantity'},{key:'smart_missiles_cooldown',label:'Smart Missiles - Cooldown'},
-    {key:'death_wave_damage',label:'Death Wave - Damage'},{key:'death_wave_quantity',label:'Death Wave - Quantity'},
-    {key:'death_wave_cooldown',label:'Death Wave - Cooldown'},{key:'chrono_field_duration',label:'Chrono Field - Duration'},
-    {key:'chrono_field_speed_reduction',label:'Chrono Field - Speed Reduction'},{key:'chrono_field_cooldown',label:'Chrono Field - Cooldown'},
-    {key:'inner_land_mines_damage',label:'Inner Land Mines - Damage'},{key:'inner_land_mines_quantity',label:'Inner Land Mines - Quantity'},
-    {key:'inner_land_mines_cooldown',label:'Inner Land Mines - Cooldown'},{key:'golden_tower_bonus',label:'Golden Tower - Bonus'},
-    {key:'golden_tower_duration',label:'Golden Tower - Duration'},{key:'golden_tower_cooldown',label:'Golden Tower - Cooldown'},
-    {key:'poison_swamp_damage',label:'Poison Swamp - Damage'},{key:'poison_swamp_duration',label:'Poison Swamp - Duration'},
-    {key:'poison_swamp_cooldown',label:'Poison Swamp - Cooldown'},{key:'black_hole_size',label:'Black Hole - Size'},
-    {key:'black_hole_duration',label:'Black Hole - Duration'},{key:'black_hole_cooldown',label:'Black Hole - Cooldown'},
-    {key:'spotlight_bonus',label:'Spotlight - Bonus'},{key:'spotlight_angle',label:'Spotlight - Angle'}
-  ]
-};
+let MOD_SUBSTATS={};
+
+async function loadModSubstats(){
+  try{
+    const res=await fetch(`${API}/modules/substats`);
+    if(res.ok) MOD_SUBSTATS=await res.json();
+  }catch(e){ /* keep empty; UI falls back to raw key names */ }
+}
 
 function modSubstatLabel(type,key){
   const list=MOD_SUBSTATS[type]||[];
@@ -2246,6 +2239,120 @@ function restoreModScroll(){
   requestAnimationFrame(()=>document.getElementById('mainContent').scrollTop=top);
 }
 async function refreshModulesView(){await renderModulesView();restoreModScroll();}
+
+// ── Effect Bans ────────────────────────────────────────────────────────────────
+
+const RARITY_ORDER=['Common','Rare','Epic','Legendary','Mythic','Ancestral'];
+
+function ebRarityBadge(minRarity){
+  return `<span class="eb-rarity ${minRarity}" title="Available from ${minRarity}">${minRarity[0]}</span>`;
+}
+
+function ebGroupedOptions(substats){
+  const groups={};
+  for(const s of substats){
+    const r=s.minRarity||'Common';
+    if(!groups[r]) groups[r]=[];
+    groups[r].push(s);
+  }
+  return RARITY_ORDER
+    .filter(r=>groups[r]?.length)
+    .map(r=>`<optgroup label="${r}">${groups[r].map(s=>`<option value="${s.key}">${s.label}</option>`).join('')}</optgroup>`)
+    .join('');
+}
+
+async function renderEffectBansView(){
+  const el=document.getElementById('mainContent');
+  el.innerHTML='<div class="loading-placeholder" style="padding:4rem;text-align:center">Loading effect bans…</div>';
+  try{
+    const [bansRes]=await Promise.all([
+      fetch(`${API}/modules/bans`),
+      MOD_SUBSTATS.Cannon?Promise.resolve():loadModSubstats(),
+    ]);
+    if(!bansRes.ok) throw new Error(bansRes.statusText);
+    const bans=await bansRes.json();
+
+    const ORDER=['Cannon','Generator','Armor','Core'];
+    const banMap=Object.fromEntries(bans.map(b=>[b.moduleType,b]));
+
+    let html=`<div class="report-title" style="margin-bottom:0.25rem">Module Effect Bans</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:1rem">
+        Ban sub-stats from appearing when rolling a module type. Sub-stats available from lower rarities
+        (C=Common, R=Rare, E=Epic, L=Legendary) appear more frequently and are generally higher priority to ban.
+        Ban slots unlock via the Effect Bans labs.
+      </div>
+      <div class="eb-grid">`;
+
+    for(const type of ORDER){
+      const b=banMap[type]||{moduleType:type,maxBans:0,banned:[]};
+      const color=MOD_TYPE_COLOR[type];
+      const slotsUsed=b.banned.length;
+      const maxBans=b.maxBans;
+      const isFull=slotsUsed>=maxBans;
+      const substats=MOD_SUBSTATS[type]||[];
+      const substatMap=Object.fromEntries(substats.map(s=>[s.key,s]));
+      const available=substats.filter(s=>!b.banned.includes(s.key));
+
+      const bannedRows=b.banned.length
+        ? b.banned.map(key=>{
+            const s=substatMap[key]||{label:key,minRarity:'Common'};
+            return `<div class="eb-banned-row">
+              ${ebRarityBadge(s.minRarity||'Common')}
+              <span class="eb-banned-label">${s.label}</span>
+              <button class="eb-remove-btn" title="Remove ban" onclick="ebRemoveBan('${type}','${key}')">✕</button>
+            </div>`;
+          }).join('')
+        : `<span class="eb-empty">No bans set</span>`;
+
+      const addRow=maxBans===0
+        ? `<div style="font-size:11px;color:var(--muted);font-style:italic">Research ${type} Effect Bans lab to unlock ban slots.</div>`
+        : `<div class="eb-add-row">
+            <select class="eb-add-select" id="eb-sel-${type}" ${isFull?'disabled':''}>
+              <option value="" disabled selected>— choose sub-stat —</option>
+              ${ebGroupedOptions(available)}
+            </select>
+            <button class="eb-add-btn" ${isFull?'disabled':''} onclick="ebAddBan('${type}')">Ban</button>
+          </div>`;
+
+      html+=`<div class="eb-card" style="border-top-color:${color}">
+        <div class="eb-header">
+          <span class="mod-type-badge ${type}">${type}</span>
+          <span class="eb-slots${isFull?' full':''}">${slotsUsed} / ${maxBans} ban${maxBans===1?'':'s'} used</span>
+        </div>
+        <div class="eb-banned-list">${bannedRows}</div>
+        ${addRow}
+      </div>`;
+    }
+
+    html+='</div>';
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML=`<div style="padding:2rem;color:var(--red)">Failed to load effect bans: ${e.message}</div>`;
+  }
+}
+
+async function ebAddBan(type){
+  const sel=document.getElementById(`eb-sel-${type}`);
+  const key=sel?.value;
+  if(!key) return;
+  const res=await fetch(`${API}/modules/bans/${encodeURIComponent(type)}/${encodeURIComponent(key)}`,{method:'PUT'});
+  if(!res.ok){
+    const msg=await res.text();
+    alert(`Could not add ban: ${msg}`);
+    return;
+  }
+  renderEffectBansView();
+}
+
+async function ebRemoveBan(type,key){
+  const res=await fetch(`${API}/modules/bans/${encodeURIComponent(type)}/${encodeURIComponent(key)}`,{method:'DELETE'});
+  if(!res.ok){
+    alert('Failed to remove ban.');
+    return;
+  }
+  renderEffectBansView();
+}
+
 
 async function modSaveState(id,owned,rarity,stars,level){
   saveModScroll();

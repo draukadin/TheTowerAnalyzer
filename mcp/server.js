@@ -83,14 +83,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'get_tower_state',
-      description: 'Get UW stats, module inventory, and relic data. Use sections to control what is returned.',
+      description: 'Get UW stats, module inventory, relic data, and module effect bans. Use sections to control what is returned.',
       inputSchema: {
         type: 'object',
         properties: {
           sections: {
             type: 'array',
-            items: { type: 'string', enum: ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details'] },
-            description: 'Sections to include. Defaults to ["uw", "modules_active", "relic_summary"]. Use modules_all instead of modules_active for full 24-module swap analysis.',
+            items: { type: 'string', enum: ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans'] },
+            description: 'Sections to include. Defaults to ["uw", "modules_active", "relic_summary"]. Use modules_all instead of modules_active for full 24-module swap analysis. Use effect_bans to see which sub-stats are banned per module type and how many ban slots are available.',
           },
         },
       },
@@ -448,8 +448,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get_tower_state': {
         const sections = args.sections ?? ['uw', 'modules_active', 'relic_summary'];
-        validateSections(sections, ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details']);
-        return distillTowerState(await fetchApi('/api/player-tracker/state'), sections);
+        validateSections(sections, ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans']);
+
+        const [state, bans] = await Promise.all([
+          fetchApi('/api/player-tracker/state'),
+          sections.includes('effect_bans') ? fetchApi('/api/modules/bans') : null,
+        ]);
+
+        return distillTowerState(state, sections, bans);
       }
 
       // ── Lab state ─────────────────────────────────────────────────────────
@@ -925,7 +931,7 @@ function distillRecentRuns(runs, includeDiagnosis, diagnoses) {
 
 // ── Distillation: tower state ─────────────────────────────────────────────────
 
-function distillTowerState(d, sections) {
+function distillTowerState(d, sections, bans) {
   const out = {};
 
   if (sections.includes('uw')) {
@@ -970,6 +976,16 @@ function distillTowerState(d, sections) {
     const { summary, owned } = distillRelics(d.relics ?? []);
     if (sections.includes('relic_summary'))  out.relic_summary = summary;
     if (sections.includes('relic_details'))  out.relics_owned  = owned;
+  }
+
+  if (sections.includes('effect_bans') && bans) {
+    out.effect_bans = Object.fromEntries(
+      bans.map(b => [b.moduleType, {
+        max_bans:  b.maxBans,
+        bans_used: b.banned.length,
+        banned:    b.banned,
+      }])
+    );
   }
 
   return result(out);
@@ -1131,15 +1147,21 @@ function distillWorkshopState({ items, progress, discounts, spend, presets }, se
 
 // ── Distillation: cards state ─────────────────────────────────────────────────
 
+// Copies required to advance TO each star level (index = target star, 1-based; index 1 = 0).
+const COPIES_TO_REACH_STAR = [0, 0, 1, 2, 3, 4, 6, 8];
+
 function distillCardsState({ cards, slots, presets }, sections) {
   const out = {};
 
   if (sections.includes('cards') && cards) {
     out.cards = cards.map(c => ({
-      name:          c.name,
-      rarity:        c.rarity,
-      star_level:    c.starLevel,
-      copies_owned:  c.copiesOwned,
+      name:                c.name,
+      rarity:              c.rarity,
+      star_level:          c.starLevel,
+      copies_owned:        c.copiesOwned,
+      copies_toward_next:  c.starLevel < 7
+        ? Math.min(c.copiesOwned, COPIES_TO_REACH_STAR[c.starLevel + 1])
+        : null,
       mastery_level: c.masteryLevel,
       mastery_max:   c.masteryLabLevel,
     }));
