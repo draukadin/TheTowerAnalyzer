@@ -46,12 +46,15 @@ public class LabSlotRepository {
                     Double coinsPerDay = null;
                     if (!plans.isEmpty()) {
                         PlanEntry current = plans.get(0);
-                        // Subtract the currently-running step's cost — already paid
+                        // Coins still owed on the active plan (first step already paid)
                         double coinsStillNeeded = current.coinsTotalResearch() - current.coinsCurrentStep();
-                        if (current.durationSeconds() > 0 && coinsStillNeeded > 0) {
-                            coinsPerDay = coinsStillNeeded / (current.durationSeconds() / 86400.0);
+                        // Add queued plans — need to save for them while current runs
+                        double queuedCoins = plans.stream().skip(1).mapToDouble(PlanEntry::coinsTotalResearch).sum();
+                        double totalCoinsNeeded = coinsStillNeeded + queuedCoins;
+                        if (current.durationSeconds() > 0 && totalCoinsNeeded > 0) {
+                            coinsPerDay = totalCoinsNeeded / (current.durationSeconds() / 86400.0);
                         } else {
-                            coinsPerDay = 0.0;
+                            coinsPerDay = null;
                         }
                     }
 

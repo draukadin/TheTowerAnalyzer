@@ -228,6 +228,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: { type: 'object', properties: {} },
     },
     {
+      name: 'get_lab_plan',
+      description: 'Get the active research plan for each lab slot: what is currently being researched, its coin cost and estimated duration, what is queued next, and which slots are idle. Use this for lab prioritization advice, time-to-completion estimates, and identifying idle slots.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
       name: 'get_lab_costs',
       description: 'Get the per-level coin cost and duration for a specific lab by name.',
       inputSchema: {
@@ -602,6 +607,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get_lab_slots':
         return distillLabSlots(await fetchApi('/api/lab-slots'));
+
+      case 'get_lab_plan':
+        return distillLabPlan(await fetchApi('/api/lab-slots'));
 
       // ── Lab costs ─────────────────────────────────────────────────────────
 
@@ -1351,19 +1359,49 @@ function distillCosmetics(items) {
 function distillLabSlots(slots) {
   return result(slots.map(s => {
     const entry = {
-      slot:            s.slotNumber,
-      speed_mult:      s.cellSpeedMult,
-      queue_coins_T:   round(s.totalCoins / 1e12, 3),
-      queue_days:      round(s.totalDurationSeconds / 86400, 1),
-      coins_per_day_T: s.coinsPerDay != null ? round(s.coinsPerDay / 1e12, 3) : null,
+      slot:          s.slotNumber,
+      speed_mult:    s.cellSpeedMult,
+      queue_coins:   Math.round(s.totalCoins),
+      queue_days:    round(s.totalDurationSeconds / 86400, 1),
+      coins_per_day: s.coinsPerDay != null ? Math.round(s.coinsPerDay) : null,
       plans: (s.plans ?? []).map(p => ({
-        lab:     p.labName,
-        from:    p.startLevel,
-        to:      p.targetLevel,
-        coins_T: round(p.coinsTotalResearch / 1e12, 3),
-        days:    round(p.durationSeconds / 86400, 1),
+        lab:    p.labName,
+        from:   p.startLevel,
+        to:     p.targetLevel,
+        coins:  Math.round(p.coinsTotalResearch),
+        days:   round(p.durationSeconds / 86400, 1),
       })),
     };
+    return entry;
+  }));
+}
+
+// ── Distillation: lab plan ────────────────────────────────────────────────────
+
+function distillLabPlan(slots) {
+  return result(slots.map(s => {
+    const plans = s.plans ?? [];
+    if (plans.length === 0) {
+      return { slot: s.slotNumber, status: 'idle' };
+    }
+    const [current, next, ...rest] = plans;
+    const entry = {
+      slot:    s.slotNumber,
+      status:  'active',
+      current: {
+        lab:     current.labName,
+        from:    current.startLevel,
+        to:      current.targetLevel,
+        coins:   Math.round(current.coinsTotalResearch),
+        days:    round(current.durationSeconds / 86400, 1),
+      },
+    };
+    if (next) {
+      entry.next = { lab: next.labName, from: next.startLevel, to: next.targetLevel };
+    }
+    if (rest.length > 0) {
+      entry.queued = rest.map(p => ({ lab: p.labName, from: p.startLevel, to: p.targetLevel }));
+    }
     return entry;
   }));
 }

@@ -6,13 +6,6 @@ Planned endpoints and fields not yet implemented.
 
 ## Endpoints
 
-### `get_lab_plan`
-Returns the current state of each lab slot: what's being researched, target level, coin cost, time remaining, and what's queued next once the current target is reached.
-
-**Needed for**: lab prioritization advice, estimating time-to-completion, identifying idle slots.
-
----
-
 ### `get_card_details`
 Given a `cardName`, returns full progression state for that card:
 - Current star level and stat value at that level
