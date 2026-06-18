@@ -1,8 +1,10 @@
 package com.pphi.tower.repository;
 
+import com.pphi.tower.model.TowerEra;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Repository
@@ -19,15 +21,18 @@ public class VersionHistoryRepository {
     public record VersionChange(long id, String version, String category,
                                 String entityName, String oldValue, String newValue, String notes) {}
 
+    private static final Comparator<VersionEntry> SEMVER_DESC =
+            Comparator.comparing((VersionEntry e) -> TowerEra.parse(e.version())).reversed();
+
     public List<VersionEntry> getAllVersions() {
         return jdbc.query("""
                 SELECT version, type, summary FROM tower_version
-                ORDER BY version DESC
                 """,
                 (rs, i) -> new VersionEntry(
                         rs.getString("version"),
                         rs.getString("type"),
-                        rs.getString("summary")));
+                        rs.getString("summary")))
+                .stream().sorted(SEMVER_DESC).toList();
     }
 
     public List<VersionChange> getChangesForVersion(String version) {
