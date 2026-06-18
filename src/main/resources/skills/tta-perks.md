@@ -53,8 +53,7 @@ Waves = floor((Base − Waves_Required_lab_levels) × (1 − PWR_perk_picks × 0
 - Round **down** (floor) after applying the formula.
 - Calculate the floored result for the first perk at each base breakpoint, then multiply
   by the number of perks in that range.
-- This is a backend calculation — call `get_perk_wave_cost` (planned MCP tool) rather
-  than computing it manually.
+- Call `get_perk_wave_cost` rather than computing this manually.
 
 ### First Perk Choice
 
@@ -288,6 +287,7 @@ intent.
 | Tool | When to call |
 |------|-------------|
 | `get_perk_settings` | Get current ban list and auto-pick ranking order |
+| `get_perk_wave_cost` | Compute wave cost per perk across all four base breakpoints given current lab levels and PWR picks; optionally count perks reachable at a target wave |
 | `get_lab_state` with `category: "Perks"` | Check current levels of all perk labs (Waves Required, Standard Perks Bonus, Ban Perks, etc.) |
 | `get_lab_costs` | Get coin cost and time for next Ban Perks or Waves Required levels |
 | `get_recent_runs` | Confirm whether the user is farming or pushing — drives which perk strategy applies |

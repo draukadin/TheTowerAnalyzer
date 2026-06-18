@@ -278,6 +278,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description: 'Get the current perk ban list and auto-pick ranking order.',
       inputSchema: { type: 'object', properties: {} },
     },
+    {
+      name: 'get_perk_wave_cost',
+      description: 'Compute the wave cost to earn each perk across the four base breakpoints (200/250/300/350), given the current Waves Required and Standard Perks Bonus lab levels plus the number of Perk Wave Requirement (PWR) perks already picked this run.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          pwrPicks: {
+            type: 'integer',
+            description: 'Number of Perk Wave Requirement perks picked so far this run (default: 0)',
+          },
+          targetWave: {
+            type: 'integer',
+            description: 'Optional wave target — response will include how many perks are reachable at that wave',
+          },
+        },
+      },
+    },
   ],
 }));
 
@@ -571,6 +588,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get_perk_settings':
         return distillPerkSettings(await fetchApi('/api/perks/settings'));
+
+      // ── Perk wave cost ────────────────────────────────────────────────────
+
+      case 'get_perk_wave_cost': {
+        const pwrPicks   = args.pwrPicks   ?? 0;
+        const targetWave = args.targetWave ?? null;
+        const labState   = await fetchApi('/api/player-tracker/lab-state');
+        return distillPerkWaveCost(labState, pwrPicks, targetWave);
+      }
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -1246,6 +1272,53 @@ function distillPerkSettings(d) {
     bans:        d.bans ?? [],
     ranking:     d.ranking ?? [],
   });
+}
+
+// ── Distillation: perk wave cost ─────────────────────────────────────────────
+
+const PERK_BASES = [200, 250, 300, 350];
+
+function distillPerkWaveCost(labState, pwrPicks, targetWave) {
+  const labs = labState.labs ?? [];
+  const wavesRequiredLevel = labs.find(l => l.name === 'Waves Required')?.currentLevel ?? 0;
+  const spbLevel           = labs.find(l => l.name === 'Standard Perks Bonus')?.currentLevel ?? 0;
+
+  const reductionFactor = 1 - pwrPicks * 0.20 * (1 + spbLevel * 0.01);
+
+  const breakpoints = PERK_BASES.map(base => ({
+    base,
+    waves: Math.floor((base - wavesRequiredLevel) * reductionFactor),
+  }));
+
+  const out = {
+    inputs: {
+      waves_required_level: wavesRequiredLevel,
+      spb_level:            spbLevel,
+      pwr_picks:            pwrPicks,
+    },
+    breakpoints,
+  };
+
+  if (targetWave != null) {
+    const ranges = [
+      { cost: breakpoints[0].waves, count: 20 },
+      { cost: breakpoints[1].waves, count: 10 },
+      { cost: breakpoints[2].waves, count: 10 },
+      { cost: breakpoints[3].waves, count: Infinity },
+    ];
+    let remaining = targetWave;
+    let perks = 0;
+    for (const { cost, count } of ranges) {
+      if (cost <= 0) break;
+      const affordable = Math.min(count, Math.floor(remaining / cost));
+      perks += affordable;
+      remaining -= affordable * cost;
+      if (affordable < count) break;
+    }
+    out.perks_reachable = perks;
+  }
+
+  return result(out);
 }
 
 // ── Distillation: lab costs ───────────────────────────────────────────────────

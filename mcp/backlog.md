@@ -6,24 +6,6 @@ Planned endpoints and fields not yet implemented.
 
 ## Endpoints
 
-### `get_perk_wave_cost`
-Given the player's current Waves Required lab level, number of Perk Wave Requirement perks
-picked this run, and Standard Perks Bonus lab level, compute the waves needed to earn each
-perk across all four base breakpoints (200/250/300/350).
-
-Formula per breakpoint:
-```
-Waves = floor((Base − waves_required_lab) × (1 − pwr_picks × 0.20 × (1 + spb_level × 0.01)))
-```
-
-Should return: wave cost at each base tier, total perks reachable at a given wave target,
-and how many perk picks of Perk Wave Requirement are worth taking given current lab levels.
-
-**Needed for**: answering "when do I get my next perk?", "is it worth picking PWR again?",
-perk planning for dissonance/milestone target waves.
-
----
-
 ### `get_module_leveling_cost`
 Given `fromLevel` and `toLevel`, returns the total shards and coins needed to level a module between those two levels. Backed by the `module_level_cost` table (seeded from `ModuleLevelTable`).
 
