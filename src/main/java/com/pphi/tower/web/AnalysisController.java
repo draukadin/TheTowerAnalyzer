@@ -2,8 +2,10 @@ package com.pphi.tower.web;
 
 import com.pphi.tower.config.AppConfig;
 import com.pphi.tower.service.CellIncomeService;
+import com.pphi.tower.service.GtIncomeService;
 import com.pphi.tower.service.ShardAnalysisService;
 import com.pphi.tower.web.dto.CellIncomeDto;
+import com.pphi.tower.web.dto.GtIncomeProjectionDto;
 import com.pphi.tower.web.dto.LabSpeedDto;
 import com.pphi.tower.web.dto.ShardRateDto;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +19,16 @@ public class AnalysisController {
 
     private final CellIncomeService cellIncomeService;
     private final ShardAnalysisService shardAnalysisService;
+    private final GtIncomeService gtIncomeService;
     private final AppConfig config;
 
     public AnalysisController(CellIncomeService cellIncomeService,
                               ShardAnalysisService shardAnalysisService,
+                              GtIncomeService gtIncomeService,
                               AppConfig config) {
         this.cellIncomeService = cellIncomeService;
         this.shardAnalysisService = shardAnalysisService;
+        this.gtIncomeService = gtIncomeService;
         this.config = config;
     }
 
@@ -63,6 +68,18 @@ public class AnalysisController {
     @GetMapping("/shards/snapshot-count")
     public int getSnapshotCount() {
         return shardAnalysisService.getSnapshotCount();
+    }
+
+    @GetMapping("/gt-income")
+    public GtIncomeProjectionDto getGtIncomeProjection(
+            @RequestParam int gtPlusLevel,
+            @RequestParam double gtDurationSec,
+            @RequestParam double gtCooldownSec,
+            @RequestParam double kps,
+            @RequestParam double totalRunDurationSec,
+            @RequestParam double incomePerMob) {
+        return gtIncomeService.project(gtPlusLevel, gtDurationSec, gtCooldownSec,
+                kps, totalRunDurationSec, incomePerMob);
     }
 
     @GetMapping("/lab-speed")

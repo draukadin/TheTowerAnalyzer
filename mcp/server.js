@@ -313,6 +313,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['fromLevel', 'toLevel'],
       },
     },
+    {
+      name: 'get_gt_income_projection',
+      description: 'Compute projected Golden Tower income for a run using GT+ compounding formula. Returns projected income, perma-GT income, marginal value of +1s GT duration, and a comparison table across key duration milestones (15–53s). Use to advise whether to invest next stone in GT Duration vs GT+ level vs GT Cooldown.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          runType: {
+            type: 'string',
+            description: 'Run type to derive KPS and duration from (default: Farming)',
+          },
+          runsWindow: {
+            type: 'integer',
+            description: 'Number of recent runs to average for KPS/duration (default: 5)',
+          },
+        },
+      },
+    },
   ],
 }));
 
@@ -624,6 +641,61 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           fetchApi('/api/player-tracker/lab-state'),
         ]);
         return distillModuleLevelingCost(cost, labState);
+      }
+
+      // ── GT income projection ──────────────────────────────────────────────
+
+      case 'get_gt_income_projection': {
+        const runType    = args.runType    ?? 'Farming';
+        const runsWindow = args.runsWindow ?? 5;
+
+        const [uwData, allRuns] = await Promise.all([
+          fetchApi('/api/uw'),
+          fetchApi(`/api/reports?runType=${encodeURIComponent(runType)}`),
+        ]);
+
+        const gt = uwData.find(u => u.code === 'GT');
+        if (!gt) throw new Error('GT UW not found in player state');
+
+        const gtPlusStat    = gt.stats.find(s => s.statKey === 'STAT_1');
+        const durationStat  = gt.stats.find(s => s.statKey === 'STAT_2');
+        const cooldownStat  = gt.stats.find(s => s.statKey === 'STAT_3');
+
+        if (!durationStat || !cooldownStat) throw new Error('GT Duration/Cooldown stats not found');
+
+        const gtPlusLevel   = gtPlusStat?.currentLevel ?? 0;
+        const gtDurationSec = durationStat.currentValue;
+        const gtCooldownSec = cooldownStat.currentValue;
+
+        const recentRuns = allRuns.slice(0, runsWindow);
+        if (recentRuns.length === 0) throw new Error(`No ${runType} runs found`);
+
+        const avgGameTimeSec = recentRuns.reduce((s, r) => s + r.gameTimeSeconds, 0) / recentRuns.length;
+
+        // Fetch full payload of most recent run to get totalEnemies + coinsEarned
+        const payload = await fetchApi(`/api/reports/${recentRuns[0].id}`);
+        const parsed  = typeof payload === 'string' ? JSON.parse(payload) : payload;
+        const sections = parsed.sectionMap ?? parsed;
+
+        const totalEnemies = sections['TOTAL_ENEMIES']?.totalEnemies ?? 0;
+        if (totalEnemies === 0) throw new Error('Could not read totalEnemies from latest run payload');
+
+        const kps           = totalEnemies / recentRuns[0].gameTimeSeconds;
+        const coinsEarned   = recentRuns[0].coinsPerHour * (recentRuns[0].gameTimeSeconds / 3600);
+        const incomePerMob  = coinsEarned / totalEnemies;
+
+        const params = new URLSearchParams({
+          gtPlusLevel, gtDurationSec, gtCooldownSec,
+          kps, totalRunDurationSec: avgGameTimeSec, incomePerMob,
+        });
+        const proj = await fetchApi(`/api/analysis/gt-income?${params}`);
+        return distillGtIncomeProjection(proj, {
+          gtPlusLevel, gtDurationSec, gtCooldownSec,
+          kps: round(kps, 3),
+          avgRunDurationSec: Math.round(avgGameTimeSec),
+          incomePerMob: round(incomePerMob, 2),
+          runsUsed: recentRuns.length,
+        });
       }
 
       default:
@@ -1374,6 +1446,28 @@ function distillModuleLevelingCost(d, labState) {
     total_coins:           Math.ceil(d.totalCoins  * coinMult),
     shard_discount_pct:    shardDiscountLevel,
     coin_discount_pct:     coinDiscountLevel,
+  });
+}
+
+// ── Distillation: GT income projection ───────────────────────────────────────
+
+function distillGtIncomeProjection(d, inputs) {
+  const fmt = n => round(n / 1e9, 3);  // express in billions (T-coins × 1e-3)
+
+  return result({
+    inputs,
+    projected_income_B:      fmt(d.projectedIncome),
+    perm_gt_income_B:        fmt(d.permGtIncome),
+    activations_per_run:     round(d.activationsPerRun, 1),
+    kills_per_activation:    round(d.killsPerActivation, 0),
+    gt_plus_bonus_pct:       round(d.bonusFraction * 100, 1),
+    marginal_duration_value_B: fmt(d.marginalDurationValue),
+    comparison_table: d.comparisonTable.map(row => ({
+      duration_sec:      row.durationSec,
+      income_B:          fmt(row.projectedIncome),
+      gain_vs_current_B: fmt(row.incomeGainVsCurrent),
+      is_current:        row.isCurrent,
+    })),
   });
 }
 
