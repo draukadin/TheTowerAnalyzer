@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -61,6 +62,98 @@ public class CardController {
                     "masteryLevel cannot exceed the mastery lab level (" + labLevel + ")");
         }
         repo.updateMasteryLevel(id, req.masteryLevel());
+    }
+
+    // ── Card details ──────────────────────────────────────────────────────────
+
+    /** Copies required to advance TO each star level (index = target star, 1-based; index 1 = 0). */
+    private static final int[] COPIES_TO_REACH_STAR = {0, 0, 1, 2, 3, 4, 6, 8};
+    private static final int GEM_COST_PER_COPY = 20;
+
+    record MasteryDetails(
+            String  description,
+            String  valueUnit,
+            int     stoneCostPerLevel,
+            boolean isUnlocked,
+            int     currentLevel,
+            int     maxLevel,
+            double  currentValue,
+            List<Double> valuesByLevel,
+            int     stonesRemainingToMax
+    ) {}
+
+    record PresetEquipped(int presetId, int presetSlot, String presetName, int cardSlot) {}
+
+    record CardDetailsResponse(
+            String  name,
+            String  rarity,
+            String  description,
+            String  valueUnit,
+            Integer milestoneUnlockTier,
+            Integer milestoneUnlockWave,
+            int     starLevel,
+            double  currentValue,
+            List<Double> statsByLevel,
+            int     copiesOwned,
+            int     copiesForNextStar,
+            int     copiesRemainingForMax,
+            int     gemCostToMax,
+            MasteryDetails mastery,
+            List<PresetEquipped> presetsEquipped
+    ) {}
+
+    @GetMapping("/by-name/{name}/details")
+    public CardDetailsResponse getCardDetails(@PathVariable String name) {
+        CardData c = repo.findByName(name)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Card not found: " + name));
+
+        List<Double> statsByLevel = Arrays.asList(
+                c.level1(), c.level2(), c.level3(), c.level4(),
+                c.level5(), c.level6(), c.level7());
+        double currentValue = statsByLevel.get(c.starLevel() - 1);
+
+        // Copies toward the next star (capped at what's needed for the next star)
+        int copiesForNextStar = c.starLevel() < 7
+                ? Math.min(c.copiesOwned(), COPIES_TO_REACH_STAR[c.starLevel() + 1])
+                : 0;
+
+        // Total copies still needed for stars beyond current, minus what's already owned
+        int totalCopiesNeededFromNow = 0;
+        for (int star = c.starLevel() + 1; star <= 7; star++) {
+            totalCopiesNeededFromNow += COPIES_TO_REACH_STAR[star];
+        }
+        int copiesRemainingForMax = Math.max(0, totalCopiesNeededFromNow - c.copiesOwned());
+        int gemCostToMax = copiesRemainingForMax * GEM_COST_PER_COPY;
+
+        // Mastery
+        // DB fields mastery_level_0..8 correspond to player research levels 1..9.
+        // mastery_level_9 is reserved for a future level 10 and is not surfaced here.
+        // Player mastery_level=0 means not yet researched → value is 1.0 (multiplicative no-op).
+        List<Double> masteryValuesByLevel = Arrays.asList(
+                1.0,
+                c.masteryLevel0(), c.masteryLevel1(), c.masteryLevel2(),
+                c.masteryLevel3(), c.masteryLevel4(), c.masteryLevel5(),
+                c.masteryLevel6(), c.masteryLevel7(), c.masteryLevel8());
+        boolean masteryUnlocked = c.masteryLabLevel() > 0;
+        double masteryCurrentValue = masteryValuesByLevel.get(c.masteryLabLevel());
+        int stonesRemainingToMax = (9 - c.masteryLabLevel()) * c.masteryStoneCost();
+        MasteryDetails mastery = new MasteryDetails(
+                c.masteryDescription(), c.masteryValueUnit(), c.masteryStoneCost(),
+                masteryUnlocked, c.masteryLabLevel(), 9,
+                masteryCurrentValue, masteryValuesByLevel, stonesRemainingToMax);
+
+        // Presets
+        List<PresetEquipped> presetsEquipped = repo.findPresetsByCardId(c.id()).stream()
+                .map(p -> new PresetEquipped(p.presetId(), p.presetSlot(), p.presetName(), p.slotNumber()))
+                .toList();
+
+        return new CardDetailsResponse(
+                c.name(), c.rarity(), c.description(), c.valueUnit(),
+                c.milestoneUnlockTier(), c.milestoneUnlockWave(),
+                c.starLevel(), currentValue, statsByLevel,
+                c.copiesOwned(), copiesForNextStar, copiesRemainingForMax, gemCostToMax,
+                mastery, presetsEquipped);
     }
 
     // ── Slots ─────────────────────────────────────────────────────────────────

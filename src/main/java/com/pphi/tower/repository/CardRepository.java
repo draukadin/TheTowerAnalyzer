@@ -61,6 +61,13 @@ public class CardRepository {
             String cardName
     ) {}
 
+    public record CardPresetEquipped(
+            int    presetId,
+            int    presetSlot,
+            String presetName,
+            int    slotNumber
+    ) {}
+
     // ── Card queries ──────────────────────────────────────────────────────────
 
     /** All 31 cards with their current player state and mastery lab level. */
@@ -125,6 +132,77 @@ public class CardRepository {
                 WHERE c.id = ?
                 """, Integer.class, cardId);
         return level != null ? level : 0;
+    }
+
+    /** Single card by name (case-insensitive), with player state and mastery lab level. */
+    public java.util.Optional<CardData> findByName(String name) {
+        List<CardData> results = jdbc.query("""
+                SELECT
+                    c.id, c.name, c.rarity, c.description, c.value_unit,
+                    c.level_1, c.level_2, c.level_3, c.level_4,
+                    c.level_5, c.level_6, c.level_7,
+                    c.milestone_unlock_tier, c.milestone_unlock_wave,
+                    c.mastery_description, c.mastery_stone_cost, c.mastery_value_unit,
+                    c.mastery_level_0, c.mastery_level_1, c.mastery_level_2,
+                    c.mastery_level_3, c.mastery_level_4, c.mastery_level_5,
+                    c.mastery_level_6, c.mastery_level_7, c.mastery_level_8,
+                    c.mastery_level_9,
+                    COALESCE(ps.star_level,    1) AS star_level,
+                    COALESCE(ps.copies_owned,  0) AS copies_owned,
+                    COALESCE(ps.mastery_level, 0) AS mastery_level,
+                    COALESCE(lps.current_level, 0) AS mastery_lab_level
+                FROM card c
+                LEFT JOIN card_player_state ps  ON ps.card_id = c.id
+                LEFT JOIN lab l                 ON l.name = c.name || ' Mastery'
+                LEFT JOIN lab_player_state lps  ON lps.lab_id = l.id
+                WHERE LOWER(c.name) = LOWER(?)
+                """,
+                (rs, i) -> new CardData(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getString("rarity"),
+                        rs.getString("description"),
+                        rs.getString("value_unit"),
+                        rs.getDouble("level_1"), rs.getDouble("level_2"),
+                        rs.getDouble("level_3"), rs.getDouble("level_4"),
+                        rs.getDouble("level_5"), rs.getDouble("level_6"),
+                        rs.getDouble("level_7"),
+                        rs.getObject("milestone_unlock_tier") != null
+                                ? rs.getInt("milestone_unlock_tier") : null,
+                        rs.getObject("milestone_unlock_wave") != null
+                                ? rs.getInt("milestone_unlock_wave") : null,
+                        rs.getString("mastery_description"),
+                        rs.getInt("mastery_stone_cost"),
+                        rs.getString("mastery_value_unit"),
+                        rs.getDouble("mastery_level_0"), rs.getDouble("mastery_level_1"),
+                        rs.getDouble("mastery_level_2"), rs.getDouble("mastery_level_3"),
+                        rs.getDouble("mastery_level_4"), rs.getDouble("mastery_level_5"),
+                        rs.getDouble("mastery_level_6"), rs.getDouble("mastery_level_7"),
+                        rs.getDouble("mastery_level_8"), rs.getDouble("mastery_level_9"),
+                        rs.getInt("star_level"),
+                        rs.getInt("copies_owned"),
+                        rs.getInt("mastery_level"),
+                        rs.getInt("mastery_lab_level")
+                ), name);
+        return results.isEmpty() ? java.util.Optional.empty() : java.util.Optional.of(results.get(0));
+    }
+
+    /** All presets that currently have the given card assigned, with the slot it occupies. */
+    public List<CardPresetEquipped> findPresetsByCardId(long cardId) {
+        return jdbc.query("""
+                SELECT cp.id AS preset_id, cp.slot AS preset_slot, cp.name AS preset_name,
+                       cpa.slot_number
+                FROM card_preset_assignment cpa
+                JOIN card_preset cp ON cp.id = cpa.preset_id
+                WHERE cpa.card_id = ?
+                ORDER BY cp.slot
+                """,
+                (rs, i) -> new CardPresetEquipped(
+                        rs.getInt("preset_id"),
+                        rs.getInt("preset_slot"),
+                        rs.getString("preset_name"),
+                        rs.getInt("slot_number")
+                ), cardId);
     }
 
     // ── Player-state mutations ────────────────────────────────────────────────

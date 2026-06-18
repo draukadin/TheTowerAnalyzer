@@ -264,6 +264,7 @@ current meta. Very situational; do not prioritize.
 
 | Tool | When to call |
 |------|-------------|
+| `get_card_details(cardName)` | Deep dive on a single card's mastery: unlock status, current level, stone cost per level, stones remaining to max, and values at every mastery level |
 | `get_cards_state` (sections: `["cards"]`) | Verify which masteries are unlocked and which cards are maxed before recommending unlock order |
 | `get_currencies` | Check stone balance before recommending mastery unlock (stone cost varies per mastery) |
 | `get_lab_costs` | Retrieve mastery research coin costs per level |

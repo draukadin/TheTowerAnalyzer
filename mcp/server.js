@@ -132,6 +132,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'get_card_details',
+      description: 'Get full progression details for a single card by name: current star level and stat value, stat at every level (1–7), copies owned, copies remaining toward the next star and toward max (level 7), gem cost to max, mastery state (stone cost, unlock status, values per level, stones to max), and which presets the card is currently equipped in.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          cardName: {
+            type: 'string',
+            description: 'The card name (case-insensitive), e.g. "Damage", "Death Ray", "Wave Accelerator".',
+          },
+        },
+        required: ['cardName'],
+      },
+    },
+    {
       name: 'get_cards_state',
       description: 'Get card collection, slot unlock state, and card presets.',
       inputSchema: {
@@ -477,6 +491,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         return distillWorkshopState({ items, progress, discounts, spend, presets }, sections, categoryFilter);
+      }
+
+      // ── Card details ──────────────────────────────────────────────────────
+
+      case 'get_card_details': {
+        const cardName = args.cardName;
+        if (!cardName) throw new Error('cardName is required');
+        const data = await fetchApi(`/api/cards/by-name/${encodeURIComponent(cardName)}/details`);
+        return result(distillCardDetails(data));
       }
 
       // ── Cards state ───────────────────────────────────────────────────────
@@ -1145,6 +1168,44 @@ function distillCardsState({ cards, slots, presets }, sections) {
   }
 
   return result(out);
+}
+
+// ── Distillation: card details ────────────────────────────────────────────────
+
+function distillCardDetails(d) {
+  return {
+    name:         d.name,
+    rarity:       d.rarity,
+    description:  d.description,
+    value_unit:   d.valueUnit,
+    milestone_unlock: d.milestoneUnlockTier != null
+      ? { tier: d.milestoneUnlockTier, wave: d.milestoneUnlockWave }
+      : null,
+    star_level:    d.starLevel,
+    current_value: d.currentValue,
+    stats_by_level: d.statsByLevel,
+    copies_owned:              d.copiesOwned,
+    copies_for_next_star:      d.copiesForNextStar,
+    copies_remaining_for_max:  d.copiesRemainingForMax,
+    gem_cost_to_max:           d.gemCostToMax,
+    mastery: {
+      description:           d.mastery.description,
+      value_unit:            d.mastery.valueUnit,
+      stone_cost_per_level:  d.mastery.stoneCostPerLevel,
+      is_unlocked:           d.mastery.isUnlocked,
+      current_level:         d.mastery.currentLevel,
+      max_level:             d.mastery.maxLevel,
+      current_value:         d.mastery.currentValue,
+      values_by_level:       d.mastery.valuesByLevel,
+      stones_remaining_to_max: d.mastery.stonesRemainingToMax,
+    },
+    presets_equipped: d.presetsEquipped.map(p => ({
+      preset_id:   p.presetId,
+      preset_slot: p.presetSlot,
+      preset_name: p.presetName,
+      card_slot:   p.cardSlot,
+    })),
+  };
 }
 
 // ── Distillation: bots state ──────────────────────────────────────────────────

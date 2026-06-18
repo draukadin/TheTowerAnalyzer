@@ -326,6 +326,7 @@ Always retrieve live data before making personalized card recommendations.
 
 | Tool | When to call |
 |------|-------------|
+| `get_card_details(cardName)` | Deep dive on a single card: stat at every star level, copies to next star and to max, gem cost to max, mastery stone cost and unlock status, which presets it's equipped in |
 | `get_cards_state` (sections: `["cards", "slots"]`) | Check which cards the player owns, their star level, and slot count |
 | `get_cards_state` (sections: `["presets"]`) | Check configured presets and equipped cards per preset |
 | `get_currencies` | Before advising on gem spending (card purchases, slot unlocks) |
