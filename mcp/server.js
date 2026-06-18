@@ -295,6 +295,24 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
+    {
+      name: 'get_module_leveling_cost',
+      description: 'Returns the total shards and coins needed to level a module from fromLevel to toLevel (max 300). Use for leveling feasibility checks and shard-to-target projections.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          fromLevel: {
+            type: 'integer',
+            description: 'Current module level (>= 1)',
+          },
+          toLevel: {
+            type: 'integer',
+            description: 'Target module level (<= 300)',
+          },
+        },
+        required: ['fromLevel', 'toLevel'],
+      },
+    },
   ],
 }));
 
@@ -596,6 +614,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const targetWave = args.targetWave ?? null;
         const labState   = await fetchApi('/api/player-tracker/lab-state');
         return distillPerkWaveCost(labState, pwrPicks, targetWave);
+      }
+
+      // ── Module leveling cost ──────────────────────────────────────────────
+
+      case 'get_module_leveling_cost': {
+        const [cost, labState] = await Promise.all([
+          fetchApi(`/api/modules/leveling-cost?fromLevel=${args.fromLevel}&toLevel=${args.toLevel}`),
+          fetchApi('/api/player-tracker/lab-state'),
+        ]);
+        return distillModuleLevelingCost(cost, labState);
       }
 
       default:
@@ -1329,6 +1357,24 @@ function distillLabCosts(costs) {
     coins_T:  c.coinCost != null ? round(c.coinCost / 1e12, 3) : null,
     days:     c.durationSeconds != null ? round(c.durationSeconds / 86400, 2) : null,
   })));
+}
+
+// ── Distillation: module leveling cost ───────────────────────────────────────
+
+function distillModuleLevelingCost(d, labState) {
+  const labs = labState?.labs ?? [];
+  const shardDiscountLevel = labs.find(l => l.name === 'Module Shards Cost')?.currentLevel ?? 0;
+  const coinDiscountLevel  = labs.find(l => l.name === 'Module Coin Cost')?.currentLevel  ?? 0;
+  const shardMult = 1 - shardDiscountLevel * 0.01;
+  const coinMult  = 1 - coinDiscountLevel  * 0.01;
+  return result({
+    from_level:            d.fromLevel,
+    to_level:              d.toLevel,
+    total_shards:          Math.ceil(d.totalShards * shardMult),
+    total_coins:           Math.ceil(d.totalCoins  * coinMult),
+    shard_discount_pct:    shardDiscountLevel,
+    coin_discount_pct:     coinDiscountLevel,
+  });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

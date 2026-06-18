@@ -1,5 +1,6 @@
 package com.pphi.tower.web;
 
+import com.pphi.tower.model.ModuleLevelTable;
 import com.pphi.tower.repository.ModuleRepository;
 import com.pphi.tower.repository.ModuleRepository.ModulePlayerData;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,24 @@ public class ModuleController {
     record SubstatRequest(String key, String rarity, boolean locked) {}
     record CopyRequest(String rarity) {}
     record ShatteredRequest(int count) {}
+
+    record LevelingCostResponse(int fromLevel, int toLevel, long totalShards, long totalCoins) {}
+
+    @GetMapping("/leveling-cost")
+    public LevelingCostResponse getLevelingCost(
+            @RequestParam int fromLevel,
+            @RequestParam int toLevel) {
+        if (fromLevel < 1 || toLevel > ModuleLevelTable.MAX_LEVEL || fromLevel > toLevel) {
+            throw new IllegalArgumentException(
+                "fromLevel must be >= 1, toLevel must be <= " + ModuleLevelTable.MAX_LEVEL + ", and fromLevel <= toLevel");
+        }
+        return new LevelingCostResponse(
+            fromLevel,
+            toLevel,
+            ModuleLevelTable.shardsRemainingTo(fromLevel, toLevel),
+            ModuleLevelTable.coinsRemainingTo(fromLevel, toLevel)
+        );
+    }
 
     @GetMapping
     public List<ModulePlayerData> getAll() {

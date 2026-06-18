@@ -6,13 +6,6 @@ Planned endpoints and fields not yet implemented.
 
 ## Endpoints
 
-### `get_module_leveling_cost`
-Given `fromLevel` and `toLevel`, returns the total shards and coins needed to level a module between those two levels. Backed by the `module_level_cost` table (seeded from `ModuleLevelTable`).
-
-**Needed for**: leveling feasibility checks, shard-to-target projections, affordability questions.
-
----
-
 ### `get_gt_income_projection`
 Given the player's current GT+ level, GT duration, GT cooldown, and kills-per-second (derived
 from recent runs), compute projected Golden Tower income using the formula:
