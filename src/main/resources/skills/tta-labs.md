@@ -148,8 +148,10 @@ Economy becomes the primary focus. UW coin labs are the biggest CPH lever at thi
 - **Improve Trade-Off Perks** (10 levels, expensive late levels) — increases the positive
   side of trade-off perks. High value for builds that lean on damage or econ trade-offs.
 - **Band Perks** — removes specific unwanted standard perks from the draw pool. Target
-  3–4 bands at minimum. Priority targets: perks you never want to see (Range in farming,
-  low-tier defense perks once defense is capped).
+  4–5 bans. See `tta-perks.md` for ban priority guidance by run type.
+
+> Full perk system detail — standard perks, UW perks, trade-offs, pick strategy by run
+> type, and ban strategy — is in the **tower-perks** skill (`tta-perks.md`).
 
 **Card labs** (baseline levels):
 - Orb Adjuster (T6W50 — adjusts extra orb distance; required for optimal BH/orb setups)

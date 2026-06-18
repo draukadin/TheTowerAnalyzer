@@ -274,13 +274,6 @@ public class DatabaseInitializer {
                 )
                 """);
 
-        // Migration: drop legacy equipped_slot column — superseded by module_preset_assignment.
-        try {
-            jdbc.execute("ALTER TABLE module_player_state DROP COLUMN equipped_slot");
-        } catch (Exception ignored) {
-            // Column already gone — safe to continue.
-        }
-
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS module_level_cost (
                     level      INTEGER NOT NULL PRIMARY KEY,
@@ -403,6 +396,41 @@ public class DatabaseInitializer {
             }
         } catch (Exception ignored) {}
 
+        // ── Perk Settings ────────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS perk (
+                    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name          TEXT    NOT NULL UNIQUE,
+                    type          TEXT    NOT NULL CHECK(type IN ('Standard','UW','TradeOff')),
+                    max_picks     INTEGER NOT NULL DEFAULT 1,
+                    base_value    REAL,
+                    value_formula TEXT    CHECK(value_formula IN ('multiplicative','additive')),
+                    value_unit    TEXT    CHECK(value_unit IN ('multiplier','percent','flat','seconds')),
+                    downside_desc TEXT
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS perk_ban (
+                    perk_id INTEGER NOT NULL REFERENCES perk(id) PRIMARY KEY
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS perk_auto_pick_ranking (
+                    rank    INTEGER NOT NULL PRIMARY KEY,
+                    perk_id INTEGER NOT NULL REFERENCES perk(id)
+                )
+                """);
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS perk_first_choice (
+                    id      INTEGER PRIMARY KEY CHECK(id = 1),
+                    perk_id INTEGER NOT NULL REFERENCES perk(id)
+                )
+                """);
+
         // ── Cosmetics ─────────────────────────────────────────────────────────
 
         jdbc.execute("""
@@ -509,7 +537,7 @@ public class DatabaseInitializer {
                     (3, 'UTILITY')
                 """);
 
-        // One-time flat-fee groups that unlock one or more Workshop (non-plus) items together.
+        // One-time flat-fee groups that unlock one or more Workshop (nonplus) items together.
         // Items with unlock_cost = 0 are available immediately.
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS workshop_unlock_group (
@@ -909,11 +937,6 @@ public class DatabaseInitializer {
                     PRIMARY KEY (preset_id, chip_id)
                 )
                 """);
-
-        // Migration: rename acquired → active on existing installs.
-        try {
-            jdbc.execute("ALTER TABLE guardian_preset_chip RENAME COLUMN acquired TO active");
-        } catch (Exception ignored) {}
 
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS guardian_preset_stat_level (

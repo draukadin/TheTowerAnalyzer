@@ -268,6 +268,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['q'],
       },
     },
+    {
+      name: 'get_perks',
+      description: 'Get the full perk catalog: id, name, type (Standard/UW/TradeOff), and max picks per run.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'get_perk_settings',
+      description: 'Get the current perk ban list and auto-pick ranking order.',
+      inputSchema: { type: 'object', properties: {} },
+    },
   ],
 }));
 
@@ -553,6 +563,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'search_labs':
         return distillLabCatalog(await fetchApi(`/api/labs/search?q=${encodeURIComponent(args.q)}`));
+
+      // ── Perk catalog / settings ───────────────────────────────────────────
+
+      case 'get_perks':
+        return result(await fetchApi('/api/perks'));
+
+      case 'get_perk_settings':
+        return distillPerkSettings(await fetchApi('/api/perks/settings'));
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -1218,6 +1236,16 @@ function parseUnlock(unlock) {
   if (!unlock) return null;
   const m = unlock.match(/T(\d+),W(\d+)/);
   return m ? { tier: parseInt(m[1]), wave: parseInt(m[2]) } : unlock;
+}
+
+// ── Distillation: perk settings ──────────────────────────────────────────────
+
+function distillPerkSettings(d) {
+  return result({
+    firstChoice: d.firstChoice ?? null,
+    bans:        d.bans ?? [],
+    ranking:     d.ranking ?? [],
+  });
 }
 
 // ── Distillation: lab costs ───────────────────────────────────────────────────
