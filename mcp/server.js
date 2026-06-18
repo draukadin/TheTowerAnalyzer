@@ -241,6 +241,95 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['name'],
       },
     },
+    {
+      name: 'get_labs',
+      description: 'Get the lab catalog: name, category, description, unlock requirement, max level, and current player level. Use to browse all labs or filter by category. Prefer search_labs when the user names a specific lab.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          category: {
+            type: 'string',
+            description: 'Filter to a specific category (e.g. "Main", "Attack", "Defense", "Utility", "Ultimate Weapons", "Cards", "Perks", "Bots", "Enemies", "Modules", "Battle Condition")',
+          },
+        },
+      },
+    },
+    {
+      name: 'search_labs',
+      description: 'Search labs by name or description using a partial, case-insensitive query. Use this whenever the user names a specific lab and you are not certain of the exact DB name — it handles typos and word-order differences. Returns matching labs with full catalog detail and current player level.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          q: {
+            type: 'string',
+            description: 'Search query — matched against lab name and description',
+          },
+        },
+        required: ['q'],
+      },
+    },
+    {
+      name: 'get_perks',
+      description: 'Get the full perk catalog: id, name, type (Standard/UW/TradeOff), and max picks per run.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'get_perk_settings',
+      description: 'Get the current perk ban list and auto-pick ranking order.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
+      name: 'get_perk_wave_cost',
+      description: 'Compute the wave cost to earn each perk across the four base breakpoints (200/250/300/350), given the current Waves Required and Standard Perks Bonus lab levels plus the number of Perk Wave Requirement (PWR) perks already picked this run.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          pwrPicks: {
+            type: 'integer',
+            description: 'Number of Perk Wave Requirement perks picked so far this run (default: 0)',
+          },
+          targetWave: {
+            type: 'integer',
+            description: 'Optional wave target — response will include how many perks are reachable at that wave',
+          },
+        },
+      },
+    },
+    {
+      name: 'get_module_leveling_cost',
+      description: 'Returns the total shards and coins needed to level a module from fromLevel to toLevel (max 300). Use for leveling feasibility checks and shard-to-target projections.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          fromLevel: {
+            type: 'integer',
+            description: 'Current module level (>= 1)',
+          },
+          toLevel: {
+            type: 'integer',
+            description: 'Target module level (<= 300)',
+          },
+        },
+        required: ['fromLevel', 'toLevel'],
+      },
+    },
+    {
+      name: 'get_gt_income_projection',
+      description: 'Compute projected Golden Tower income for a run using GT+ compounding formula. Returns projected income, perma-GT income, marginal value of +1s GT duration, and a comparison table across key duration milestones (15–53s). Use to advise whether to invest next stone in GT Duration vs GT+ level vs GT Cooldown.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          runType: {
+            type: 'string',
+            description: 'Run type to derive KPS and duration from (default: Farming)',
+          },
+          runsWindow: {
+            type: 'integer',
+            description: 'Number of recent runs to average for KPS/duration (default: 5)',
+          },
+        },
+      },
+    },
   ],
 }));
 
@@ -513,6 +602,100 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const lab = allLabs.find(l => l.name.toLowerCase() === args.name.toLowerCase());
         if (!lab) throw new Error(`Unknown lab: ${args.name}`);
         return distillLabCosts(await fetchApi(`/api/labs/${lab.id}/costs`));
+      }
+
+      // ── Lab catalog ───────────────────────────────────────────────────────
+
+      case 'get_labs': {
+        const qs = args.category ? `?category=${encodeURIComponent(args.category)}` : '';
+        return distillLabCatalog(await fetchApi(`/api/labs${qs}`));
+      }
+
+      // ── Lab search ────────────────────────────────────────────────────────
+
+      case 'search_labs':
+        return distillLabCatalog(await fetchApi(`/api/labs/search?q=${encodeURIComponent(args.q)}`));
+
+      // ── Perk catalog / settings ───────────────────────────────────────────
+
+      case 'get_perks':
+        return result(await fetchApi('/api/perks'));
+
+      case 'get_perk_settings':
+        return distillPerkSettings(await fetchApi('/api/perks/settings'));
+
+      // ── Perk wave cost ────────────────────────────────────────────────────
+
+      case 'get_perk_wave_cost': {
+        const pwrPicks   = args.pwrPicks   ?? 0;
+        const targetWave = args.targetWave ?? null;
+        const labState   = await fetchApi('/api/player-tracker/lab-state');
+        return distillPerkWaveCost(labState, pwrPicks, targetWave);
+      }
+
+      // ── Module leveling cost ──────────────────────────────────────────────
+
+      case 'get_module_leveling_cost': {
+        const [cost, labState] = await Promise.all([
+          fetchApi(`/api/modules/leveling-cost?fromLevel=${args.fromLevel}&toLevel=${args.toLevel}`),
+          fetchApi('/api/player-tracker/lab-state'),
+        ]);
+        return distillModuleLevelingCost(cost, labState);
+      }
+
+      // ── GT income projection ──────────────────────────────────────────────
+
+      case 'get_gt_income_projection': {
+        const runType    = args.runType    ?? 'Farming';
+        const runsWindow = args.runsWindow ?? 5;
+
+        const [uwData, allRuns] = await Promise.all([
+          fetchApi('/api/uw'),
+          fetchApi(`/api/reports?runType=${encodeURIComponent(runType)}`),
+        ]);
+
+        const gt = uwData.find(u => u.code === 'GT');
+        if (!gt) throw new Error('GT UW not found in player state');
+
+        const gtPlusStat    = gt.stats.find(s => s.statKey === 'STAT_1');
+        const durationStat  = gt.stats.find(s => s.statKey === 'STAT_2');
+        const cooldownStat  = gt.stats.find(s => s.statKey === 'STAT_3');
+
+        if (!durationStat || !cooldownStat) throw new Error('GT Duration/Cooldown stats not found');
+
+        const gtPlusLevel   = gtPlusStat?.currentLevel ?? 0;
+        const gtDurationSec = durationStat.currentValue;
+        const gtCooldownSec = cooldownStat.currentValue;
+
+        const recentRuns = allRuns.slice(0, runsWindow);
+        if (recentRuns.length === 0) throw new Error(`No ${runType} runs found`);
+
+        const avgGameTimeSec = recentRuns.reduce((s, r) => s + r.gameTimeSeconds, 0) / recentRuns.length;
+
+        // Fetch full payload of most recent run to get totalEnemies + coinsEarned
+        const payload = await fetchApi(`/api/reports/${recentRuns[0].id}`);
+        const parsed  = typeof payload === 'string' ? JSON.parse(payload) : payload;
+        const sections = parsed.sectionMap ?? parsed;
+
+        const totalEnemies = sections['TOTAL_ENEMIES']?.totalEnemies ?? 0;
+        if (totalEnemies === 0) throw new Error('Could not read totalEnemies from latest run payload');
+
+        const kps           = totalEnemies / recentRuns[0].gameTimeSeconds;
+        const coinsEarned   = recentRuns[0].coinsPerHour * (recentRuns[0].gameTimeSeconds / 3600);
+        const incomePerMob  = coinsEarned / totalEnemies;
+
+        const params = new URLSearchParams({
+          gtPlusLevel, gtDurationSec, gtCooldownSec,
+          kps, totalRunDurationSec: avgGameTimeSec, incomePerMob,
+        });
+        const proj = await fetchApi(`/api/analysis/gt-income?${params}`);
+        return distillGtIncomeProjection(proj, {
+          gtPlusLevel, gtDurationSec, gtCooldownSec,
+          kps: round(kps, 3),
+          avgRunDurationSec: Math.round(avgGameTimeSec),
+          incomePerMob: round(incomePerMob, 2),
+          runsUsed: recentRuns.length,
+        });
       }
 
       default:
@@ -1154,6 +1337,90 @@ function distillLabSlots(slots) {
   }));
 }
 
+// ── Distillation: lab catalog ─────────────────────────────────────────────────
+
+function distillLabCatalog(labs) {
+  const byCategory = {};
+  for (const l of labs) {
+    if (!byCategory[l.category]) byCategory[l.category] = [];
+    const unlock = parseUnlock(l.unlock);
+    const entry = {
+      id:          l.id,
+      name:        l.name,
+      level:       l.currentLevel,
+      max:         l.maxLevel,
+      description: l.description ?? null,
+      unlock,
+    };
+    if (l.targetLevel != null) entry.target = l.targetLevel;
+    byCategory[l.category].push(entry);
+  }
+  return result(byCategory);
+}
+
+function parseUnlock(unlock) {
+  if (!unlock) return null;
+  const m = unlock.match(/T(\d+),W(\d+)/);
+  return m ? { tier: parseInt(m[1]), wave: parseInt(m[2]) } : unlock;
+}
+
+// ── Distillation: perk settings ──────────────────────────────────────────────
+
+function distillPerkSettings(d) {
+  return result({
+    firstChoice: d.firstChoice ?? null,
+    bans:        d.bans ?? [],
+    ranking:     d.ranking ?? [],
+  });
+}
+
+// ── Distillation: perk wave cost ─────────────────────────────────────────────
+
+const PERK_BASES = [200, 250, 300, 350];
+
+function distillPerkWaveCost(labState, pwrPicks, targetWave) {
+  const labs = labState.labs ?? [];
+  const wavesRequiredLevel = labs.find(l => l.name === 'Waves Required')?.currentLevel ?? 0;
+  const spbLevel           = labs.find(l => l.name === 'Standard Perks Bonus')?.currentLevel ?? 0;
+
+  const reductionFactor = 1 - pwrPicks * 0.20 * (1 + spbLevel * 0.01);
+
+  const breakpoints = PERK_BASES.map(base => ({
+    base,
+    waves: Math.floor((base - wavesRequiredLevel) * reductionFactor),
+  }));
+
+  const out = {
+    inputs: {
+      waves_required_level: wavesRequiredLevel,
+      spb_level:            spbLevel,
+      pwr_picks:            pwrPicks,
+    },
+    breakpoints,
+  };
+
+  if (targetWave != null) {
+    const ranges = [
+      { cost: breakpoints[0].waves, count: 20 },
+      { cost: breakpoints[1].waves, count: 10 },
+      { cost: breakpoints[2].waves, count: 10 },
+      { cost: breakpoints[3].waves, count: Infinity },
+    ];
+    let remaining = targetWave;
+    let perks = 0;
+    for (const { cost, count } of ranges) {
+      if (cost <= 0) break;
+      const affordable = Math.min(count, Math.floor(remaining / cost));
+      perks += affordable;
+      remaining -= affordable * cost;
+      if (affordable < count) break;
+    }
+    out.perks_reachable = perks;
+  }
+
+  return result(out);
+}
+
 // ── Distillation: lab costs ───────────────────────────────────────────────────
 
 function distillLabCosts(costs) {
@@ -1162,6 +1429,46 @@ function distillLabCosts(costs) {
     coins_T:  c.coinCost != null ? round(c.coinCost / 1e12, 3) : null,
     days:     c.durationSeconds != null ? round(c.durationSeconds / 86400, 2) : null,
   })));
+}
+
+// ── Distillation: module leveling cost ───────────────────────────────────────
+
+function distillModuleLevelingCost(d, labState) {
+  const labs = labState?.labs ?? [];
+  const shardDiscountLevel = labs.find(l => l.name === 'Module Shards Cost')?.currentLevel ?? 0;
+  const coinDiscountLevel  = labs.find(l => l.name === 'Module Coin Cost')?.currentLevel  ?? 0;
+  const shardMult = 1 - shardDiscountLevel * 0.01;
+  const coinMult  = 1 - coinDiscountLevel  * 0.01;
+  return result({
+    from_level:            d.fromLevel,
+    to_level:              d.toLevel,
+    total_shards:          Math.ceil(d.totalShards * shardMult),
+    total_coins:           Math.ceil(d.totalCoins  * coinMult),
+    shard_discount_pct:    shardDiscountLevel,
+    coin_discount_pct:     coinDiscountLevel,
+  });
+}
+
+// ── Distillation: GT income projection ───────────────────────────────────────
+
+function distillGtIncomeProjection(d, inputs) {
+  const fmt = n => round(n / 1e9, 3);  // express in billions (T-coins × 1e-3)
+
+  return result({
+    inputs,
+    projected_income_B:      fmt(d.projectedIncome),
+    perm_gt_income_B:        fmt(d.permGtIncome),
+    activations_per_run:     round(d.activationsPerRun, 1),
+    kills_per_activation:    round(d.killsPerActivation, 0),
+    gt_plus_bonus_pct:       round(d.bonusFraction * 100, 1),
+    marginal_duration_value_B: fmt(d.marginalDurationValue),
+    comparison_table: d.comparisonTable.map(row => ({
+      duration_sec:      row.durationSec,
+      income_B:          fmt(row.projectedIncome),
+      gain_vs_current_B: fmt(row.incomeGainVsCurrent),
+      is_current:        row.isCurrent,
+    })),
+  });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

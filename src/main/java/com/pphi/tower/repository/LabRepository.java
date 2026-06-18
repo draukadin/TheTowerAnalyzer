@@ -18,7 +18,8 @@ public class LabRepository {
     }
 
     public record LabData(long id, String name, String category, int maxLevel,
-                          int currentLevel, Integer targetLevel) {}
+                          int currentLevel, Integer targetLevel,
+                          String description, String unlock) {}
 
     public record LabLevelCost(int level, Integer durationSeconds, Double coinCost) {}
 
@@ -30,21 +31,56 @@ public class LabRepository {
     public List<LabData> getAll() {
         return jdbc.query("""
                 SELECT l.id, l.name, l.category, l.max_level,
-                       COALESCE(ps.current_level, 0)  AS current_level,
-                       ps.target_level
+                       COALESCE(ps.current_level, 0) AS current_level,
+                       ps.target_level,
+                       l.description,
+                       l.unlock
                 FROM lab l
                 LEFT JOIN lab_player_state ps ON ps.lab_id = l.id
                 ORDER BY l.id
-                """,
-                (rs, i) -> new LabData(
-                        rs.getLong("id"),
-                        rs.getString("name"),
-                        rs.getString("category"),
-                        rs.getInt("max_level"),
-                        rs.getInt("current_level"),
-                        rs.getObject("target_level") != null ? rs.getInt("target_level") : null
-                ));
+                """, LAB_ROW_MAPPER);
     }
+
+    public List<LabData> getByCategory(String category) {
+        return jdbc.query("""
+                SELECT l.id, l.name, l.category, l.max_level,
+                       COALESCE(ps.current_level, 0) AS current_level,
+                       ps.target_level,
+                       l.description,
+                       l.unlock
+                FROM lab l
+                LEFT JOIN lab_player_state ps ON ps.lab_id = l.id
+                WHERE l.category = ?
+                ORDER BY l.id
+                """, LAB_ROW_MAPPER, category);
+    }
+
+    public List<LabData> search(String query) {
+        String pattern = "%" + query.toLowerCase() + "%";
+        return jdbc.query("""
+                SELECT l.id, l.name, l.category, l.max_level,
+                       COALESCE(ps.current_level, 0) AS current_level,
+                       ps.target_level,
+                       l.description,
+                       l.unlock
+                FROM lab l
+                LEFT JOIN lab_player_state ps ON ps.lab_id = l.id
+                WHERE LOWER(l.name) LIKE ? OR LOWER(l.description) LIKE ?
+                ORDER BY l.id
+                """, LAB_ROW_MAPPER, pattern, pattern);
+    }
+
+    private static final org.springframework.jdbc.core.RowMapper<LabData> LAB_ROW_MAPPER =
+            (rs, i) -> new LabData(
+                    rs.getLong("id"),
+                    rs.getString("name"),
+                    rs.getString("category"),
+                    rs.getInt("max_level"),
+                    rs.getInt("current_level"),
+                    rs.getObject("target_level") != null ? rs.getInt("target_level") : null,
+                    rs.getString("description"),
+                    rs.getString("unlock")
+            );
 
     @Caching(evict = {
         @CacheEvict(value = "labs", allEntries = true),

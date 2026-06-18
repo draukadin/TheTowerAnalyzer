@@ -148,8 +148,10 @@ Economy becomes the primary focus. UW coin labs are the biggest CPH lever at thi
 - **Improve Trade-Off Perks** (10 levels, expensive late levels) — increases the positive
   side of trade-off perks. High value for builds that lean on damage or econ trade-offs.
 - **Band Perks** — removes specific unwanted standard perks from the draw pool. Target
-  3–4 bands at minimum. Priority targets: perks you never want to see (Range in farming,
-  low-tier defense perks once defense is capped).
+  4–5 bans. See `tta-perks.md` for ban priority guidance by run type.
+
+> Full perk system detail — standard perks, UW perks, trade-offs, pick strategy by run
+> type, and ban strategy — is in the **tower-perks** skill (`tta-perks.md`).
 
 **Card labs** (baseline levels):
 - Orb Adjuster (T6W50 — adjusts extra orb distance; required for optimal BH/orb setups)
@@ -266,16 +268,22 @@ Always check live lab state before making prioritization recommendations.
 | Tool | When to call |
 |------|-------------|
 | `get_lab_state` | Get current lab levels across all categories to identify gaps |
+| `get_labs` | Browse the full lab catalog with descriptions and unlock requirements; pass `category` to filter to one category |
+| `search_labs` | Resolve a specific lab by name — handles typos and word-order differences; always use before `get_lab_costs` when the user names a lab |
 | `get_lab_slots` | Check which slots are active, what's researching, and idle slots |
-| `get_lab_costs` | Get coin cost for next levels of candidate labs |
+| `get_lab_costs` | Get coin cost and duration per level for a specific lab (use lab `id` from `search_labs` result) |
 | `get_lab_speed_affordability` | Check whether current cell income can sustain a higher speed multiplier |
 | `get_currencies` | Verify coin balance before recommending expensive lab starts |
 | `get_recent_runs` | Determine farming vs. tournament context to prioritize build-specific labs |
 
 ### Personalization Rules
 
-- **Never recommend a lab that is tier/wave locked.** Call `get_lab_state` first —
-  it filters locked labs based on the player's current milestone progress.
+- **Resolve lab names via `search_labs` first.** Never pass a user-supplied lab name
+  directly to `get_lab_costs` — use `search_labs` to find the exact DB name and `id`,
+  then pass the `id`. This handles typos, abbreviations, and word-order differences.
+- **Never recommend a lab that is tier/wave locked.** Each lab returned by `get_labs`
+  and `search_labs` includes an `unlock` field `{ tier, wave }`. Cross-reference against
+  the player's current tier PB (`get_tier_pbs`) before recommending.
 - **Check Lab Speed level first.** If it is low relative to game stage, that is almost
   always the highest-ROI recommendation before anything else.
 - **Idle slots are always the biggest mistake.** If `get_lab_slots` shows an empty slot,

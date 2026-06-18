@@ -6,13 +6,6 @@ Planned endpoints and fields not yet implemented.
 
 ## Endpoints
 
-### `get_module_leveling_cost`
-Given `fromLevel` and `toLevel`, returns the total shards and coins needed to level a module between those two levels. Backed by the `module_level_cost` table (seeded from `ModuleLevelTable`).
-
-**Needed for**: leveling feasibility checks, shard-to-target projections, affordability questions.
-
----
-
 ### `get_gt_income_projection`
 Given the player's current GT+ level, GT duration, GT cooldown, and kills-per-second (derived
 from recent runs), compute projected Golden Tower income using the formula:
@@ -111,6 +104,20 @@ Bots, Enemies, Modules, Battle Condition.
 
 **Approach**: interview per-category the same way cards were done — source material or
 user walkthrough one lab at a time.
+
+---
+
+### Lab DB descriptions — remaining categories
+
+Two lab categories have unlock data populated but descriptions not yet added, pending
+in-game access:
+
+- **Cards mastery labs** (ids 107–137, 31 labs) — all unlock at T16W100. Descriptions
+  deferred until player reaches that milestone and can verify in-game wording.
+- **Battle Condition labs** (ids 198–217, 20 labs) — unlock T18W1000–T21W1000. Descriptions
+  deferred until player unlocks these labs in-game.
+
+Also pending: fix trailing space on Recharge Second Wind description (id 104).
 
 ---
 

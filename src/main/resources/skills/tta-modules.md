@@ -79,7 +79,7 @@ Max level is determined by rarity:
 - Rare → Legendary+: higher cap
 - Epic → Ancestral (5 stars): highest cap, up to level 200
 
-Leveling costs scale steeply — see `references/tta-module-level-costs.md` for the full table. Notable inflection points: costs jump hard at level 61 (25M coins), 101 (8B coins), 141 (500B coins), and 171+ (510T+ coins).
+Leveling costs scale steeply. Use `get_module_leveling_cost` for exact shard and coin totals between any two levels. Notable inflection points: costs jump hard at level 61 (25M coins), 101 (8B coins), 141 (500B coins), and 171+ (510T+ coins). See `references/tta-module-level-costs.md` for the full static table.
 
 **Main stat bonus also scales non-linearly.** The bonus gained per level increases dramatically at high levels — going from 165 to 166 gives roughly 200× more main stat than going from level 1 to 2. This means each level becomes more valuable as you progress, and it is the core reason investing in the main module beyond level 141 outperforms continuing to level the assist module.
 
@@ -239,7 +239,7 @@ For full lab data and unlock tiers, see `references/tta-module-labs.md`.
 ### Priority Rationale
 
 - **Reroll Shards**: sub-stat optimization bottleneck — start early and run continuously
-- **Module Shard/Coin Cost**: invest immediately on unlock; 163K+ shards needed to reach level 161 and coin costs above level 101 are brutal. After each lab level, restore the module to level 1 (all shards and coins are fully refunded) and re-upgrade at the discounted rate to immediately recoup the savings.
+- **Module Shard/Coin Cost**: invest immediately on unlock; ~163K shards and ~21T coins needed to reach level 161 (use `get_module_leveling_cost` for exact current-to-target figures) — coin costs above level 101 are brutal. After each lab level, restore the module to level 1 (all shards and coins are fully refunded) and re-upgrade at the discounted rate to immediately recoup the savings.
 - **Rare Drop Chance**: triples base rate (0.5% → 1.5%), critical for sustaining the fodder pipeline
 - **Unmerge Module**: trivial cost, crucial safety net — get it immediately
 - **Core Effect Bans L1**: largest pool (7 slots), cheapest first level — highest priority first ban lab
@@ -402,6 +402,7 @@ If a required data point is unavailable from MCP tools, state what's missing, as
 | `get_tower_state` | Need module loadout, rarity, stars, substats, or presets |
 | `get_currencies` | Before any reroll, leveling, or merge affordability question |
 | `get_shard_rates` | Projecting time to a target level |
+| `get_module_leveling_cost` | Exact total shards and coins to level a module from any level to any target (max 300) |
 | `get_recent_runs` | Establishing farming/tournament/milestone context without asking the user |
 | `get_cell_income` | Advising on lab speed boosts |
 | `get_lab_state` | Checking current level of any lab before making priority recommendations |
