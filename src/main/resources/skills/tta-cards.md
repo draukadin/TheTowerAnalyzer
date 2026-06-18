@@ -214,7 +214,18 @@ farming or tank builds.
 **Second Wind** — Revives once per run at half health and creates an invincibility shield for
 up to 40s. **Wall interaction**: when Second Wind triggers, the wall is also fully restored if
 unlocked — a significant survival boost for wall-based builds. Tournament and milestone safety
-net. **Recharge lab** (300 waves to recharge, enabling multiple triggers per deep run).
+net. **Recharge Second Wind lab** (T14W60, 7 levels) enables multiple triggers per run:
+
+| Level | Waves to Recharge |
+|------:|------------------:|
+| 1 | 2,000 |
+| 2 | 1,500 |
+| 3 | 1,250 |
+| 4 | 1,000 |
+| 5 | 750 |
+| 6 | 550 |
+| 7 | 400 |
+
 **Interaction with Energy Shield**: Energy Shield procs first on a fatal hit; Second Wind only
 activates if the Energy Shield has no charges. Running both is only worth it if you are
 deliberately stacking death-prevention layers. In long farming runs the second chance typically
@@ -222,9 +233,18 @@ just delays the inevitable — not worth the slot.
 
 **Demon Mode** — Grants 300× projectile damage and invincibility, once per run. **Manual
 trigger only** — useless AFK. Use for **milestone pushes and tournaments** by activating just
-before a lethal boss hit. The **Recharge Demon Mode lab** (T14W60, 7 levels, 1,500→300 waves
-to recharge) enables multiple activations per run and significantly increases its value for
-active players. **Event mission combo**: in a defense dissonance run (no orbs or thorns),
+before a lethal boss hit. The **Recharge Demon Mode lab** (T14W60, 7 levels) enables multiple activations per run
+and significantly increases its value for active players:
+
+| Level | Waves to Recharge |
+|------:|------------------:|
+| 1 | 1,500 |
+| 2 | 1,250 |
+| 3 | 1,000 |
+| 4 | 750 |
+| 5 | 550 |
+| 6 | 400 |
+| 7 | 300 | **Event mission combo**: in a defense dissonance run (no orbs or thorns),
 equip Second Wind + Demon Mode + Nuke — let Second Wind trigger, activate Demon Mode, then
 trigger Nuke just before Demon Mode ends to clear up to 120 stacked enemies.
 
@@ -260,8 +280,19 @@ survivability card for this in farming.
 for milestone pushes and deep tournament runs. The late-game unlock that makes it passive:
 the Smart Nuke automation triggers it on a killing blow, giving 15s of invincibility. Useless
 in farming — one-shot manual use doesn't justify the slot. Not effective at low levels (25%
-clear at level 1). **Recharge lab** (300 waves to recharge, enabling multiple activations per
-deep run). See Demon Mode event mission combo above.
+clear at level 1). The **Recharge Nuke lab** (T14W60, 7 levels) enables multiple activations per run:
+
+| Level | Waves to Recharge |
+|------:|------------------:|
+| 1 | 1,500 |
+| 2 | 1,250 |
+| 3 | 1,000 |
+| 4 | 750 |
+| 5 | 550 |
+| 6 | 400 |
+| 7 | 300 |
+
+See Demon Mode event mission combo above.
 
 **Area of Effect** — Increases AoE damage and radius for ILM, PS, SM, Flame Bot, and Land
 Mine. The **PS radius increase** is the primary value — a larger swamp holds more enemies in
