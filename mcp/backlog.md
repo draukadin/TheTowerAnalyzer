@@ -6,29 +6,6 @@ Planned endpoints and fields not yet implemented.
 
 ## Endpoints
 
-### `get_gt_income_projection`
-Given the player's current GT+ level, GT duration, GT cooldown, and kills-per-second (derived
-from recent runs), compute projected Golden Tower income using the formula:
-
-```
-K  = Kps * d
-B  = ((1 + 0.0003 * (Level + 1))^K) - 1
-T  = Total run duration / GT CD
-FI = T * Kps * d * income_per_mob * (1 + B)
-```
-
-At 100% GT uptime (perma-GT via MVN or generator module sub-stats):
-```
-FI = Total duration * Kps * income_per_mob * ((1 + 0.0003 * (Level + 1))^(Kps * d))
-```
-
-Should return: projected income, marginal value of +1 duration at current GT+ level, and a
-comparison table across key duration milestones.
-
-**Needed for**: advising whether to invest next stone in GT Duration vs. GT+ level vs. GT Cooldown.
-
----
-
 ### `get_sl_coverage_efficiency`
 Given the player's current SL Angle level, Quantity level, and stone costs at those levels,
 compute coverage-per-stone for the next Angle level vs. the next Quantity level. Effective

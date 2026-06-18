@@ -524,6 +524,8 @@ When giving personalized UW advice, call the relevant tools first:
 
 **`get_recent_runs`** — Determines whether the player is in a run (locks certain actions) and what run type they're doing (farming vs. tournament affects UW priority significantly).
 
+**`get_gt_income_projection`** — Computes projected GT income per run using the GT+ compounding formula, derived from recent run data (KPS, run duration, GT+ level, GT duration, GT cooldown). Returns total projected income, perma-GT income, marginal value of +1s GT duration, and a comparison table across key duration milestones (15–53s). Call this whenever the user asks about GT income, whether to invest in GT Duration vs GT+ level vs GT Cooldown, or the value of perma-GT. Accepts optional `runType` (default: Farming) and `runsWindow` (default: 5).
+
 ### Personalization Rules
 
 - **Never assume** a player's current UW levels match any "typical" benchmark. Levels vary enormously based on tournament placement history.
