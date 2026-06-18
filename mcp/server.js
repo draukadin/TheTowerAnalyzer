@@ -314,6 +314,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'get_sl_coverage_efficiency',
+      description: 'Compute Spotlight coverage-per-stone for the next Angle level vs. the next Quantity level, given the player\'s current SL stat levels. Effective coverage = Angle (degrees) × Quantity (beams). Use to decide whether to invest the next stone in Angle or Quantity.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+      },
+    },
+    {
       name: 'get_gt_income_projection',
       description: 'Compute projected Golden Tower income for a run using GT+ compounding formula. Returns projected income, perma-GT income, marginal value of +1s GT duration, and a comparison table across key duration milestones (15–53s). Use to advise whether to invest next stone in GT Duration vs GT+ level vs GT Cooldown.',
       inputSchema: {
@@ -696,6 +704,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           incomePerMob: round(incomePerMob, 2),
           runsUsed: recentRuns.length,
         });
+      }
+
+      // ── SL coverage efficiency ────────────────────────────────────────────
+
+      case 'get_sl_coverage_efficiency': {
+        const uwData = await fetchApi('/api/uw');
+        const sl = uwData.find(u => u.code === 'SP');
+        if (!sl) throw new Error('Spotlight UW not found in player state');
+
+        const angleStat    = sl.stats.find(s => s.statKey === 'STAT_2');
+        const quantityStat = sl.stats.find(s => s.statKey === 'STAT_3');
+        if (!angleStat || !quantityStat) throw new Error('SL Angle/Quantity stats not found');
+
+        const params = new URLSearchParams({
+          angleLevel:    angleStat.currentLevel,
+          quantityLevel: quantityStat.currentLevel,
+          angleDegrees:  angleStat.currentValue,
+          quantityBeams: quantityStat.currentValue,
+        });
+        if (angleStat.stonesToNext    != null) params.set('angleNextStoneCost',    angleStat.stonesToNext);
+        if (quantityStat.stonesToNext != null) params.set('quantityNextStoneCost', quantityStat.stonesToNext);
+
+        return distillSlCoverageEfficiency(await fetchApi(`/api/analysis/sl-coverage?${params}`));
       }
 
       default:
@@ -1469,6 +1500,41 @@ function distillGtIncomeProjection(d, inputs) {
       is_current:        row.isCurrent,
     })),
   });
+}
+
+// ── Distillation: SL coverage efficiency ─────────────────────────────────────
+
+function distillSlCoverageEfficiency(d) {
+  const out = {
+    angle_level:        d.angleLevel,
+    quantity_level:     d.quantityLevel,
+    angle_degrees:      d.angleDegrees,
+    quantity_beams:     d.quantityBeams,
+    effective_coverage: round(d.effectiveCoverage, 1),
+  };
+
+  if (d.angleNextStoneCost != null) {
+    out.angle_next = {
+      coverage_gain:      round(d.angleNextCoverageGain, 1),
+      stone_cost:         d.angleNextStoneCost,
+      coverage_per_stone: round(d.angleCoveragePerStone, 4),
+    };
+  } else {
+    out.angle_next = 'maxed';
+  }
+
+  if (d.quantityNextStoneCost != null) {
+    out.quantity_next = {
+      coverage_gain:      round(d.quantityNextCoverageGain, 1),
+      stone_cost:         d.quantityNextStoneCost,
+      coverage_per_stone: round(d.quantityCoveragePerStone, 4),
+    };
+  } else {
+    out.quantity_next = 'maxed';
+  }
+
+  out.recommendation = d.recommendation;
+  return result(out);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

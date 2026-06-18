@@ -273,6 +273,8 @@ For detailed mechanics, labs, stone investment, and module synergies, see `refer
 - **SL+ Light Range** scales with tower range — players who have invested heavily in range get significantly more value from it; this makes SL+ priority dependent on range investment
 - Angle has 61 upgrade levels — the longest upgrade track of any single stat in the game; budget carefully
 
+Use `get_sl_coverage_efficiency` to compare coverage-per-stone for the next Angle level vs. the next Quantity level at the player's current investment (effective coverage = Angle° × beams).
+
 For detailed mechanics, labs, stone investment, and module synergies, see `references/tta-spotlight.md`.
 
 ---
