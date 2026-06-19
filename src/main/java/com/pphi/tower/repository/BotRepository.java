@@ -31,7 +31,8 @@ public class BotRepository {
             boolean isBotPlus,
             int maxLevel,
             int sortOrder,
-            int currentLevel
+            int currentLevel,
+            Integer targetLevel
     ) {}
 
     public record BotDef(
@@ -81,7 +82,8 @@ public class BotRepository {
         jdbc.query("""
                 SELECT bs.id, bs.bot_id, bs.stat_key, bs.label, bs.value_unit, bs.is_bot_plus,
                        bs.max_level, bs.sort_order,
-                       COALESCE(pl.current_level, 0) AS current_level
+                       COALESCE(pl.current_level, 0) AS current_level,
+                       pl.target_level
                 FROM bot_stat bs
                 LEFT JOIN bot_stat_player_level pl ON pl.bot_stat_id = bs.id
                 ORDER BY bs.bot_id, bs.sort_order
@@ -96,7 +98,8 @@ public class BotRepository {
                                       rs.getInt("is_bot_plus") == 1,
                                       rs.getInt("max_level"),
                                       rs.getInt("sort_order"),
-                                      rs.getInt("current_level")));
+                                      rs.getInt("current_level"),
+                                      rs.getObject("target_level") != null ? rs.getInt("target_level") : null));
                     return null;
                 });
 
@@ -156,6 +159,13 @@ public class BotRepository {
                 INSERT INTO bot_player_state (bot_id, bot_plus_unlocked) VALUES (?,?)
                 ON CONFLICT(bot_id) DO UPDATE SET bot_plus_unlocked = excluded.bot_plus_unlocked
                 """, botId, botPlusUnlocked ? 1 : 0);
+    }
+
+    public void setStatTargetLevel(long botStatId, Integer targetLevel) {
+        jdbc.update("""
+                INSERT INTO bot_stat_player_level (bot_stat_id, target_level) VALUES (?,?)
+                ON CONFLICT(bot_stat_id) DO UPDATE SET target_level = excluded.target_level
+                """, botStatId, targetLevel);
     }
 
     public void setStatLevel(long botStatId, int level) {

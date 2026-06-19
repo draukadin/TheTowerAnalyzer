@@ -62,6 +62,13 @@ public class BotController {
         repo.setStatLevel(statId, req.level());
     }
 
+    record StatTargetLevelRequest(Integer targetLevel) {}
+
+    @PutMapping("/stats/{statId}/target-level")
+    public void setStatTargetLevel(@PathVariable long statId, @RequestBody StatTargetLevelRequest req) {
+        repo.setStatTargetLevel(statId, req.targetLevel());
+    }
+
     // ── Presets ───────────────────────────────────────────────────────────────
 
     @GetMapping("/presets")
