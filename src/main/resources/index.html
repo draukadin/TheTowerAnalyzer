@@ -5024,8 +5024,16 @@ function renderBotsTracker() {
         <div class="val" id="bots-chip-unlock">${botsUnlockMedalsSpent().toLocaleString()}</div>
       </div>
       <div class="bots-medals-chip">
-        <div class="lbl">Upgrade Medals</div>
+        <div class="lbl">Medals Invested</div>
         <div class="val" id="bots-chip-upgrade">${botsUpgradeMedalsSpent().toLocaleString()}</div>
+      </div>
+      <div class="bots-medals-chip">
+        <div class="lbl">Medals to Planned Targets</div>
+        <div class="val" style="color:var(--orange)" id="bots-chip-to-targets">${botsMedalsToTargets().toLocaleString()}</div>
+      </div>
+      <div class="bots-medals-chip">
+        <div class="lbl">Medals to Max Everything</div>
+        <div class="val" id="bots-chip-to-max">${botsMedalsToMax().toLocaleString()}</div>
       </div>
     </div>`;
 
@@ -5046,18 +5054,32 @@ function renderBotsTracker() {
 function updateBotsMedalChips(){
   const u=document.getElementById('bots-chip-unlock');
   const g=document.getElementById('bots-chip-upgrade');
+  const t=document.getElementById('bots-chip-to-targets');
+  const m=document.getElementById('bots-chip-to-max');
   if(u)u.textContent=botsUnlockMedalsSpent().toLocaleString();
   if(g)g.textContent=botsUpgradeMedalsSpent().toLocaleString();
+  if(t)t.textContent=botsMedalsToTargets().toLocaleString();
+  if(m)m.textContent=botsMedalsToMax().toLocaleString();
 }
 function botSpinChange(statId,level,botId){
   const bot=botsData.find(b=>b.id===botId);
   const stat=bot?.stats.find(s=>s.statId===statId);
   if(!bot||!stat)return;
-  stat.currentLevel=level;
+  stat.currentLevel=Math.min(Math.max(level,0),stat.maxLevel);
   const wrap=document.querySelector(`.bot-card-wrap[data-code="${bot.code}"]`);
   if(wrap)wrap.innerHTML=botCardHtml(bot);
   updateBotsMedalChips();
-  fetch(`${API}/bots/stats/${statId}/level`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({level})});
+  fetch(`${API}/bots/stats/${statId}/level`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({level:stat.currentLevel})});
+}
+
+function botSpinTarget(statId,level,botId){
+  const bot=botsData.find(b=>b.id===botId);
+  const stat=bot?.stats.find(s=>s.statId===statId);
+  if(!bot||!stat)return;
+  stat.targetLevel=Math.min(Math.max(level,stat.currentLevel),stat.maxLevel);
+  const wrap=document.querySelector(`.bot-card-wrap[data-code="${bot.code}"]`);
+  if(wrap)wrap.innerHTML=botCardHtml(bot);
+  fetch(`${API}/bots/stats/${statId}/target-level`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({targetLevel:stat.targetLevel})});
 }
 
 function botCardHtml(bot) {
@@ -5072,6 +5094,7 @@ function botCardHtml(bot) {
   const rows = bot.stats.map(s => {
     const lvls     = botsLevelValues[s.statId] || [];
     const curLvl   = s.currentLevel;
+    const tgtLvl   = s.targetLevel ?? '';
     const curEntry = lvls.find(e => e.level === curLvl);
     const nextEntry= lvls.find(e => e.level === curLvl + 1);
     const val      = curEntry ? fmtBotVal(curEntry.value, s.valueUnit) : '—';
@@ -5080,19 +5103,31 @@ function botCardHtml(bot) {
     const rowClass = (s.isBotPlus ? ' bot-plus-row' : '') + (locked ? ' bot-row-locked' : atMax ? ' bot-row-maxed' : '');
     const valClass = `bot-val${s.isBotPlus?' plus':''}`;
     const label    = `${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}`;
-    const lvlCell  = mkSpin(curLvl,0,s.maxLevel,locked,`botSpinChange(${s.statId},__V__,${bot.id})`);
-    const nextCostCell = atMax
+    const lvlCell  = atMax
+      ? `<span class="bot-max-label">${s.maxLevel} ★</span>`
+      : mkSpin(curLvl,0,s.maxLevel,locked,`botSpinChange(${s.statId},__V__,${bot.id})`);
+    const tgtCell  = atMax
       ? `<span class="bot-max-label">—</span>`
-      : (curEntry?.medalsToNext != null ? `${curEntry.medalsToNext.toLocaleString()} 🏅` : 'Max');
+      : mkSpin(tgtLvl===''?curLvl:tgtLvl,curLvl,s.maxLevel,locked,`botSpinTarget(${s.statId},__V__,${bot.id})`);
+    const costToTarget = !atMax && tgtLvl !== '' && tgtLvl > curLvl
+      ? lvls.filter(e => e.level >= curLvl && e.level < tgtLvl && e.medalsToNext != null)
+             .reduce((sum,e)=>sum+e.medalsToNext,0)
+      : null;
+    const costCell = atMax
+      ? `<span class="bot-max-label">—</span>`
+      : costToTarget != null
+        ? `${costToTarget.toLocaleString()} 🏅`
+        : (curEntry?.medalsToNext != null ? `${curEntry.medalsToNext.toLocaleString()} 🏅` : '—');
     const nextPreview = (!locked && !atMax && nextEntry)
       ? `<tr class="bot-next-row${s.isBotPlus?' bot-plus-row':''}"><td></td>
-           <td colspan="3"><span class="bot-next-preview">${val} → ${fmtBotVal(nextEntry.value, s.valueUnit)}</span></td></tr>`
+           <td colspan="4"><span class="bot-next-preview">${val} → ${fmtBotVal(nextEntry.value, s.valueUnit)}</span></td></tr>`
       : '';
     return `<tr class="${rowClass}">
       <td>${label}</td>
       <td class="bot-lvl-cell">${lvlCell}</td>
       <td class="${valClass}">${val}</td>
-      <td class="bot-cost">${nextCostCell}</td>
+      <td class="bot-lvl-cell">${tgtCell}</td>
+      <td class="bot-cost">${costCell}</td>
     </tr>${nextPreview}`;
   }).join('');
 
@@ -5119,7 +5154,8 @@ function botCardHtml(bot) {
         <th>Stat</th>
         <th class="r" style="width:62px">Level</th>
         <th class="r" style="width:72px">Value</th>
-        <th class="r" style="width:80px">Next Cost</th>
+        <th class="r" style="width:62px">Target</th>
+        <th class="r" style="width:88px">Cost</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -5147,6 +5183,24 @@ function botsUpgradeMedalsSpent() {
   return botsData.flatMap(b => b.stats).reduce((sum, s) => {
     const lvls = botsLevelValues[s.statId] || [];
     return sum + lvls.filter(e => e.level < s.currentLevel && e.medalsToNext != null)
+                     .reduce((a, e) => a + e.medalsToNext, 0);
+  }, 0);
+}
+
+function botsMedalsToTargets() {
+  return botsData.flatMap(b => b.stats).reduce((sum, s) => {
+    const tgt = s.targetLevel;
+    if (tgt == null || tgt <= s.currentLevel) return sum;
+    const lvls = botsLevelValues[s.statId] || [];
+    return sum + lvls.filter(e => e.level >= s.currentLevel && e.level < tgt && e.medalsToNext != null)
+                     .reduce((a, e) => a + e.medalsToNext, 0);
+  }, 0);
+}
+
+function botsMedalsToMax() {
+  return botsData.flatMap(b => b.stats).reduce((sum, s) => {
+    const lvls = botsLevelValues[s.statId] || [];
+    return sum + lvls.filter(e => e.level >= s.currentLevel && e.medalsToNext != null)
                      .reduce((a, e) => a + e.medalsToNext, 0);
   }, 0);
 }
@@ -5252,7 +5306,9 @@ function renderBotsPresetsTab() {
         const atMax    = !locked && curLvl >= s.maxLevel;
         const rowClass = (s.isBotPlus?' bot-plus-row':'') + (locked?' bot-row-locked':(atMax?' bots-preset-row-maxed':''));
         const label    = `${escHtml(s.label)}${s.isBotPlus?` <span style="font-size:10px;color:var(--accent2)">(Bot+)</span>`:''}`;
-        const lvlCell  = mkSpin(curLvl,0,s.maxLevel,locked,`botsPresetSetStatLevel(${preset.id},${s.statId},__V__)`);
+        const lvlCell  = atMax
+          ? `<span class="bots-preset-max-label">${s.maxLevel} ★</span>`
+          : mkSpin(curLvl,0,s.maxLevel,locked,`botsPresetSetStatLevel(${preset.id},${s.statId},__V__)`);
         const nextPreview = (!locked && !atMax && nextEntry)
           ? `<tr class="bots-preset-next-row${s.isBotPlus?' bot-plus-row':''}"><td></td>
                <td colspan="2"><span class="bots-preset-next-preview">${val} → ${fmtBotVal(nextEntry.value, s.valueUnit)}</span></td></tr>`
