@@ -115,6 +115,26 @@ public class LabRepository {
         }
     }
 
+    @Cacheable("lab-costs-all")
+    public java.util.Map<Long, List<LabLevelCost>> getAllCosts() {
+        java.util.Map<Long, List<LabLevelCost>> map = new java.util.HashMap<>();
+        jdbc.query("""
+                SELECT lab_id, level, duration_seconds, coin_cost
+                FROM lab_level_cost
+                ORDER BY lab_id, level
+                """,
+                (rs, i) -> {
+                    long labId = rs.getLong("lab_id");
+                    map.computeIfAbsent(labId, k -> new java.util.ArrayList<>())
+                       .add(new LabLevelCost(
+                               rs.getInt("level"),
+                               rs.getObject("duration_seconds") != null ? rs.getInt("duration_seconds") : null,
+                               rs.getObject("coin_cost") != null ? rs.getDouble("coin_cost") : null));
+                    return null;
+                });
+        return map;
+    }
+
     public List<LabLevelCost> getCosts(long labId) {
         return jdbc.query("""
                 SELECT level, duration_seconds, coin_cost

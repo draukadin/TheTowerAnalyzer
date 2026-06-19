@@ -36,6 +36,11 @@ public class LabController {
         repo.updateState(id, req.currentLevel(), req.targetLevel());
     }
 
+    @GetMapping("/costs")
+    public java.util.Map<Long, List<LabLevelCost>> getAllCosts() {
+        return repo.getAllCosts();
+    }
+
     @GetMapping("/{id}/costs")
     public List<LabLevelCost> getCosts(@PathVariable long id) {
         return repo.getCosts(id);
