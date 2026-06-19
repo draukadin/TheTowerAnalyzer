@@ -68,4 +68,15 @@ public class ReportController {
         return comparisonService.compare(id, id2);
     }
 
+    @GetMapping("/compare")
+    public List<BattleHistory> compareByNumber(
+            @RequestParam int n1,
+            @RequestParam int n2) {
+        String id1 = repository.findIdByRunNumber(n1)
+                .orElseThrow(() -> new ReportNotFoundException("run #" + n1));
+        String id2 = repository.findIdByRunNumber(n2)
+                .orElseThrow(() -> new ReportNotFoundException("run #" + n2));
+        return comparisonService.compare(id1, id2);
+    }
+
 }

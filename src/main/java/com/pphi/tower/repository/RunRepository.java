@@ -23,6 +23,7 @@ public class RunRepository {
     private static final RowMapper<ReportSummaryDto> SUMMARY_MAPPER = (rs, rowNum) ->
             new ReportSummaryDto(
                     rs.getString("id"),
+                    rs.getInt("run_number"),
                     rs.getString("filename"),
                     rs.getString("run_type"),
                     rs.getString("battle_date"),
@@ -52,14 +53,22 @@ public class RunRepository {
                 INSERT INTO runs (id, filename, run_type, battle_date, tier, wave,
                     cells_earned, real_time_seconds, game_time_seconds,
                     cells_per_hour, coins_per_hour, killed_by, tower_era, payload,
-                    battle_epoch_seconds)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    battle_epoch_seconds, run_number)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    (SELECT COALESCE(MAX(run_number), 0) + 1 FROM runs))
                 """,
                 id, filename, runType, battleDate, tier, wave,
                 cellsEarned, realTimeSeconds, gameTimeSeconds,
                 cellsPerHour, coinsPerHour, killedBy,
                 towerEra != null ? towerEra.toString() : null,
                 payloadJson, battleEpochSeconds);
+    }
+
+    public Optional<String> findIdByRunNumber(int runNumber) {
+        List<String> results = jdbc.query(
+                "SELECT id FROM runs WHERE run_number = ?",
+                (rs, rowNum) -> rs.getString("id"), runNumber);
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
 
     public List<ReportSummaryDto> findAllSummaries() {

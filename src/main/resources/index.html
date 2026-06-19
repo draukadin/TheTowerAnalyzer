@@ -1003,7 +1003,7 @@ function renderSidebar(reports){
     const item=document.createElement('div');
     item.className='report-item'+(r.id===activeId?' active':'');
     item.innerHTML=`
-      <div class="report-item-name">T${r.tier}_Wave${r.wave.toLocaleString()}</div>
+      <div class="report-item-name">#${r.runNumber} — T${r.tier}_Wave${r.wave.toLocaleString()}</div>
       <div class="report-item-meta">
         <span class="tier-badge">T${r.tier}</span>
         <span class="wave-badge">⚡ ${r.wave.toLocaleString()}</span>

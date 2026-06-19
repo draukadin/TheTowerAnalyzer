@@ -8,6 +8,7 @@ import com.pphi.tower.model.TowerEra;
  */
 public record ReportSummaryDto(
         String id,
+        int runNumber,
         String filename,
         String runType,
         String battleDate,

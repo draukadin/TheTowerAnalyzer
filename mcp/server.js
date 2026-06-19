@@ -82,15 +82,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'compare_runs',
+      description: 'Compare two battle reports by their run numbers (visible in the front-end report list as #N). Returns a side-by-side delta of all battle sections.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          n1: { type: 'integer', description: 'Run number of the first report' },
+          n2: { type: 'integer', description: 'Run number of the second report' },
+        },
+        required: ['n1', 'n2'],
+      },
+    },
+    {
       name: 'get_tower_state',
-      description: 'Get UW stats, module inventory, relic data, and module effect bans. Use sections to control what is returned.',
+      description: 'Get UW stats, module inventory, relic data, module effect bans, and stat contributor breakdown. Use sections to control what is returned.',
       inputSchema: {
         type: 'object',
         properties: {
           sections: {
             type: 'array',
-            items: { type: 'string', enum: ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans'] },
-            description: 'Sections to include. Defaults to ["uw", "modules_active", "relic_summary"]. Use modules_all instead of modules_active for full 24-module swap analysis. Use effect_bans to see which sub-stats are banned per module type and how many ban slots are available.',
+            items: { type: 'string', enum: ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans', 'stat_breakdown', 'stat_breakdown_detailed'] },
+            description: 'Sections to include. Defaults to ["uw", "modules_active", "relic_summary"]. Use modules_all instead of modules_active for full 24-module swap analysis. Use effect_bans to see which sub-stats are banned per module type and how many ban slots are available. Use stat_breakdown for a per-stat aggregate summary showing effective workshop values and total relic bonuses. Use stat_breakdown_detailed for the full per-contributor breakdown listing each workshop item level, each owned relic, and each equipped module substat.',
           },
         },
       },
@@ -444,18 +456,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return distillRecentRuns(runs, sections.includes('diagnosis'), diagnoses);
       }
 
+      // ── Compare runs ──────────────────────────────────────────────────────
+
+      case 'compare_runs': {
+        const { n1, n2 } = args;
+        if (!Number.isInteger(n1) || !Number.isInteger(n2))
+          throw new Error('n1 and n2 must be integers');
+        const [r1, r2, delta] = await fetchApi(`/api/reports/compare?n1=${n1}&n2=${n2}`);
+        return distillComparison(n1, n2, r1, r2, delta);
+      }
+
       // ── Tower state ───────────────────────────────────────────────────────
 
       case 'get_tower_state': {
         const sections = args.sections ?? ['uw', 'modules_active', 'relic_summary'];
-        validateSections(sections, ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans']);
+        validateSections(sections, ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans', 'stat_breakdown', 'stat_breakdown_detailed']);
 
-        const [state, bans] = await Promise.all([
+        const [state, bans, summary, breakdown] = await Promise.all([
           fetchApi('/api/player-tracker/state'),
-          sections.includes('effect_bans') ? fetchApi('/api/modules/bans') : null,
+          sections.includes('effect_bans')             ? fetchApi('/api/modules/bans')       : null,
+          sections.includes('stat_breakdown')          ? fetchApi('/api/stats/summary')      : null,
+          sections.includes('stat_breakdown_detailed') ? fetchApi('/api/stats/breakdown')    : null,
         ]);
 
-        return distillTowerState(state, sections, bans);
+        return distillTowerState(state, sections, bans, summary, breakdown);
       }
 
       // ── Lab state ─────────────────────────────────────────────────────────
@@ -929,9 +953,64 @@ function distillRecentRuns(runs, includeDiagnosis, diagnoses) {
   }));
 }
 
+// ── Distillation: run comparison ──────────────────────────────────────────────
+
+function distillComparison(n1, n2, r1, r2, delta) {
+  const br = h => h.sectionMap?.BATTLE_REPORT ?? {};
+  const fmt = v => (v == null ? null : typeof v === 'object' && 'value' in v ? v.value : v);
+
+  function summarise(h, runNumber) {
+    const b = br(h);
+    return {
+      run: runNumber,
+      date:     h.battleDate ?? null,
+      type:     h.runType    ?? null,
+      tier:     fmt(b.tier)  ?? null,
+      wave:     fmt(b.wave)  ?? null,
+      version:  h.towerEra   ?? null,
+      killed_by: fmt(b.killedBy) ?? null,
+      coins_per_hour: fmt(b.coinsPerHour) ?? null,
+      cells_earned:   fmt(b.cellsEarned)  ?? null,
+      real_time_s:    fmt(b.realTime)     ?? null,
+      game_time_s:    fmt(b.gameTime)     ?? null,
+    };
+  }
+
+  function deltaSections(d) {
+    const out = {};
+    const sm = d.sectionMap ?? {};
+    for (const [key, section] of Object.entries(sm)) {
+      if (!section || key === 'BATTLE_REPORT') continue;
+      const fields = {};
+      for (const [k, v] of Object.entries(section)) {
+        if (k === 'sectionHeader') continue;
+        const val = fmt(v);
+        if (val != null && val !== 0) fields[k] = val;
+      }
+      if (Object.keys(fields).length) out[key] = fields;
+    }
+    return out;
+  }
+
+  const b = br(delta);
+  return result({
+    run1: summarise(r1, n1),
+    run2: summarise(r2, n2),
+    delta: {
+      wave_diff:            fmt(b.wave)         ?? null,
+      coins_per_hour_diff:  fmt(b.coinsPerHour) ?? null,
+      cells_earned_diff:    fmt(b.cellsEarned)  ?? null,
+      real_time_diff_s:     fmt(b.realTime)     ?? null,
+      game_time_diff_s:     fmt(b.gameTime)     ?? null,
+      killed_by:            fmt(b.killedBy)     ?? null,
+      sections: deltaSections(delta),
+    },
+  });
+}
+
 // ── Distillation: tower state ─────────────────────────────────────────────────
 
-function distillTowerState(d, sections, bans) {
+function distillTowerState(d, sections, bans, summary, breakdown) {
   const out = {};
 
   if (sections.includes('uw')) {
@@ -985,6 +1064,38 @@ function distillTowerState(d, sections, bans) {
         bans_used: b.banned.length,
         banned:    b.banned,
       }])
+    );
+  }
+
+  if (sections.includes('stat_breakdown') && summary) {
+    out.stat_breakdown = Object.fromEntries(
+      Object.entries(summary).map(([key, s]) => {
+        const entry = {};
+        if (s.workshopValue     != null) entry.workshop      = s.workshopValue;
+        if (s.workshopPlusValue != null) entry.workshop_plus = s.workshopPlusValue;
+        if (s.relicBonus        != null) entry.relic_bonus   = s.relicBonus;
+        if (s.moduleSubstatRarities?.length > 0) entry.module_substats = s.moduleSubstatRarities;
+        return [key, entry];
+      })
+    );
+  }
+
+  if (sections.includes('stat_breakdown_detailed') && breakdown) {
+    out.stat_breakdown_detailed = Object.fromEntries(
+      Object.entries(breakdown).map(([key, bd]) => {
+        const entry = {};
+        if (bd.workshopItems.length > 0) {
+          const regular = bd.workshopItems.filter(w => !w.isPlus);
+          const plus    = bd.workshopItems.filter(w =>  w.isPlus);
+          if (regular.length > 0) entry.workshop      = regular.map(w => ({ name: w.name, level: w.level, max: w.maxLevel }));
+          if (plus.length    > 0) entry.workshop_plus = plus.map(w =>    ({ name: w.name, level: w.level, max: w.maxLevel }));
+        }
+        if (bd.relics.length > 0)
+          entry.relics = bd.relics.map(r => ({ name: r.name, rarity: r.rarity, bonus: r.bonus }));
+        if (bd.moduleSubstats.length > 0)
+          entry.module_substats = bd.moduleSubstats.map(m => ({ module: m.moduleName, rarity: m.substatRarity }));
+        return [key, entry];
+      })
     );
   }
 
