@@ -139,24 +139,32 @@ function parseDoubles(buf) {
 // ── Step 4: Map to named items and build output JSONs ────────────────────────
 
 function buildOutputs(raw) {
-    const coins = {}, cash = {};
+    const coins = {}, cash = {}, values = {};
     for (const [catStr, items] of Object.entries(raw)) {
         const names = ITEM_NAMES[parseInt(catStr)];
         if (!names) continue;
         for (const [idxStr, levels] of Object.entries(items)) {
             const name = names[parseInt(idxStr)];
             if (!name) continue;
-            const maxLvl = Object.keys(levels).length - 1; // last entry is a 0-cost sentinel
-            coins[name] = {};
-            cash[name]  = {};
+            // levels[n] = { cash, coins, value } where value is the stat AT level n.
+            // levels[maxLvl] is the sentinel (0 cost, but holds the max-level value).
+            const maxLvl = Object.keys(levels).length - 1;
+            coins[name]  = {};
+            cash[name]   = {};
+            values[name] = {};
             for (let n = 1; n <= maxLvl; n++) {
-                const lvl = levels[n - 1];
-                if (lvl.coins > 0) coins[name][String(n)] = Math.round(lvl.coins);
-                if (lvl.cash  > 0) cash[name][String(n)]  = Math.round(lvl.cash);
+                // Cost to go from n-1 → n lives in levels[n-1]
+                const costEntry = levels[n - 1];
+                if (costEntry.coins > 0) coins[name][String(n)] = Math.round(costEntry.coins);
+                if (costEntry.cash  > 0) cash[name][String(n)]  = Math.round(costEntry.cash);
+            }
+            // Value at level n lives in levels[n]; store for n=0 (base) through n=maxLvl
+            for (let n = 0; n <= maxLvl; n++) {
+                values[name][String(n)] = parseFloat(levels[n].value.toFixed(6));
             }
         }
     }
-    return { coins, cash };
+    return { coins, cash, values };
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -186,16 +194,20 @@ const categories = Object.keys(raw).map(Number).sort();
 categories.forEach(c => console.log(`  Category ${c}: ${Object.keys(raw[c]).length} items`));
 
 console.log('Building output files...');
-const { coins, cash } = buildOutputs(raw);
+const { coins, cash, values } = buildOutputs(raw);
 
 const outDir = path.dirname(bundlePath);
-const coinsPath = path.join(outDir, 'workshop_costs.json');
-const cashPath  = path.join(outDir, 'workshop_cash_costs.json');
-fs.writeFileSync(coinsPath, JSON.stringify(coins));
-fs.writeFileSync(cashPath,  JSON.stringify(cash));
+const coinsPath  = path.join(outDir, 'workshop_costs.json');
+const cashPath   = path.join(outDir, 'workshop_cash_costs.json');
+const valuesPath = path.join(outDir, 'workshop_values.json');
+fs.writeFileSync(coinsPath,  JSON.stringify(coins));
+fs.writeFileSync(cashPath,   JSON.stringify(cash));
+fs.writeFileSync(valuesPath, JSON.stringify(values));
 
-const coinCount = Object.values(coins).reduce((s, v) => s + Object.keys(v).length, 0);
-const cashCount = Object.values(cash).reduce((s, v)  => s + Object.keys(v).length, 0);
+const coinCount   = Object.values(coins).reduce((s, v) => s + Object.keys(v).length, 0);
+const cashCount   = Object.values(cash).reduce((s, v)  => s + Object.keys(v).length, 0);
+const valuesCount = Object.values(values).reduce((s, v) => s + Object.keys(v).length, 0);
 console.log(`  ${coinsPath}: ${coinCount} records`);
 console.log(`  ${cashPath}: ${cashCount} records`);
+console.log(`  ${valuesPath}: ${valuesCount} records`);
 console.log('Done.');

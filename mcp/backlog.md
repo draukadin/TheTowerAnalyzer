@@ -38,9 +38,4 @@ in-game access:
 ## Missing Fields
 
 ### `get_tower_state`
-- `modules.effect_bans` — which sub-stats are currently banned per module type.
 - `workshop.*` — per-stat values with contributor breakdown (workshop + relics + module substats + cap).
-
-### `get_cards_state`
-- `presets` section — which cards are equipped in each named preset. Needed for mid-run swap advice and preset comparison.
-- `cards[].copies_toward_next` — copies accumulated toward the next star level. Needed for `get_card_details` progression calculations.

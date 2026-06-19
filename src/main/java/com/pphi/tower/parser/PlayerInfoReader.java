@@ -419,6 +419,12 @@ public class PlayerInfoReader {
             case PTE_DATETIME -> s.readInt64(); // 100-ns ticks (packed with Kind bits)
             case PTE_UINT16   -> s.readUInt16();
             case PTE_UINT32   -> s.readUInt32();
+            // TODO: UInt64 is read as a signed Java long. If the high bit is set (values > Long.MAX_VALUE,
+            //       ~9.2 quintillion) the result will appear as a large negative number, or when cast/displayed
+            //       as an unsigned value will produce a ridiculously large number (e.g. gems). Known affected
+            //       fields should be displayed via Long.toUnsignedString(), or converted to BigInteger via:
+            //         BigInteger.valueOf(rawLong).and(BigInteger.TWO.pow(64).subtract(BigInteger.ONE))
+            //       Consider returning BigInteger here for correctness once all UInt64 fields are identified.
             case PTE_UINT64   -> s.readInt64();  // returned as signed long; caller casts if needed
             case 31 -> { s.skip(4); yield null; } // Unity PTE=31: unknown 4-byte type
             default -> throw new IOException("Unknown PrimitiveTypeEnum: " + pte + " at pos 0x" + Integer.toHexString(s.pos() - 1));
