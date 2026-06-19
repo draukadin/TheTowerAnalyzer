@@ -27,7 +27,8 @@ public class GuardianRepository {
             String valueUnit,
             int maxLevel,
             int sortOrder,
-            int currentLevel
+            int currentLevel,
+            Integer targetLevel
     ) {}
 
     public record ChipDef(
@@ -100,7 +101,8 @@ public class GuardianRepository {
         jdbc.query("""
                 SELECT cs.id, cs.chip_id, cs.stat_key, cs.label, cs.value_unit,
                        cs.max_level, cs.sort_order,
-                       COALESCE(pl.current_level, 0) AS current_level
+                       COALESCE(pl.current_level, 0) AS current_level,
+                       pl.target_level
                 FROM guardian_chip_stat cs
                 LEFT JOIN guardian_chip_stat_player_level pl ON pl.chip_stat_id = cs.id
                 ORDER BY cs.chip_id, cs.sort_order
@@ -114,7 +116,8 @@ public class GuardianRepository {
                                        rs.getString("value_unit"),
                                        rs.getInt("max_level"),
                                        rs.getInt("sort_order"),
-                                       rs.getInt("current_level")));
+                                       rs.getInt("current_level"),
+                                       rs.getObject("target_level") != null ? rs.getInt("target_level") : null));
                     return null;
                 });
 
@@ -164,6 +167,13 @@ public class GuardianRepository {
                 INSERT INTO guardian_chip_player_state (chip_id, acquired) VALUES (?,?)
                 ON CONFLICT(chip_id) DO UPDATE SET acquired = excluded.acquired
                 """, chipId, acquired ? 1 : 0);
+    }
+
+    public void setStatTargetLevel(long chipStatId, Integer targetLevel) {
+        jdbc.update("""
+                INSERT INTO guardian_chip_stat_player_level (chip_stat_id, target_level) VALUES (?,?)
+                ON CONFLICT(chip_stat_id) DO UPDATE SET target_level = excluded.target_level
+                """, chipStatId, targetLevel);
     }
 
     public void setStatLevel(long chipStatId, int level) {

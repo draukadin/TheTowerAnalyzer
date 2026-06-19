@@ -723,10 +723,17 @@
   .guardian-chip-stats td{padding:6px 10px;border-top:1px solid var(--border);vertical-align:middle;}
   .guardian-chip-val{font-family:var(--mono);color:var(--accent);font-weight:600;text-align:right;}
   .guardian-level-select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:2px 5px;font-family:var(--mono);cursor:pointer;width:56px;}
+  .guardian-row-maxed td{color:#f5c842;}
+  .guardian-max-label{font-family:var(--mono);font-size:12px;color:#f5c842;font-weight:600;}
   .guardian-bits-bar{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:1.25rem;}
   .guardian-bits-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;}
   .guardian-bits-chip .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;}
   .guardian-bits-chip .val{font-family:var(--mono);font-weight:700;color:var(--accent);}
+  .guardian-filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
+  .guardian-filter-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
+    background:var(--surface2);border:1px solid var(--border2);font-size:11px;cursor:pointer;user-select:none;transition:opacity .15s;}
+  .guardian-filter-pill.hidden-chip{opacity:0.38;text-decoration:line-through;}
+  .guardian-filter-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);white-space:nowrap;}
   .guardian-slots-section{margin-bottom:1.25rem;}
   .guardian-slots-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
   .guardian-slot-pill{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;}
@@ -5005,6 +5012,7 @@ function renderBotsBody() {
 // ── Tracker ───────────────────────────────────────────────────────────────────
 
 let botsHidden = new Set(JSON.parse(localStorage.getItem('bots-hidden') || '[]'));
+let guardianHidden = new Set(JSON.parse(localStorage.getItem('guardian-hidden') || '[]'));
 function botsToggleHidden(code) {
   if (botsHidden.has(code)) botsHidden.delete(code); else botsHidden.add(code);
   localStorage.setItem('bots-hidden', JSON.stringify([...botsHidden]));
@@ -5491,7 +5499,9 @@ function buildGuardianPage() {
       <div class="guardian-summary-chip"><div class="lbl">Guardian</div><div class="val" style="color:${guardianUnlocked?'var(--green)':'var(--muted)'}">${guardianUnlocked?'Unlocked':'Locked'}</div></div>
       <div class="guardian-summary-chip"><div class="lbl">Chips</div><div class="val">${acquired} / ${guardianChips.length}</div></div>
       <div class="guardian-summary-chip"><div class="lbl">Slots Unlocked</div><div class="val">${slotsUnlocked} / ${guardianSlots.length}</div></div>
-      <div class="guardian-summary-chip"><div class="lbl">Bits Invested</div><div class="val" style="color:var(--accent)">${bitsSpent.toLocaleString()}</div></div>
+      <div class="guardian-summary-chip"><div class="lbl">Bits Invested</div><div class="val" id="guardian-chip-invested" style="color:var(--accent)">${bitsSpent.toLocaleString()}</div></div>
+      <div class="guardian-summary-chip"><div class="lbl">Bits to Planned Targets</div><div class="val" id="guardian-chip-to-targets" style="color:var(--orange)"></div></div>
+      <div class="guardian-summary-chip"><div class="lbl">Bits to Max Everything</div><div class="val" id="guardian-chip-to-max"></div></div>
     </div>
     <div class="guardian-tab-bar">
       <div class="guardian-tab${guardianTab==='tracker'?' active':''}" onclick="guardianSetTab('tracker')">Tracker</div>
@@ -5500,6 +5510,7 @@ function buildGuardianPage() {
     <div id="guardianBody"></div>`;
 
   renderGuardianBody();
+  updateGuardianBitsChips();
 }
 
 function guardianSetTab(tab) {
@@ -5538,12 +5549,21 @@ function renderGuardianTracker() {
       </div>
     </div>`;
 
-  const cards = guardianChips.map(chip => guardianChipCardHtml(chip)).join('');
+  const filterPills = guardianChips.map(chip => {
+    const hidden = guardianHidden.has(chip.code);
+    return `<span class="guardian-filter-pill${hidden?' hidden-chip':''}" data-code="${chip.code}"
+      onclick="guardianToggleHidden('${chip.code}')">${escHtml(chip.name)}</span>`;
+  }).join('');
+
+  const cards = guardianChips.map(chip =>
+    `<div class="guardian-chip-wrap" data-code="${chip.code}" style="${guardianHidden.has(chip.code)?'display:none':''}">${guardianChipCardHtml(chip)}</div>`
+  ).join('');
+
   const addBtn = `<div style="margin-bottom:1rem">
     <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="guardianOpenAddChip()">+ Add Chip</button>
   </div>`;
   document.getElementById('guardianBody').innerHTML =
-    `${unlockToggle}${slotsHtml}${addBtn}<div class="guardian-chips-grid">${cards}</div>`;
+    `${unlockToggle}${slotsHtml}${addBtn}<div class="guardian-filter-bar"><span class="guardian-filter-lbl">Show:</span>${filterPills}</div><div class="guardian-chips-grid">${cards}</div>`;
 }
 
 function guardianChipBitsSpent(chip) {
@@ -5565,20 +5585,42 @@ function guardianChipCardHtml(chip) {
 
   const rows = chip.stats.map(s => {
     const lvls     = guardianLevelValues[s.statId] || [];
+    const atMax    = s.currentLevel >= s.maxLevel;
+    const tgtLvl   = s.targetLevel ?? '';
     const curEntry = lvls.find(e => e.level === s.currentLevel);
     const val      = curEntry ? fmtGuardianVal(curEntry.value, s.valueUnit) : '—';
-    const nextCost = curEntry?.bitsToNext != null ? `${curEntry.bitsToNext.toLocaleString()} bits` : 'Max';
-    const opts     = Array.from({length: s.maxLevel + 1}, (_,i) =>
-      `<option value="${i}"${i===s.currentLevel?' selected':''}>${i}</option>`).join('');
-    return `<tr>
+
+    const lvlCell = atMax
+      ? `<span class="guardian-max-label">${s.maxLevel} ★</span>`
+      : mkSpin(s.currentLevel, 0, s.maxLevel, false, `guardianSetStatLevel(${s.statId},__V__,${chip.id})`);
+
+    const tgtCell = atMax
+      ? `<span class="guardian-max-label">—</span>`
+      : mkSpin(tgtLvl === '' ? s.currentLevel : tgtLvl, s.currentLevel, s.maxLevel, false, `guardianSetStatTargetLevel(${s.statId},__V__,${chip.id})`);
+
+    let costCell;
+    if (atMax) {
+      costCell = `<span style="color:#f5c842;font-weight:600">★ Max</span>`;
+    } else if (tgtLvl !== '' && tgtLvl > s.currentLevel) {
+      const costToTarget = lvls.filter(e => e.level >= s.currentLevel && e.level < tgtLvl && e.bitsToNext != null)
+                               .reduce((a, e) => a + e.bitsToNext, 0);
+      costCell = `<span style="color:var(--orange);font-size:11px">${costToTarget.toLocaleString()} bits</span>`;
+    } else if (curEntry?.bitsToNext != null) {
+      costCell = `<span style="color:var(--muted);font-size:11px">${curEntry.bitsToNext.toLocaleString()} bits</span>`;
+    } else {
+      costCell = `<span style="color:var(--muted);font-size:11px">—</span>`;
+    }
+
+    return `<tr${atMax?' class="guardian-row-maxed"':''}>
       <td>${escHtml(s.label)}</td>
       <td class="guardian-chip-val">${val}</td>
-      <td><select class="guardian-level-select" onchange="guardianSetStatLevel(${s.statId},+this.value,${chip.id})">${opts}</select></td>
-      <td style="color:var(--muted);font-size:11px;text-align:right">${nextCost}</td>
+      <td style="text-align:right">${lvlCell}</td>
+      <td style="text-align:right">${tgtCell}</td>
+      <td style="text-align:right">${costCell}</td>
     </tr>`;
   }).join('');
 
-  return `<div class="guardian-chip-card">
+  return `<div class="guardian-chip-card" data-chip-id="${chip.id}">
     <div class="guardian-chip-card-header">
       <div>
         <div class="guardian-chip-name">${escHtml(chip.name)}</div>
@@ -5591,7 +5633,7 @@ function guardianChipCardHtml(chip) {
       </label>
     </div>
     <table class="guardian-chip-stats">
-      <thead><tr><th>Stat</th><th class="r">Value</th><th class="r">Level</th><th class="r">Next</th></tr></thead>
+      <thead><tr><th>Stat</th><th class="r">Value</th><th class="r">Level</th><th class="r">Target</th><th class="r">Cost</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>`;
@@ -5617,6 +5659,44 @@ function guardianBitsSpent() {
     }
   }
   return total;
+}
+
+function guardianToggleHidden(code) {
+  if (guardianHidden.has(code)) guardianHidden.delete(code); else guardianHidden.add(code);
+  localStorage.setItem('guardian-hidden', JSON.stringify([...guardianHidden]));
+  document.querySelectorAll('.guardian-filter-pill').forEach(p => {
+    p.classList.toggle('hidden-chip', guardianHidden.has(p.dataset.code));
+  });
+  document.querySelectorAll('.guardian-chip-wrap').forEach(w => {
+    w.style.display = guardianHidden.has(w.dataset.code) ? 'none' : '';
+  });
+}
+
+function guardianBitsToTargets() {
+  return guardianChips.flatMap(c => c.stats).reduce((sum, s) => {
+    const tgt = s.targetLevel;
+    if (tgt == null || tgt <= s.currentLevel) return sum;
+    const lvls = guardianLevelValues[s.statId] || [];
+    return sum + lvls.filter(e => e.level >= s.currentLevel && e.level < tgt && e.bitsToNext != null)
+                     .reduce((a, e) => a + e.bitsToNext, 0);
+  }, 0);
+}
+
+function guardianBitsToMax() {
+  return guardianChips.flatMap(c => c.stats).reduce((sum, s) => {
+    const lvls = guardianLevelValues[s.statId] || [];
+    return sum + lvls.filter(e => e.level >= s.currentLevel && e.bitsToNext != null)
+                     .reduce((a, e) => a + e.bitsToNext, 0);
+  }, 0);
+}
+
+function updateGuardianBitsChips() {
+  const i = document.getElementById('guardian-chip-invested');
+  const t = document.getElementById('guardian-chip-to-targets');
+  const m = document.getElementById('guardian-chip-to-max');
+  if (i) i.textContent = guardianBitsSpent().toLocaleString();
+  if (t) t.textContent = guardianBitsToTargets().toLocaleString();
+  if (m) m.textContent = guardianBitsToMax().toLocaleString();
 }
 
 async function guardianToggleUnlocked(unlocked) {
@@ -5651,12 +5731,29 @@ async function guardianToggleChip(chipId, acquired) {
 async function guardianSetStatLevel(statId, level, chipId) {
   const chip = guardianChips.find(c => c.id === chipId);
   const stat = chip?.stats.find(s => s.statId === statId);
-  if (stat) stat.currentLevel = level;
+  if (!chip || !stat) return;
+  stat.currentLevel = Math.min(Math.max(level, 0), stat.maxLevel);
+  const wrap = document.querySelector(`.guardian-chip-wrap[data-code="${chip.code}"]`);
+  if (wrap) wrap.innerHTML = guardianChipCardHtml(chip);
+  updateGuardianBitsChips();
   await fetch(`${API}/guardian/stats/${statId}/level`, {
     method:'PUT', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({level})
+    body: JSON.stringify({level: stat.currentLevel})
   });
-  buildGuardianPage();
+}
+
+async function guardianSetStatTargetLevel(statId, level, chipId) {
+  const chip = guardianChips.find(c => c.id === chipId);
+  const stat = chip?.stats.find(s => s.statId === statId);
+  if (!chip || !stat) return;
+  stat.targetLevel = Math.min(Math.max(level, stat.currentLevel), stat.maxLevel);
+  const wrap = document.querySelector(`.guardian-chip-wrap[data-code="${chip.code}"]`);
+  if (wrap) wrap.innerHTML = guardianChipCardHtml(chip);
+  updateGuardianBitsChips();
+  fetch(`${API}/guardian/stats/${statId}/target-level`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({targetLevel: stat.targetLevel})
+  });
 }
 
 // ── Presets ───────────────────────────────────────────────────────────────────
