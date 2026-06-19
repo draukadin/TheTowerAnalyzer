@@ -992,7 +992,10 @@ function setStatus(ok,msg){
 function populateFolderFilter(){
   const folders=[...new Set(allReports.map(r=>r.runType))].sort();
   const sel=document.getElementById('folderFilter');
+  const prev=sel.value;
+  sel.innerHTML='<option value="">All run types</option>';
   folders.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;sel.appendChild(o);});
+  if(prev&&folders.includes(prev))sel.value=prev;
 }
 
 function filterFolder(folder){
