@@ -5027,6 +5027,14 @@ function renderBotsTracker() {
         <div class="lbl">Upgrade Medals</div>
         <div class="val" id="bots-chip-upgrade">${botsUpgradeMedalsSpent().toLocaleString()}</div>
       </div>
+      <div class="bots-medals-chip">
+        <div class="lbl">Medals to Planned Targets</div>
+        <div class="val" style="color:var(--orange)" id="bots-chip-to-targets">${botsMedalsToTargets().toLocaleString()}</div>
+      </div>
+      <div class="bots-medals-chip">
+        <div class="lbl">Medals to Max Everything</div>
+        <div class="val" id="bots-chip-to-max">${botsMedalsToMax().toLocaleString()}</div>
+      </div>
     </div>`;
 
   const filterPills = botsData.map(bot => {
@@ -5046,8 +5054,12 @@ function renderBotsTracker() {
 function updateBotsMedalChips(){
   const u=document.getElementById('bots-chip-unlock');
   const g=document.getElementById('bots-chip-upgrade');
+  const t=document.getElementById('bots-chip-to-targets');
+  const m=document.getElementById('bots-chip-to-max');
   if(u)u.textContent=botsUnlockMedalsSpent().toLocaleString();
   if(g)g.textContent=botsUpgradeMedalsSpent().toLocaleString();
+  if(t)t.textContent=botsMedalsToTargets().toLocaleString();
+  if(m)m.textContent=botsMedalsToMax().toLocaleString();
 }
 function botSpinChange(statId,level,botId){
   const bot=botsData.find(b=>b.id===botId);
@@ -5171,6 +5183,24 @@ function botsUpgradeMedalsSpent() {
   return botsData.flatMap(b => b.stats).reduce((sum, s) => {
     const lvls = botsLevelValues[s.statId] || [];
     return sum + lvls.filter(e => e.level < s.currentLevel && e.medalsToNext != null)
+                     .reduce((a, e) => a + e.medalsToNext, 0);
+  }, 0);
+}
+
+function botsMedalsToTargets() {
+  return botsData.flatMap(b => b.stats).reduce((sum, s) => {
+    const tgt = s.targetLevel;
+    if (tgt == null || tgt <= s.currentLevel) return sum;
+    const lvls = botsLevelValues[s.statId] || [];
+    return sum + lvls.filter(e => e.level >= s.currentLevel && e.level < tgt && e.medalsToNext != null)
+                     .reduce((a, e) => a + e.medalsToNext, 0);
+  }, 0);
+}
+
+function botsMedalsToMax() {
+  return botsData.flatMap(b => b.stats).reduce((sum, s) => {
+    const lvls = botsLevelValues[s.statId] || [];
+    return sum + lvls.filter(e => e.level >= s.currentLevel && e.medalsToNext != null)
                      .reduce((a, e) => a + e.medalsToNext, 0);
   }, 0);
 }
