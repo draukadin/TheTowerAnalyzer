@@ -10,9 +10,6 @@ public class RelicSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(RelicSeeder.class);
 
-    // Update this whenever you refresh the bundled analyzer.db after adding new relics
-    private static final int SEEDED_RELICS_IN_BUNDLED_DB = 272;
-
     private final JdbcTemplate jdbc;
 
     public RelicSeeder(JdbcTemplate jdbc, DatabaseInitializer init) {
@@ -22,7 +19,7 @@ public class RelicSeeder {
 
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM relic", Integer.class);
-        if (count != null && count.equals(SEEDED_RELICS_IN_BUNDLED_DB)) return;
+        if (count != null && count != 0) return;
         log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedRelics();
         log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
