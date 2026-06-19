@@ -125,14 +125,19 @@ public class WorkshopStatKeySeeder {
 
     public WorkshopStatKeySeeder(JdbcTemplate jdbc, DatabaseInitializer init, WorkshopSeeder workshopSeeder) {
         this.jdbc = jdbc;
-        seed();
-    }
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM workshop_item_stat_key", Integer.class);
+        if (count == null || count <= 0) {
+            log.info("Seeding WorkshopStatKey...");
+            seedItemKeys();
+            log.info("Finished seeding WorkshopStatKey");
+        }
+        Integer relicCount = jdbc.queryForObject("SELECT COUNT(*) FROM relic", Integer.class);
+        if (relicCount == null || relicCount <= 0) {
+            log.info("Seeding RelicStatKey...");
+            seedRelicKeys();
+            log.info("Finished seeding RelicStatKey");
 
-    private void seed() {
-        log.info("Seeding WorkshopStatKey...");
-        seedItemKeys();
-        seedRelicKeys();
-        log.info("Finished seeding WorkshopStatKey");
+        }
     }
 
     private void seedItemKeys() {

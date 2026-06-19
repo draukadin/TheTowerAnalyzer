@@ -19,6 +19,8 @@ public class ModuleSubstatDefSeeder {
 
     public ModuleSubstatDefSeeder(JdbcTemplate jdbc, DatabaseInitializer init) {
         this.jdbc = jdbc;
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM module_substat_def", Integer.class);
+        if (count != null && count > 0) return;
         seed();
     }
 
