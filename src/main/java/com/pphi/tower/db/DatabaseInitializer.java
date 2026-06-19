@@ -943,6 +943,13 @@ public class DatabaseInitializer {
                 )
                 """);
 
+        // Migration: add target_level for per-stat upgrade goals on the tracker tab.
+        try {
+            jdbc.execute("ALTER TABLE guardian_chip_stat_player_level ADD COLUMN target_level INTEGER");
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
+
         // Up to 5 named preset slots; slot 1 seeded as default.
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS guardian_preset (
