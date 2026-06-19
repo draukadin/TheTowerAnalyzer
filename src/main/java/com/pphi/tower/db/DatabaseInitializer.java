@@ -51,6 +51,26 @@ public class DatabaseInitializer {
             // Column already exists — safe to continue.
         }
 
+        // Migration: add run_number — a stable user-facing integer identifier.
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN run_number INTEGER");
+            // Backfill existing rows in chronological order.
+            jdbc.execute("""
+                    WITH numbered AS (
+                        SELECT id,
+                               ROW_NUMBER() OVER (ORDER BY COALESCE(battle_epoch_seconds, 0), id) AS rn
+                        FROM runs
+                    )
+                    UPDATE runs SET run_number = (SELECT rn FROM numbered WHERE numbered.id = runs.id)
+                    """);
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
+
+        try {
+            jdbc.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_runs_run_number ON runs (run_number)");
+        } catch (Exception ignored) {}
+
         jdbc.execute("""
                 CREATE INDEX IF NOT EXISTS idx_runs_battle_date
                 ON runs (battle_date)
@@ -946,6 +966,56 @@ public class DatabaseInitializer {
                     PRIMARY KEY (preset_id, chip_stat_id)
                 )
                 """);
+
+        // ── Module Substat Catalog & Bans ─────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_substat_def (
+                    module_type TEXT NOT NULL,
+                    key         TEXT NOT NULL,
+                    label       TEXT NOT NULL,
+                    PRIMARY KEY (module_type, key)
+                )
+                """);
+
+        try {
+            jdbc.execute("ALTER TABLE module_substat_def ADD COLUMN min_rarity TEXT NOT NULL DEFAULT 'Common'");
+        } catch (Exception ignored) {}
+
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS module_substat_ban (
+                    module_type  TEXT NOT NULL,
+                    substat_key  TEXT NOT NULL,
+                    PRIMARY KEY (module_type, substat_key),
+                    FOREIGN KEY (module_type, substat_key) REFERENCES module_substat_def(module_type, key)
+                )
+                """);
+
+        // ── Workshop Item Values ──────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_item_level_value (
+                    workshop_item_id INTEGER NOT NULL REFERENCES workshop_item(id),
+                    level            INTEGER NOT NULL CHECK (level >= 0),
+                    value            REAL    NOT NULL,
+                    PRIMARY KEY (workshop_item_id, level)
+                )
+                """);
+
+        // ── Stat Key Mapping ─────────────────────────────────────────────────
+
+        jdbc.execute("""
+                CREATE TABLE IF NOT EXISTS workshop_item_stat_key (
+                    workshop_item_id INTEGER NOT NULL REFERENCES workshop_item(id),
+                    stat_key         TEXT    NOT NULL,
+                    PRIMARY KEY (workshop_item_id, stat_key)
+                )
+                """);
+
+        try {
+            jdbc.execute("ALTER TABLE relic ADD COLUMN stat_key TEXT");
+        } catch (Exception ignored) {}
 
         // ── Tournament Battle Conditions ──────────────────────────────────────
 

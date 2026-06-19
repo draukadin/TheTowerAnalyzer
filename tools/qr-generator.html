@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #e94560;
+      text-align: center;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #a0a0b0;
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+
+    input[type="url"] {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      background: #0f3460;
+      border: 1px solid #1a4a80;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="url"]:focus { border-color: #e94560; }
+
+    .row {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .field { flex: 1; }
+
+    select {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      background: #0f3460;
+      border: 1px solid #1a4a80;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    button {
+      padding: 0.65rem 1.2rem;
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    button:hover { background: #c73652; }
+    button:disabled { background: #555; cursor: default; }
+
+    #qr-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    #qr-box {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    #qr-box canvas { display: block; }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-secondary {
+      background: #0f3460;
+      border: 1px solid #1a4a80;
+    }
+
+    .btn-secondary:hover { background: #1a4a80; }
+
+    .url-display {
+      font-size: 0.78rem;
+      color: #888;
+      word-break: break-all;
+      text-align: center;
+      max-width: 100%;
+    }
+
+    .error {
+      font-size: 0.85rem;
+      color: #e94560;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>QR Code Generator</h1>
+
+    <div>
+      <label for="url-input">URL</label>
+      <input type="url" id="url-input" placeholder="https://example.com" />
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="size-select">Size</label>
+        <select id="size-select">
+          <option value="128">128 × 128</option>
+          <option value="200" selected>200 × 200</option>
+          <option value="300">300 × 300</option>
+          <option value="400">400 × 400</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="ec-select">Error Correction</label>
+        <select id="ec-select">
+          <option value="L">Low (7%)</option>
+          <option value="M" selected>Medium (15%)</option>
+          <option value="Q">Quartile (25%)</option>
+          <option value="H">High (30%)</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="generate-btn">Generate</button>
+    <p id="error-msg" class="error" hidden></p>
+
+    <div id="qr-container">
+      <div id="qr-box"></div>
+      <p class="url-display" id="url-display"></p>
+      <div class="actions">
+        <button id="download-btn" class="btn-secondary">Download PNG</button>
+        <button id="copy-btn" class="btn-secondary">Copy Image</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const urlInput = document.getElementById('url-input');
+    const sizeSelect = document.getElementById('size-select');
+    const ecSelect = document.getElementById('ec-select');
+    const generateBtn = document.getElementById('generate-btn');
+    const errorMsg = document.getElementById('error-msg');
+    const qrContainer = document.getElementById('qr-container');
+    const qrBox = document.getElementById('qr-box');
+    const urlDisplay = document.getElementById('url-display');
+    const downloadBtn = document.getElementById('download-btn');
+    const copyBtn = document.getElementById('copy-btn');
+
+    let qr = null;
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.hidden = false;
+      qrContainer.style.display = 'none';
+    }
+
+    function clearError() {
+      errorMsg.hidden = true;
+    }
+
+    function getCanvas() {
+      return qrBox.querySelector('canvas');
+    }
+
+    generateBtn.addEventListener('click', () => {
+      clearError();
+      const url = urlInput.value.trim();
+
+      if (!url) { showError('Please enter a URL.'); return; }
+
+      try { new URL(url); } catch {
+        showError('Please enter a valid URL (include https://).');
+        return;
+      }
+
+      const size = parseInt(sizeSelect.value, 10);
+      const ec = ecSelect.value;
+
+      qrBox.innerHTML = '';
+      qr = new QRCode(qrBox, {
+        text: url,
+        width: size,
+        height: size,
+        correctLevel: QRCode.CorrectLevel[ec],
+      });
+
+      urlDisplay.textContent = url;
+      qrContainer.style.display = 'flex';
+    });
+
+    urlInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') generateBtn.click();
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const canvas = getCanvas();
+      if (!canvas) return;
+      const a = document.createElement('a');
+      a.download = 'qrcode.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const canvas = getCanvas();
+      if (!canvas) return;
+      canvas.toBlob(async blob => {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          const orig = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => copyBtn.textContent = orig, 1500);
+        } catch {
+          copyBtn.textContent = 'Copy failed';
+          setTimeout(() => copyBtn.textContent = 'Copy Image', 1500);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -4,10 +4,12 @@ import com.pphi.tower.config.AppConfig;
 import com.pphi.tower.service.CellIncomeService;
 import com.pphi.tower.service.GtIncomeService;
 import com.pphi.tower.service.ShardAnalysisService;
+import com.pphi.tower.service.SlCoverageService;
 import com.pphi.tower.web.dto.CellIncomeDto;
 import com.pphi.tower.web.dto.GtIncomeProjectionDto;
 import com.pphi.tower.web.dto.LabSpeedDto;
 import com.pphi.tower.web.dto.ShardRateDto;
+import com.pphi.tower.web.dto.SlCoverageEfficiencyDto;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,15 +22,18 @@ public class AnalysisController {
     private final CellIncomeService cellIncomeService;
     private final ShardAnalysisService shardAnalysisService;
     private final GtIncomeService gtIncomeService;
+    private final SlCoverageService slCoverageService;
     private final AppConfig config;
 
     public AnalysisController(CellIncomeService cellIncomeService,
                               ShardAnalysisService shardAnalysisService,
                               GtIncomeService gtIncomeService,
+                              SlCoverageService slCoverageService,
                               AppConfig config) {
         this.cellIncomeService = cellIncomeService;
         this.shardAnalysisService = shardAnalysisService;
         this.gtIncomeService = gtIncomeService;
+        this.slCoverageService = slCoverageService;
         this.config = config;
     }
 
@@ -80,6 +85,18 @@ public class AnalysisController {
             @RequestParam double incomePerMob) {
         return gtIncomeService.project(gtPlusLevel, gtDurationSec, gtCooldownSec,
                 kps, totalRunDurationSec, incomePerMob);
+    }
+
+    @GetMapping("/sl-coverage")
+    public SlCoverageEfficiencyDto getSlCoverageEfficiency(
+            @RequestParam int angleLevel,
+            @RequestParam int quantityLevel,
+            @RequestParam double angleDegrees,
+            @RequestParam int quantityBeams,
+            @RequestParam(required = false) Integer angleNextStoneCost,
+            @RequestParam(required = false) Integer quantityNextStoneCost) {
+        return slCoverageService.compute(angleLevel, quantityLevel, angleDegrees, quantityBeams,
+                angleNextStoneCost, quantityNextStoneCost);
     }
 
     @GetMapping("/lab-speed")

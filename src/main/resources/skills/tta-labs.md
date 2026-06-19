@@ -270,7 +270,8 @@ Always check live lab state before making prioritization recommendations.
 | `get_lab_state` | Get current lab levels across all categories to identify gaps |
 | `get_labs` | Browse the full lab catalog with descriptions and unlock requirements; pass `category` to filter to one category |
 | `search_labs` | Resolve a specific lab by name — handles typos and word-order differences; always use before `get_lab_costs` when the user names a lab |
-| `get_lab_slots` | Check which slots are active, what's researching, and idle slots |
+| `get_lab_plan` | **Primary slot tool.** Returns each slot's active research (lab, level range, coin cost, estimated days), next queued lab, and idle slots. Use this for prioritization advice, time-to-completion estimates, and identifying idle slots |
+| `get_lab_slots` | Full slot detail including queue coin totals, total duration, and coins-per-day burn rate. Use when the user asks about overall queue size, total spend, or slot configuration rather than what to research next |
 | `get_lab_costs` | Get coin cost and duration per level for a specific lab (use lab `id` from `search_labs` result) |
 | `get_lab_speed_affordability` | Check whether current cell income can sustain a higher speed multiplier |
 | `get_currencies` | Verify coin balance before recommending expensive lab starts |
@@ -286,7 +287,7 @@ Always check live lab state before making prioritization recommendations.
   the player's current tier PB (`get_tier_pbs`) before recommending.
 - **Check Lab Speed level first.** If it is low relative to game stage, that is almost
   always the highest-ROI recommendation before anything else.
-- **Idle slots are always the biggest mistake.** If `get_lab_slots` shows an empty slot,
+- **Idle slots are always the biggest mistake.** If `get_lab_plan` shows a slot with `status: idle`,
   something should be in it — even a low-priority lab is better than nothing.
 - **Coin balance gates the recommendation.** A lab that costs 500T coins is not
   actionable if the player has 2T in the bank. Call `get_currencies` first.

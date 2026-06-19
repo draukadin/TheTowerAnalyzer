@@ -82,15 +82,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'compare_runs',
+      description: 'Compare two battle reports by their run numbers (visible in the front-end report list as #N). Returns a side-by-side delta of all battle sections.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          n1: { type: 'integer', description: 'Run number of the first report' },
+          n2: { type: 'integer', description: 'Run number of the second report' },
+        },
+        required: ['n1', 'n2'],
+      },
+    },
+    {
       name: 'get_tower_state',
-      description: 'Get UW stats, module inventory, and relic data. Use sections to control what is returned.',
+      description: 'Get UW stats, module inventory, relic data, module effect bans, and stat contributor breakdown. Use sections to control what is returned.',
       inputSchema: {
         type: 'object',
         properties: {
           sections: {
             type: 'array',
-            items: { type: 'string', enum: ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details'] },
-            description: 'Sections to include. Defaults to ["uw", "modules_active", "relic_summary"]. Use modules_all instead of modules_active for full 24-module swap analysis.',
+            items: { type: 'string', enum: ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans', 'stat_breakdown', 'stat_breakdown_detailed'] },
+            description: 'Sections to include. Defaults to ["uw", "modules_active", "relic_summary"]. Use modules_all instead of modules_active for full 24-module swap analysis. Use effect_bans to see which sub-stats are banned per module type and how many ban slots are available. Use stat_breakdown for a per-stat aggregate summary showing effective workshop values and total relic bonuses. Use stat_breakdown_detailed for the full per-contributor breakdown listing each workshop item level, each owned relic, and each equipped module substat.',
           },
         },
       },
@@ -129,6 +141,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: 'Filter items and progress to a single category.',
           },
         },
+      },
+    },
+    {
+      name: 'get_card_details',
+      description: 'Get full progression details for a single card by name: current star level and stat value, stat at every level (1–7), copies owned, copies remaining toward the next star and toward max (level 7), gem cost to max, mastery state (stone cost, unlock status, values per level, stones to max), and which presets the card is currently equipped in.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          cardName: {
+            type: 'string',
+            description: 'The card name (case-insensitive), e.g. "Damage", "Death Ray", "Wave Accelerator".',
+          },
+        },
+        required: ['cardName'],
       },
     },
     {
@@ -228,6 +254,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: { type: 'object', properties: {} },
     },
     {
+      name: 'get_lab_plan',
+      description: 'Get the active research plan for each lab slot: what is currently being researched, its coin cost and estimated duration, what is queued next, and which slots are idle. Use this for lab prioritization advice, time-to-completion estimates, and identifying idle slots.',
+      inputSchema: { type: 'object', properties: {} },
+    },
+    {
       name: 'get_lab_costs',
       description: 'Get the per-level coin cost and duration for a specific lab by name.',
       inputSchema: {
@@ -311,6 +342,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
         },
         required: ['fromLevel', 'toLevel'],
+      },
+    },
+    {
+      name: 'get_sl_coverage_efficiency',
+      description: 'Compute Spotlight coverage-per-stone for the next Angle level vs. the next Quantity level, given the player\'s current SL stat levels. Effective coverage = Angle (degrees) × Quantity (beams). Use to decide whether to invest the next stone in Angle or Quantity.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
       },
     },
     {
@@ -417,12 +456,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return distillRecentRuns(runs, sections.includes('diagnosis'), diagnoses);
       }
 
+      // ── Compare runs ──────────────────────────────────────────────────────
+
+      case 'compare_runs': {
+        const { n1, n2 } = args;
+        if (!Number.isInteger(n1) || !Number.isInteger(n2))
+          throw new Error('n1 and n2 must be integers');
+        const [r1, r2, delta] = await fetchApi(`/api/reports/compare?n1=${n1}&n2=${n2}`);
+        return distillComparison(n1, n2, r1, r2, delta);
+      }
+
       // ── Tower state ───────────────────────────────────────────────────────
 
       case 'get_tower_state': {
         const sections = args.sections ?? ['uw', 'modules_active', 'relic_summary'];
-        validateSections(sections, ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details']);
-        return distillTowerState(await fetchApi('/api/player-tracker/state'), sections);
+        validateSections(sections, ['uw', 'modules_active', 'modules_all', 'relic_summary', 'relic_details', 'effect_bans', 'stat_breakdown', 'stat_breakdown_detailed']);
+
+        const [state, bans, summary, breakdown] = await Promise.all([
+          fetchApi('/api/player-tracker/state'),
+          sections.includes('effect_bans')             ? fetchApi('/api/modules/bans')       : null,
+          sections.includes('stat_breakdown')          ? fetchApi('/api/stats/summary')      : null,
+          sections.includes('stat_breakdown_detailed') ? fetchApi('/api/stats/breakdown')    : null,
+        ]);
+
+        return distillTowerState(state, sections, bans, summary, breakdown);
       }
 
       // ── Lab state ─────────────────────────────────────────────────────────
@@ -464,6 +521,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         return distillWorkshopState({ items, progress, discounts, spend, presets }, sections, categoryFilter);
+      }
+
+      // ── Card details ──────────────────────────────────────────────────────
+
+      case 'get_card_details': {
+        const cardName = args.cardName;
+        if (!cardName) throw new Error('cardName is required');
+        const data = await fetchApi(`/api/cards/by-name/${encodeURIComponent(cardName)}/details`);
+        return result(distillCardDetails(data));
       }
 
       // ── Cards state ───────────────────────────────────────────────────────
@@ -595,6 +661,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'get_lab_slots':
         return distillLabSlots(await fetchApi('/api/lab-slots'));
 
+      case 'get_lab_plan':
+        return distillLabPlan(await fetchApi('/api/lab-slots'));
+
       // ── Lab costs ─────────────────────────────────────────────────────────
 
       case 'get_lab_costs': {
@@ -696,6 +765,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           incomePerMob: round(incomePerMob, 2),
           runsUsed: recentRuns.length,
         });
+      }
+
+      // ── SL coverage efficiency ────────────────────────────────────────────
+
+      case 'get_sl_coverage_efficiency': {
+        const uwData = await fetchApi('/api/uw');
+        const sl = uwData.find(u => u.code === 'SP');
+        if (!sl) throw new Error('Spotlight UW not found in player state');
+
+        const angleStat    = sl.stats.find(s => s.statKey === 'STAT_2');
+        const quantityStat = sl.stats.find(s => s.statKey === 'STAT_3');
+        if (!angleStat || !quantityStat) throw new Error('SL Angle/Quantity stats not found');
+
+        const params = new URLSearchParams({
+          angleLevel:    angleStat.currentLevel,
+          quantityLevel: quantityStat.currentLevel,
+          angleDegrees:  angleStat.currentValue,
+          quantityBeams: quantityStat.currentValue,
+        });
+        if (angleStat.stonesToNext    != null) params.set('angleNextStoneCost',    angleStat.stonesToNext);
+        if (quantityStat.stonesToNext != null) params.set('quantityNextStoneCost', quantityStat.stonesToNext);
+
+        return distillSlCoverageEfficiency(await fetchApi(`/api/analysis/sl-coverage?${params}`));
       }
 
       default:
@@ -861,9 +953,64 @@ function distillRecentRuns(runs, includeDiagnosis, diagnoses) {
   }));
 }
 
+// ── Distillation: run comparison ──────────────────────────────────────────────
+
+function distillComparison(n1, n2, r1, r2, delta) {
+  const br = h => h.sectionMap?.BATTLE_REPORT ?? {};
+  const fmt = v => (v == null ? null : typeof v === 'object' && 'value' in v ? v.value : v);
+
+  function summarise(h, runNumber) {
+    const b = br(h);
+    return {
+      run: runNumber,
+      date:     h.battleDate ?? null,
+      type:     h.runType    ?? null,
+      tier:     fmt(b.tier)  ?? null,
+      wave:     fmt(b.wave)  ?? null,
+      version:  h.towerEra   ?? null,
+      killed_by: fmt(b.killedBy) ?? null,
+      coins_per_hour: fmt(b.coinsPerHour) ?? null,
+      cells_earned:   fmt(b.cellsEarned)  ?? null,
+      real_time_s:    fmt(b.realTime)     ?? null,
+      game_time_s:    fmt(b.gameTime)     ?? null,
+    };
+  }
+
+  function deltaSections(d) {
+    const out = {};
+    const sm = d.sectionMap ?? {};
+    for (const [key, section] of Object.entries(sm)) {
+      if (!section || key === 'BATTLE_REPORT') continue;
+      const fields = {};
+      for (const [k, v] of Object.entries(section)) {
+        if (k === 'sectionHeader') continue;
+        const val = fmt(v);
+        if (val != null && val !== 0) fields[k] = val;
+      }
+      if (Object.keys(fields).length) out[key] = fields;
+    }
+    return out;
+  }
+
+  const b = br(delta);
+  return result({
+    run1: summarise(r1, n1),
+    run2: summarise(r2, n2),
+    delta: {
+      wave_diff:            fmt(b.wave)         ?? null,
+      coins_per_hour_diff:  fmt(b.coinsPerHour) ?? null,
+      cells_earned_diff:    fmt(b.cellsEarned)  ?? null,
+      real_time_diff_s:     fmt(b.realTime)     ?? null,
+      game_time_diff_s:     fmt(b.gameTime)     ?? null,
+      killed_by:            fmt(b.killedBy)     ?? null,
+      sections: deltaSections(delta),
+    },
+  });
+}
+
 // ── Distillation: tower state ─────────────────────────────────────────────────
 
-function distillTowerState(d, sections) {
+function distillTowerState(d, sections, bans, summary, breakdown) {
   const out = {};
 
   if (sections.includes('uw')) {
@@ -908,6 +1055,48 @@ function distillTowerState(d, sections) {
     const { summary, owned } = distillRelics(d.relics ?? []);
     if (sections.includes('relic_summary'))  out.relic_summary = summary;
     if (sections.includes('relic_details'))  out.relics_owned  = owned;
+  }
+
+  if (sections.includes('effect_bans') && bans) {
+    out.effect_bans = Object.fromEntries(
+      bans.map(b => [b.moduleType, {
+        max_bans:  b.maxBans,
+        bans_used: b.banned.length,
+        banned:    b.banned,
+      }])
+    );
+  }
+
+  if (sections.includes('stat_breakdown') && summary) {
+    out.stat_breakdown = Object.fromEntries(
+      Object.entries(summary).map(([key, s]) => {
+        const entry = {};
+        if (s.workshopValue     != null) entry.workshop      = s.workshopValue;
+        if (s.workshopPlusValue != null) entry.workshop_plus = s.workshopPlusValue;
+        if (s.relicBonus        != null) entry.relic_bonus   = s.relicBonus;
+        if (s.moduleSubstatRarities?.length > 0) entry.module_substats = s.moduleSubstatRarities;
+        return [key, entry];
+      })
+    );
+  }
+
+  if (sections.includes('stat_breakdown_detailed') && breakdown) {
+    out.stat_breakdown_detailed = Object.fromEntries(
+      Object.entries(breakdown).map(([key, bd]) => {
+        const entry = {};
+        if (bd.workshopItems.length > 0) {
+          const regular = bd.workshopItems.filter(w => !w.isPlus);
+          const plus    = bd.workshopItems.filter(w =>  w.isPlus);
+          if (regular.length > 0) entry.workshop      = regular.map(w => ({ name: w.name, level: w.level, max: w.maxLevel }));
+          if (plus.length    > 0) entry.workshop_plus = plus.map(w =>    ({ name: w.name, level: w.level, max: w.maxLevel }));
+        }
+        if (bd.relics.length > 0)
+          entry.relics = bd.relics.map(r => ({ name: r.name, rarity: r.rarity, bonus: r.bonus }));
+        if (bd.moduleSubstats.length > 0)
+          entry.module_substats = bd.moduleSubstats.map(m => ({ module: m.moduleName, rarity: m.substatRarity }));
+        return [key, entry];
+      })
+    );
   }
 
   return result(out);
@@ -1069,15 +1258,21 @@ function distillWorkshopState({ items, progress, discounts, spend, presets }, se
 
 // ── Distillation: cards state ─────────────────────────────────────────────────
 
+// Copies required to advance TO each star level (index = target star, 1-based; index 1 = 0).
+const COPIES_TO_REACH_STAR = [0, 0, 1, 2, 3, 4, 6, 8];
+
 function distillCardsState({ cards, slots, presets }, sections) {
   const out = {};
 
   if (sections.includes('cards') && cards) {
     out.cards = cards.map(c => ({
-      name:          c.name,
-      rarity:        c.rarity,
-      star_level:    c.starLevel,
-      copies_owned:  c.copiesOwned,
+      name:                c.name,
+      rarity:              c.rarity,
+      star_level:          c.starLevel,
+      copies_owned:        c.copiesOwned,
+      copies_toward_next:  c.starLevel < 7
+        ? Math.min(c.copiesOwned, COPIES_TO_REACH_STAR[c.starLevel + 1])
+        : null,
       mastery_level: c.masteryLevel,
       mastery_max:   c.masteryLabLevel,
     }));
@@ -1106,6 +1301,44 @@ function distillCardsState({ cards, slots, presets }, sections) {
   }
 
   return result(out);
+}
+
+// ── Distillation: card details ────────────────────────────────────────────────
+
+function distillCardDetails(d) {
+  return {
+    name:         d.name,
+    rarity:       d.rarity,
+    description:  d.description,
+    value_unit:   d.valueUnit,
+    milestone_unlock: d.milestoneUnlockTier != null
+      ? { tier: d.milestoneUnlockTier, wave: d.milestoneUnlockWave }
+      : null,
+    star_level:    d.starLevel,
+    current_value: d.currentValue,
+    stats_by_level: d.statsByLevel,
+    copies_owned:              d.copiesOwned,
+    copies_for_next_star:      d.copiesForNextStar,
+    copies_remaining_for_max:  d.copiesRemainingForMax,
+    gem_cost_to_max:           d.gemCostToMax,
+    mastery: {
+      description:           d.mastery.description,
+      value_unit:            d.mastery.valueUnit,
+      stone_cost_per_level:  d.mastery.stoneCostPerLevel,
+      is_unlocked:           d.mastery.isUnlocked,
+      current_level:         d.mastery.currentLevel,
+      max_level:             d.mastery.maxLevel,
+      current_value:         d.mastery.currentValue,
+      values_by_level:       d.mastery.valuesByLevel,
+      stones_remaining_to_max: d.mastery.stonesRemainingToMax,
+    },
+    presets_equipped: d.presetsEquipped.map(p => ({
+      preset_id:   p.presetId,
+      preset_slot: p.presetSlot,
+      preset_name: p.presetName,
+      card_slot:   p.cardSlot,
+    })),
+  };
 }
 
 // ── Distillation: bots state ──────────────────────────────────────────────────
@@ -1320,19 +1553,49 @@ function distillCosmetics(items) {
 function distillLabSlots(slots) {
   return result(slots.map(s => {
     const entry = {
-      slot:            s.slotNumber,
-      speed_mult:      s.cellSpeedMult,
-      queue_coins_T:   round(s.totalCoins / 1e12, 3),
-      queue_days:      round(s.totalDurationSeconds / 86400, 1),
-      coins_per_day_T: s.coinsPerDay != null ? round(s.coinsPerDay / 1e12, 3) : null,
+      slot:          s.slotNumber,
+      speed_mult:    s.cellSpeedMult,
+      queue_coins:   Math.round(s.totalCoins),
+      queue_days:    round(s.totalDurationSeconds / 86400, 1),
+      coins_per_day: s.coinsPerDay != null ? Math.round(s.coinsPerDay) : null,
       plans: (s.plans ?? []).map(p => ({
-        lab:     p.labName,
-        from:    p.startLevel,
-        to:      p.targetLevel,
-        coins_T: round(p.coinsTotalResearch / 1e12, 3),
-        days:    round(p.durationSeconds / 86400, 1),
+        lab:    p.labName,
+        from:   p.startLevel,
+        to:     p.targetLevel,
+        coins:  Math.round(p.coinsTotalResearch),
+        days:   round(p.durationSeconds / 86400, 1),
       })),
     };
+    return entry;
+  }));
+}
+
+// ── Distillation: lab plan ────────────────────────────────────────────────────
+
+function distillLabPlan(slots) {
+  return result(slots.map(s => {
+    const plans = s.plans ?? [];
+    if (plans.length === 0) {
+      return { slot: s.slotNumber, status: 'idle' };
+    }
+    const [current, next, ...rest] = plans;
+    const entry = {
+      slot:    s.slotNumber,
+      status:  'active',
+      current: {
+        lab:     current.labName,
+        from:    current.startLevel,
+        to:      current.targetLevel,
+        coins:   Math.round(current.coinsTotalResearch),
+        days:    round(current.durationSeconds / 86400, 1),
+      },
+    };
+    if (next) {
+      entry.next = { lab: next.labName, from: next.startLevel, to: next.targetLevel };
+    }
+    if (rest.length > 0) {
+      entry.queued = rest.map(p => ({ lab: p.labName, from: p.startLevel, to: p.targetLevel }));
+    }
     return entry;
   }));
 }
@@ -1469,6 +1732,41 @@ function distillGtIncomeProjection(d, inputs) {
       is_current:        row.isCurrent,
     })),
   });
+}
+
+// ── Distillation: SL coverage efficiency ─────────────────────────────────────
+
+function distillSlCoverageEfficiency(d) {
+  const out = {
+    angle_level:        d.angleLevel,
+    quantity_level:     d.quantityLevel,
+    angle_degrees:      d.angleDegrees,
+    quantity_beams:     d.quantityBeams,
+    effective_coverage: round(d.effectiveCoverage, 1),
+  };
+
+  if (d.angleNextStoneCost != null) {
+    out.angle_next = {
+      coverage_gain:      round(d.angleNextCoverageGain, 1),
+      stone_cost:         d.angleNextStoneCost,
+      coverage_per_stone: round(d.angleCoveragePerStone, 4),
+    };
+  } else {
+    out.angle_next = 'maxed';
+  }
+
+  if (d.quantityNextStoneCost != null) {
+    out.quantity_next = {
+      coverage_gain:      round(d.quantityNextCoverageGain, 1),
+      stone_cost:         d.quantityNextStoneCost,
+      coverage_per_stone: round(d.quantityCoveragePerStone, 4),
+    };
+  } else {
+    out.quantity_next = 'maxed';
+  }
+
+  out.recommendation = d.recommendation;
+  return result(out);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

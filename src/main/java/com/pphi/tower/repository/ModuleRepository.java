@@ -200,6 +200,83 @@ public class ModuleRepository {
                 """, moduleDefId, count);
     }
 
+    // ── Substat catalog ───────────────────────────────────────────────────────
+
+    public record SubstatDef(String key, String label, String minRarity) {}
+
+    /** All substat definitions for a given module type, ordered as seeded. */
+    public List<SubstatDef> getSubstatDefs(String moduleType) {
+        return jdbc.query(
+                "SELECT key, label, min_rarity FROM module_substat_def WHERE module_type = ? ORDER BY rowid",
+                (rs, i) -> new SubstatDef(rs.getString("key"), rs.getString("label"), rs.getString("min_rarity")),
+                moduleType);
+    }
+
+    /** All substat definitions across all module types, keyed by type. */
+    public Map<String, List<SubstatDef>> getAllSubstatDefs() {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT module_type, key, label, min_rarity FROM module_substat_def ORDER BY module_type, rowid");
+        Map<String, List<SubstatDef>> result = new LinkedHashMap<>();
+        for (Map<String, Object> row : rows) {
+            String type = (String) row.get("module_type");
+            result.computeIfAbsent(type, k -> new ArrayList<>())
+                    .add(new SubstatDef((String) row.get("key"), (String) row.get("label"), (String) row.get("min_rarity")));
+        }
+        return result;
+    }
+
+    // ── Effect bans ───────────────────────────────────────────────────────────
+
+    public record BanState(String moduleType, int maxBans, List<String> banned) {}
+
+    private static final Map<String, String> BAN_LAB_NAMES = Map.of(
+            "Cannon",    "Cannon Effect Bans",
+            "Armor",     "Armor Effect Bans",
+            "Generator", "Generator Effect Bans",
+            "Core",      "Core Effect Bans"
+    );
+
+    /** Current bans and max-ban count (from lab level) for all four module types. */
+    public List<BanState> getAllBanStates() {
+        List<Map<String, Object>> banRows = jdbc.queryForList(
+                "SELECT module_type, substat_key FROM module_substat_ban ORDER BY module_type, substat_key");
+        Map<String, List<String>> bannedByType = new HashMap<>();
+        for (Map<String, Object> row : banRows) {
+            bannedByType.computeIfAbsent((String) row.get("module_type"), k -> new ArrayList<>())
+                    .add((String) row.get("substat_key"));
+        }
+
+        return BAN_LAB_NAMES.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> {
+                    String type    = e.getKey();
+                    String labName = e.getValue();
+                    Integer labLevel = jdbc.queryForObject("""
+                            SELECT COALESCE(lps.current_level, 0)
+                            FROM lab l
+                            LEFT JOIN lab_player_state lps ON lps.lab_id = l.id
+                            WHERE l.name = ?
+                            """, Integer.class, labName);
+                    int maxBans = labLevel != null ? labLevel : 0;
+                    return new BanState(type, maxBans, bannedByType.getOrDefault(type, List.of()));
+                })
+                .toList();
+    }
+
+    /** Add a ban for a module type. Caller must verify the ban limit before calling. */
+    public void addBan(String moduleType, String substatKey) {
+        jdbc.update("""
+                INSERT OR IGNORE INTO module_substat_ban (module_type, substat_key) VALUES (?, ?)
+                """, moduleType, substatKey);
+    }
+
+    /** Remove a ban for a module type. */
+    public void removeBan(String moduleType, String substatKey) {
+        jdbc.update(
+                "DELETE FROM module_substat_ban WHERE module_type = ? AND substat_key = ?",
+                moduleType, substatKey);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static boolean toBoolean(Object v) {

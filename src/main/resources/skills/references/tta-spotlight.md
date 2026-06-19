@@ -75,7 +75,7 @@ makes Angle upgrades increasingly stone-efficient the more beams you have.
 
 The flip side: buying a new beam (Quantity) multiplies your current Angle's effective coverage
 in one purchase. Whether that's more stone-efficient than buying Angle levels depends on the
-stone costs at each level. Use `get_sl_coverage_efficiency` (planned) to compare coverage-per-stone
+stone costs at each level. Use `get_sl_coverage_efficiency` to compare coverage-per-stone
 for the next Quantity level vs. the next Angle level at your current investment.
 
 **Short-term Angle target: 40–45°.** This gives the beam enough sweep width that, when BH

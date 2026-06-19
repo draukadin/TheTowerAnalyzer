@@ -118,7 +118,14 @@ public class SetupController {
         Path serverJs = mcpDir.resolve("server.js");
 
         if (!Files.exists(nodeExe) || !Files.exists(serverJs)) {
-            return ResponseEntity.ok(Map.of("status", "not_found"));
+            // Not running from the installed bundle (e.g. dev mode).
+            // Skills can still be installed independently of the MCP server files.
+            int status = claudeSkillsService.installBundledSkills();
+            if (status == 0) {
+                return ResponseEntity.ok(Map.of("status", "not_found"));
+            } else {
+                return ResponseEntity.ok(Map.of("status", "ok"));
+            }
         }
 
         // Try Claude Code CLI first, then fall back to Claude Desktop App config file
