@@ -60,7 +60,6 @@
   .report-item:hover{background:var(--surface2);}
   .report-item.active{background:rgba(79,142,247,0.1);border-left:3px solid var(--accent);
     padding-left:calc(1rem - 3px);}
-  .report-item-name{font-size:13px;font-weight:600;}
   .report-item-meta{font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;}
   .tier-badge{background:rgba(79,142,247,0.15);color:var(--accent);padding:1px 6px;
     border-radius:4px;font-size:10px;font-weight:700;}
@@ -70,6 +69,15 @@
   .wave-badge{color:var(--gold);}
   .folder-badge{background:rgba(80,200,120,0.15);color:#50c878;padding:1px 6px;
     border-radius:4px;font-size:10px;font-weight:600;}
+  .report-item-header{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .report-item-name{font-size:13px;font-weight:600;flex:1;min-width:0;}
+  .report-delete-btn{flex-shrink:0;background:none;border:none;cursor:pointer;
+    color:var(--muted);padding:2px 4px;border-radius:4px;font-size:13px;line-height:1;
+    opacity:0;transition:opacity 0.15s,color 0.15s;}
+  .report-item:hover .report-delete-btn{opacity:1;}
+  .report-delete-btn:hover{color:var(--red);}
+  .btn-danger{background:rgba(239,68,68,0.15);color:var(--red);border-color:rgba(239,68,68,0.3);}
+  .btn-danger:hover{background:rgba(239,68,68,0.28);border-color:var(--red);color:var(--red);}
   .loading-placeholder{padding:2rem;text-align:center;color:var(--muted);font-size:13px;}
   .main{flex:1;overflow-y:auto;padding:2rem;}
   .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -926,6 +934,10 @@
         <span id="statusText">Connecting…</span>
       </div>
     </div>
+    <div id="duplicateWarning" style="display:none;margin:8px;padding:10px 12px;
+      background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
+      border-radius:8px;font-size:12px;color:var(--red);line-height:1.5">
+    </div>
     <div class="report-list" id="reportList">
       <div class="loading-placeholder">Loading reports…</div>
     </div>
@@ -945,17 +957,36 @@ let allReports=[],activeId=null,activePayload=null,activeView='reports',currentT
 async function init(){
   await loadModSubstats();
   try{
-    const res=await fetch(`${API}/reports`);
-    if(!res.ok)throw new Error(res.statusText);
-    allReports=await res.json();
+    const [reportsRes,dupsRes]=await Promise.all([
+      fetch(`${API}/reports`),
+      fetch(`${API}/reports/duplicates`)
+    ]);
+    if(!reportsRes.ok)throw new Error(reportsRes.statusText);
+    allReports=await reportsRes.json();
     setStatus(true,`${allReports.length} reports loaded`);
     populateFolderFilter();
     renderSidebar(allReports);
+    if(dupsRes.ok){
+      const dups=await dupsRes.json();
+      renderDuplicateWarning(dups);
+    }
   }catch(e){
     setStatus(false,'Cannot reach server');
     document.getElementById('reportList').innerHTML=
       '<div class="loading-placeholder" style="color:var(--red)">Server offline — is Spring Boot running on :8080?</div>';
   }
+}
+
+function renderDuplicateWarning(groups){
+  const el=document.getElementById('duplicateWarning');
+  if(!groups||!groups.length){el.style.display='none';return;}
+  const lines=groups.map(g=>{
+    const [keep,...dupes]=g.runNumbers;
+    return `Runs #${dupes.join(', #')} duplicate Run #${keep}`;
+  });
+  el.style.display='';
+  el.innerHTML=`<strong>⚠️ Duplicate reports detected</strong><br>${lines.join('<br>')}<br>
+    <span style="color:var(--muted)">Use the 🗑️ button on each duplicate to remove it.</span>`;
 }
 
 async function fetchReports(){
@@ -1017,7 +1048,10 @@ function renderSidebar(reports){
     const item=document.createElement('div');
     item.className='report-item'+(r.id===activeId?' active':'');
     item.innerHTML=`
-      <div class="report-item-name">#${r.runNumber} <span class="tier-badge">T${r.tier}</span> <span class="wave-badge">⚡ ${r.wave.toLocaleString()}</span></div>
+      <div class="report-item-header">
+        <div class="report-item-name">#${r.runNumber} <span class="tier-badge">T${r.tier}</span> <span class="wave-badge">⚡ ${r.wave.toLocaleString()}</span></div>
+        <button class="report-delete-btn" title="Delete report">🗑️</button>
+      </div>
       <div class="report-item-meta">
         ${r.runType?`<span class="folder-badge">${r.runType}</span>`:''}
         ${r.towerEra?`<span class="era-badge" title="${r.towerEra}">${r.towerEra}</span>`:''}
@@ -1026,9 +1060,46 @@ function renderSidebar(reports){
         <span>📅 ${r.battleDate}</span>
         <span style="color:var(--red);font-size:10px">💀 ${r.killedBy||'?'}</span>
       </div>`;
+    item.querySelector('.report-delete-btn').addEventListener('click', e=>{
+      e.stopPropagation();
+      showDeleteModal(r);
+    });
     item.addEventListener('click',()=>selectReport(r));
     list.appendChild(item);
   });
+}
+
+let deleteModalTarget=null;
+
+function showDeleteModal(r){
+  deleteModalTarget=r;
+  document.getElementById('deleteModalTitle').textContent=`Delete Report #${r.runNumber}?`;
+  document.getElementById('deleteModal').style.display='flex';
+}
+
+function closeDeleteModal(){
+  document.getElementById('deleteModal').style.display='none';
+  deleteModalTarget=null;
+}
+
+async function confirmDelete(deleteDrive){
+  const r=deleteModalTarget;
+  closeDeleteModal();
+  try{
+    const res=await fetch(`${API}/reports/${encodeURIComponent(r.id)}?deleteDriveFile=${deleteDrive}`,{method:'DELETE'});
+    if(!res.ok)throw new Error((await res.json()).message||res.statusText);
+    allReports=allReports.filter(x=>x.id!==r.id);
+    if(activeId===r.id){
+      activeId=null;
+      document.getElementById('mainContent').innerHTML=`
+        <div class="empty-state"><div class="icon">🗼</div><h2>Select a report</h2>
+        <p>Choose a battle report from the sidebar to see detailed stats, diagnosis, and comparisons.</p></div>`;
+    }
+    renderSidebar(visibleReports());
+    fetch(`${API}/reports/duplicates`).then(r=>r.json()).then(renderDuplicateWarning).catch(()=>{});
+  }catch(e){
+    alert('Delete failed: '+e.message);
+  }
 }
 
 async function selectReport(summary){
@@ -6982,6 +7053,21 @@ function finishSetup() {
     <p style="font-size:11px;color:var(--muted);margin-top:1.25rem">
       After granting access in the browser tab, this dialog will close automatically.
     </p>
+  </div>
+</div>
+
+<div id="deleteModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title" id="deleteModalTitle">Delete Report?</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1.5rem">
+      This will permanently remove the report from the local database.<br><br>
+      <strong>Delete local + Drive</strong> also removes the source file from your Google Drive battle reports folder so it won't reappear on the next fetch.
+    </p>
+    <div class="modal-actions" style="flex-direction:column;align-items:stretch;gap:8px">
+      <button class="btn btn-danger" onclick="confirmDelete(true)">🗑️ Delete local + Drive</button>
+      <button class="btn" onclick="confirmDelete(false)">Delete local only</button>
+      <button class="btn" style="color:var(--muted)" onclick="closeDeleteModal()">Cancel</button>
+    </div>
   </div>
 </div>
 

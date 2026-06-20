@@ -2,6 +2,7 @@ package com.pphi.tower.web;
 
 import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
+import com.pphi.tower.repository.GoogleDriveRepository;
 import com.pphi.tower.repository.RunRepository;
 import com.pphi.tower.service.ComparisonService;
 import com.pphi.tower.service.DiagnosticService;
@@ -23,15 +24,18 @@ public class ReportController {
     private final DiagnosticService diagnosticService;
     private final ComparisonService comparisonService;
     private final ReportFetcherService reportFetcherService;
+    private final GoogleDriveRepository googleDriveRepository;
 
     public ReportController(RunRepository repository,
                             DiagnosticService diagnosticService,
                             ComparisonService comparisonService,
-                            ReportFetcherService reportFetcherService) {
+                            ReportFetcherService reportFetcherService,
+                            GoogleDriveRepository googleDriveRepository) {
         this.repository = repository;
         this.diagnosticService = diagnosticService;
         this.comparisonService = comparisonService;
         this.reportFetcherService = reportFetcherService;
+        this.googleDriveRepository = googleDriveRepository;
     }
 
     @PostMapping("/fetch")
@@ -66,6 +70,25 @@ public class ReportController {
             @PathVariable String id,
             @PathVariable String id2) {
         return comparisonService.compare(id, id2);
+    }
+
+    @GetMapping("/duplicates")
+    public List<RunRepository.DuplicateGroup> getDuplicates() {
+        return repository.findDuplicateGroups();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteReport(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "false") boolean deleteDriveFile) throws Exception {
+        if (!repository.existsById(id)) {
+            throw new ReportNotFoundException(id);
+        }
+        if (deleteDriveFile) {
+            googleDriveRepository.deleteFile(id);
+        }
+        repository.deleteById(id);
+        return ResponseEntity.ok(Map.of("deleted", id, "driveFileDeleted", deleteDriveFile));
     }
 
     @GetMapping("/compare")

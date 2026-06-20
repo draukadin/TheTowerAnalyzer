@@ -10,8 +10,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -169,6 +172,36 @@ public class RunRepository {
                         rs.getLong("real_time_seconds"),
                         rs.getString("payload")),
                 from.toString(), to.toString());
+    }
+
+    public void deleteById(String id) {
+        jdbc.update("DELETE FROM runs WHERE id = ?", id);
+    }
+
+    public record DuplicateGroup(String contentHash, List<Integer> runNumbers) {}
+
+    public List<DuplicateGroup> findDuplicateGroups() {
+        // Find all runs whose content_hash is shared by more than one row, grouped together.
+        List<Map<String, Object>> rows = jdbc.queryForList("""
+                SELECT content_hash, run_number
+                FROM runs
+                WHERE content_hash IN (
+                    SELECT content_hash FROM runs
+                    WHERE content_hash IS NOT NULL
+                    GROUP BY content_hash HAVING COUNT(*) > 1
+                )
+                ORDER BY content_hash, run_number
+                """);
+
+        Map<String, List<Integer>> grouped = new LinkedHashMap<>();
+        for (Map<String, Object> row : rows) {
+            String hash = (String) row.get("content_hash");
+            int runNum  = ((Number) row.get("run_number")).intValue();
+            grouped.computeIfAbsent(hash, k -> new ArrayList<>()).add(runNum);
+        }
+        return grouped.entrySet().stream()
+                .map(e -> new DuplicateGroup(e.getKey(), e.getValue()))
+                .toList();
     }
 
     public List<ReportSummaryDto> findByRunType(String runType) {

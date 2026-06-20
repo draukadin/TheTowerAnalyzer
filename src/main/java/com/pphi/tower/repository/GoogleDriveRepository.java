@@ -67,6 +67,10 @@ public class GoogleDriveRepository {
         }
     }
 
+    public void deleteFile(String fileId) throws IOException {
+        drive.files().delete(fileId).execute();
+    }
+
     public File uploadFile(java.io.File localFile, String fileName, String folderId) throws IOException {
         File metadata = new File();
         metadata.setName(fileName);
