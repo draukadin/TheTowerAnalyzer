@@ -13,6 +13,7 @@ import com.pphi.tower.repository.GoogleDriveRepository;
 import com.pphi.tower.repository.RunRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -89,21 +90,32 @@ public class ReportFetcherService {
             double cellsPerHour = toRaw(report.cellsPerHour());
             double coinsPerHour = toRaw(report.coinsPerHour());
 
+            long epochSeconds = report.battleReportDate().getEpochSecond();
+            String contentHash = RunRepository.computeContentHash(epochSeconds, report.tier(), report.wave());
+
+            if (runRepository.existsByContentHash(contentHash)) {
+                log.warn("Skipping duplicate report: {} (file={}) — content already indexed (hash={})", id, filename, contentHash);
+                return;
+            }
+
             String payload = objectMapper.writeValueAsString(history);
 
-            runRepository.insert(
-                    id, filename, runType, battleDate,
-                    report.tier(), report.wave(),
-                    cellsEarned,
-                    report.realTime().getSeconds(),
-                    report.gameTime().getSeconds(),
-                    cellsPerHour, coinsPerHour,
-                    report.killedBy(),
-                    report.towerEra(),
-                    payload,
-                    report.battleReportDate().getEpochSecond());
-
-            log.info("Indexed report: {} -> {}/{}", id, runType, filename);
+            try {
+                runRepository.insert(
+                        id, filename, runType, battleDate,
+                        report.tier(), report.wave(),
+                        cellsEarned,
+                        report.realTime().getSeconds(),
+                        report.gameTime().getSeconds(),
+                        cellsPerHour, coinsPerHour,
+                        report.killedBy(),
+                        report.towerEra(),
+                        payload,
+                        epochSeconds);
+                log.info("Indexed report: {} -> {}/{}", id, runType, filename);
+            } catch (DuplicateKeyException e) {
+                log.warn("Duplicate report rejected by unique constraint: {} (file={}, hash={})", id, filename, contentHash);
+            }
         } catch (IOException e) {
             log.error("Failed to parse report: {}", filename, e);
         }

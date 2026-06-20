@@ -1,14 +1,21 @@
 package com.pphi.tower.db;
 
+import com.pphi.tower.repository.RunRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class DatabaseInitializer {
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseInitializer.class);
 
     private final JdbcTemplate jdbc;
 
@@ -70,6 +77,20 @@ public class DatabaseInitializer {
         try {
             jdbc.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_runs_run_number ON runs (run_number)");
         } catch (Exception ignored) {}
+
+        // Migration: add content_hash for duplicate-run detection.
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN content_hash TEXT");
+            backfillContentHashes();
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
+
+        try {
+            jdbc.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_runs_content_hash ON runs (content_hash)");
+        } catch (Exception e) {
+            log.warn("Could not create unique index on runs.content_hash — duplicate runs may exist and should be removed via the UI: {}", e.getMessage());
+        }
 
         jdbc.execute("""
                 CREATE INDEX IF NOT EXISTS idx_runs_battle_date
@@ -1063,5 +1084,23 @@ public class DatabaseInitializer {
                 CREATE INDEX IF NOT EXISTS idx_tournament_date
                 ON tournament (date)
                 """);
+    }
+
+    private void backfillContentHashes() {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT id, battle_epoch_seconds, tier, wave FROM runs WHERE content_hash IS NULL");
+        for (Map<String, Object> row : rows) {
+            String id = (String) row.get("id");
+            long epoch = row.get("battle_epoch_seconds") != null
+                    ? ((Number) row.get("battle_epoch_seconds")).longValue() : 0L;
+            int tier  = ((Number) row.get("tier")).intValue();
+            int wave  = ((Number) row.get("wave")).intValue();
+            String hash = RunRepository.computeContentHash(epoch, tier, wave);
+            try {
+                jdbc.update("UPDATE runs SET content_hash = ? WHERE id = ?", hash, id);
+            } catch (Exception e) {
+                log.warn("Skipping content_hash backfill for run id={} (likely duplicate): {}", id, e.getMessage());
+            }
+        }
     }
 }
