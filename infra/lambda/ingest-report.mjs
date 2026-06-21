@@ -1,21 +1,8 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 
 const s3 = new S3Client({});
-const sm = new SecretsManagerClient({});
 
 const BUCKET = process.env.REPORTS_BUCKET;
-const API_KEY_SECRET_ARN = process.env.API_KEY_SECRET_ARN;
-
-// Cached at cold start — avoids a Secrets Manager call on every invocation
-let cachedApiKey = null;
-
-async function getApiKey() {
-  if (cachedApiKey) return cachedApiKey;
-  const result = await sm.send(new GetSecretValueCommand({ SecretId: API_KEY_SECRET_ARN }));
-  cachedApiKey = result.SecretString;
-  return cachedApiKey;
-}
 
 // Mirrors SectionHeader enum display names from BattleHistoryParser
 const SECTION_HEADERS = new Set([
@@ -45,13 +32,6 @@ function respond(statusCode, message) {
 }
 
 export const handler = async (event) => {
-  // Auth
-  const apiKey = event.headers?.['x-api-key'] ?? event.headers?.['X-Api-Key'];
-  const expectedKey = await getApiKey();
-  if (!apiKey || apiKey !== expectedKey) {
-    return respond(401, 'Unauthorized');
-  }
-
   // Player ID
   const playerId = event.headers?.['x-player-id'] ?? event.headers?.['X-Player-Id'];
   if (!playerId || playerId.trim() === '') {

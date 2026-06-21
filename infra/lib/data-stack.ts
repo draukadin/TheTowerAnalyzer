@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib/core';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export interface DataStackProps extends cdk.StackProps {
@@ -43,8 +44,32 @@ export class DataStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
+    // IAM user for the local Spring Boot app — least-privilege read from S3, write to DDB.
+    // After deploy: aws iam create-access-key --user-name <AppUserName output>
+    const appUser = new iam.User(this, 'AppUser', {
+      userName: `tower-analyzer-app-${env}`,
+    });
+
+    appUser.addToPolicy(new iam.PolicyStatement({
+      sid: 'S3ReadAndTag',
+      actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObjectTagging'],
+      resources: [reportsBucket.bucketArn, `${reportsBucket.bucketArn}/*`],
+    }));
+
+    appUser.addToPolicy(new iam.PolicyStatement({
+      sid: 'DDBVersionWrite',
+      actions: ['dynamodb:PutItem'],
+      resources: [versionTable.tableArn],
+    }));
+
     this.bucketName = reportsBucket.bucketName;
     this.versionTableName = versionTable.tableName;
+
+    new cdk.CfnOutput(this, 'AppUserName', {
+      value: appUser.userName,
+      description: 'IAM user for Spring Boot app — run: aws iam create-access-key --user-name <value>',
+      exportName: `TowerAnalyzer-${env}-AppUserName`,
+    });
 
     new cdk.CfnOutput(this, 'ReportsBucketName', {
       value: reportsBucket.bucketName,

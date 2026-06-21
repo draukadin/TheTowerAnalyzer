@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib/core';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -21,18 +20,6 @@ export class IngestStack extends cdk.Stack {
     // Import the central S3 bucket by name — cross-region import, no CDK ref needed
     const reportsBucket = s3.Bucket.fromBucketName(this, 'ReportsBucket', props.centralBucketName);
 
-    // Per-region API key secret — same value set in each region after deploy.
-    // Kept local to avoid cross-region Secrets Manager calls on Lambda cold start.
-    // Set value after deploy:
-    // aws secretsmanager put-secret-value \
-    //   --secret-id TowerAnalyzerApiKey-<env>-<region> \
-    //   --secret-string '<key>' \
-    //   --region <region>
-    const apiKeySecret = new secretsmanager.Secret(this, 'ApiKeySecret', {
-      secretName: `TowerAnalyzerApiKey-${env}-${this.region}`,
-      description: `Shared static API key for report ingest (${env} / ${this.region})`,
-    });
-
     const ingestFn = new lambda.Function(this, 'IngestReportFn', {
       functionName: `TowerAnalyzerIngestReport-${env}`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -40,14 +27,12 @@ export class IngestStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
       environment: {
         REPORTS_BUCKET: props.centralBucketName,
-        API_KEY_SECRET_ARN: apiKeySecret.secretArn,
       },
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
     });
 
     reportsBucket.grantPut(ingestFn);
-    apiKeySecret.grantRead(ingestFn);
 
     const api = new apigateway.RestApi(this, 'ReportApi', {
       restApiName: `TowerAnalyzerReportApi-${env}`,
@@ -59,7 +44,7 @@ export class IngestStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: ['POST'],
-        allowHeaders: ['Content-Type', 'X-Api-Key', 'X-Player-Id'],
+        allowHeaders: ['Content-Type', 'X-Player-Id'],
       },
     });
 
