@@ -5,6 +5,9 @@ target/
 !**/src/test/**/out/
 .claude/
 credentials.json
+android/app/build/
+android/.gradle
+android/local.properties
 
 Runner.java
 mcp/node_modules
