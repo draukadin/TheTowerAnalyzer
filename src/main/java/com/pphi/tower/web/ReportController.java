@@ -2,13 +2,16 @@ package com.pphi.tower.web;
 
 import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
+import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.repository.GoogleDriveRepository;
 import com.pphi.tower.repository.RunRepository;
 import com.pphi.tower.service.ComparisonService;
 import com.pphi.tower.service.DiagnosticService;
 import com.pphi.tower.service.ReportFetcherService;
+import com.pphi.tower.service.S3ReportFetcherService;
 import com.pphi.tower.exceptions.ReportNotFoundException;
 import com.pphi.tower.web.dto.ReportSummaryDto;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,22 +28,30 @@ public class ReportController {
     private final ComparisonService comparisonService;
     private final ReportFetcherService reportFetcherService;
     private final GoogleDriveRepository googleDriveRepository;
+    private final AwsProperties awsProperties;
+
+    @Autowired(required = false)
+    private S3ReportFetcherService s3ReportFetcherService;
 
     public ReportController(RunRepository repository,
                             DiagnosticService diagnosticService,
                             ComparisonService comparisonService,
                             ReportFetcherService reportFetcherService,
-                            GoogleDriveRepository googleDriveRepository) {
+                            GoogleDriveRepository googleDriveRepository,
+                            AwsProperties awsProperties) {
         this.repository = repository;
         this.diagnosticService = diagnosticService;
         this.comparisonService = comparisonService;
         this.reportFetcherService = reportFetcherService;
         this.googleDriveRepository = googleDriveRepository;
+        this.awsProperties = awsProperties;
     }
 
     @PostMapping("/fetch")
     public ResponseEntity<Map<String, Object>> fetchReports() {
-        int count = reportFetcherService.processReports();
+        int count = (s3ReportFetcherService != null && awsProperties.isConfigured())
+                ? s3ReportFetcherService.processReports()
+                : reportFetcherService.processReports();
         return ResponseEntity.ok(Map.of("processed", count));
     }
 
