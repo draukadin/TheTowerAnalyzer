@@ -11,9 +11,13 @@ public class AwsProperties {
     private String s3Bucket;
     private String playerId;
     private String dynamodbTable;
+    private String profile;
 
     public String getRegion()         { return region; }
     public void setRegion(String v)   { this.region = v; }
+
+    public String getProfile()        { return profile; }
+    public void setProfile(String v)  { this.profile = v; }
 
     public String getS3Bucket()           { return s3Bucket; }
     public void setS3Bucket(String v)     { this.s3Bucket = v; }
