@@ -301,6 +301,19 @@
   .mod-preset-chip.active.Tournament{background:rgba(79,142,247,0.15);border-color:rgba(79,142,247,0.5);color:var(--accent);}
   .mod-preset-chip.active.Testing{background:rgba(245,158,66,0.15);border-color:rgba(245,158,66,0.5);color:var(--orange);}
   .mod-preset-chip.taken{opacity:0.3;cursor:not-allowed;}
+  .mod-filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem;
+    padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+  .mod-filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+  .mod-filter-clear{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--border2);
+    background:transparent;color:var(--muted);cursor:pointer;}
+  .mod-filter-clear:hover{border-color:var(--red);color:var(--red);}
+  .mod-rarity-badge{font-size:10px;font-weight:700;font-family:var(--mono);
+    padding:1px 7px;border-radius:4px;background:rgba(255,255,255,0.06);}
+  .mod-pills{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+  .mod-pill{font-size:10px;font-weight:700;font-family:var(--mono);padding:2px 7px;border-radius:4px;
+    border:1px solid var(--border2);color:var(--text);cursor:pointer;user-select:none;transition:all 0.12s;}
+  .mod-pill:hover{border-color:var(--accent);color:var(--accent);}
+  .mod-pill-hidden{opacity:0.35;text-decoration:line-through;}
 
   /* ── Effect Bans ─────────────────────────── */
   .eb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:1rem;}
@@ -2132,6 +2145,71 @@ const MOD_RARITIES=['Epic','Epic+','Legendary','Legendary+','Mythic','Mythic+','
 const MOD_COPY_RARITIES=['Epic','Epic+','Legendary','Legendary+','Mythic','Mythic+'];
 const MOD_SUB_RARITIES=['Common','Rare','Epic','Legendary','Mythic','Ancestral'];
 
+function modRarityColor(rarity){
+  if(rarity==='Epic'||rarity==='Epic+') return 'var(--accent2)';
+  if(rarity==='Legendary'||rarity==='Legendary+') return 'var(--orange)';
+  if(rarity==='Mythic'||rarity==='Mythic+') return 'var(--red)';
+  return 'var(--green)'; // Ancestral + stars
+}
+
+function modRarityLabel(mod){
+  if(mod.rarity==='Ancestral'){
+    return mod.stars>0?`Ancestral ${'★'.repeat(mod.stars)}`:'Ancestral';
+  }
+  return mod.rarity;
+}
+
+let _modFilters={owned:null,rarity:null,type:null};
+
+function modHiddenKey(id){return `mod-hidden-${id}`;}
+function isModHidden(id){return localStorage.getItem(modHiddenKey(id))==='1';}
+function toggleModHidden(id){
+  const nowHidden=!isModHidden(id);
+  if(nowHidden) localStorage.setItem(modHiddenKey(id),'1');
+  else localStorage.removeItem(modHiddenKey(id));
+  // Update pill in place
+  document.querySelectorAll(`.mod-pill[data-mod-id="${id}"]`).forEach(el=>el.classList.toggle('mod-pill-hidden',nowHidden));
+  // Show/hide card in place
+  const card=document.getElementById(`mod-card-${id}`);
+  if(card) card.style.display=nowHidden?'none':'';
+}
+
+function renderModFilters(mods){
+  const rarityOpts=['','Epic','Epic+','Legendary','Legendary+','Mythic','Mythic+','Ancestral','1★','2★','3★','4★','5★'];
+  const typeOpts=['','Cannon','Armor','Generator','Core'];
+  return `<div class="mod-filter-bar">
+    <span class="mod-filter-label">Filter:</span>
+    <select class="mod-select" onchange="_modFilters.owned=this.value||null;refreshModulesView()">
+      <option value="">All</option>
+      <option value="owned"${_modFilters.owned==='owned'?' selected':''}>Owned</option>
+      <option value="unowned"${_modFilters.owned==='unowned'?' selected':''}>Not Owned</option>
+    </select>
+    <select class="mod-select" onchange="_modFilters.type=this.value||null;refreshModulesView()">
+      ${typeOpts.map(t=>`<option value="${t}"${_modFilters.type===t&&t?' selected':''}>${t||'All Types'}</option>`).join('')}
+    </select>
+    <select class="mod-select" onchange="_modFilters.rarity=this.value||null;refreshModulesView()">
+      ${rarityOpts.map(r=>`<option value="${r}"${_modFilters.rarity===r&&r?' selected':''}>${r||'All Rarities'}</option>`).join('')}
+    </select>
+    <button class="mod-filter-clear" onclick="_modFilters={owned:null,rarity:null,type:null};refreshModulesView()">Clear</button>
+  </div>`;
+}
+
+function modMatchesFilters(mod){
+  if(_modFilters.owned==='owned'&&!mod.owned) return false;
+  if(_modFilters.owned==='unowned'&&mod.owned) return false;
+  if(_modFilters.type&&mod.type!==_modFilters.type) return false;
+  if(_modFilters.rarity){
+    const r=_modFilters.rarity;
+    if(r.endsWith('★')){
+      const stars=parseInt(r);
+      if(mod.rarity!=='Ancestral'||mod.stars!==stars) return false;
+    } else {
+      if(mod.rarity!==r) return false;
+    }
+  }
+  return true;
+}
+
 let MOD_SUBSTATS={};
 
 async function loadModSubstats(){
@@ -2165,22 +2243,31 @@ async function renderModulesView(){
     const res=await fetch(`${API}/modules`);
     if(!res.ok)throw new Error(res.statusText);
     const mods=await res.json();
-    const types=['Cannon','Generator','Armor','Core'];
+    const types=['Cannon','Armor','Generator','Core'];
     const owned=mods.filter(m=>m.owned).length;
     let html=`<div class="report-title" style="margin-bottom:1rem">Module Tracker</div>
-      <div class="uw-stones-total" style="margin-bottom:1.5rem">
+      <div class="uw-stones-total" style="margin-bottom:1rem">
         <div class="uw-stones-chip"><div class="lbl">Natural Epics Owned</div><div class="val">${owned} / 24</div></div>
         ${MOD_PRESETS.flatMap(p=>MOD_SLOTS.map(s=>{
           const count=mods.filter(m=>(m.presets||[]).some(a=>a.preset===p&&a.slot===s)).length;
           return `<div class="uw-stones-chip"><div class="lbl">${p} ${s.charAt(0).toUpperCase()+s.slice(1)}</div><div class="val">${count} / 4</div></div>`;
         })).join('')}
-      </div>`;
+      </div>
+      ${renderModFilters(mods)}`;
     for(const type of types){
-      const group=mods.filter(m=>m.type===type);
-      const color=MOD_TYPE_COLOR[type];
+      const allOfType=mods.filter(m=>m.type===type);
+      const visible=allOfType.filter(m=>modMatchesFilters(m)&&!isModHidden(m.id));
+      if(allOfType.length===0) continue;
+      const pills=allOfType.map(m=>{
+        const h=isModHidden(m.id);
+        return `<span class="mod-pill${h?' mod-pill-hidden':''}" data-mod-id="${m.id}" onclick="toggleModHidden(${m.id})" title="${m.name}">${m.code}</span>`;
+      }).join('');
       html+=`<div class="mod-type-section">
-        <div class="mod-type-header"><span class="mod-type-badge ${type}">${type}</span></div>
-        <div class="mod-grid">${group.map(m=>renderModCard(m,mods)).join('')}</div>
+        <div class="mod-type-header">
+          <span class="mod-type-badge ${type}">${type}</span>
+          <div class="mod-pills">${pills}</div>
+        </div>
+        <div class="mod-grid">${allOfType.filter(m=>modMatchesFilters(m)).map(m=>renderModCard(m,mods)).join('')}</div>
       </div>`;
     }
     document.getElementById('mainContent').innerHTML=html;
@@ -2214,7 +2301,8 @@ function renderPresetChips(mod, allMods){
 }
 
 function renderModCard(mod, allMods){
-  const color=MOD_TYPE_COLOR[mod.type];
+  const color=modRarityColor(mod.rarity);
+  const rarityLabel=modRarityLabel(mod);
 
   const rarityOpts=MOD_RARITIES.map(r=>`<option value="${r}"${r===mod.rarity?' selected':''}>${r}</option>`).join('');
   const starsOpts=Array.from({length:6},(_,i)=>`<option value="${i}"${i===mod.stars?' selected':''}>${i}★</option>`).join('');
@@ -2270,16 +2358,8 @@ function renderModCard(mod, allMods){
     ?`<select class="mod-select" style="font-size:11px" onchange="modAddCopy(${mod.id},${copies.length},this.value);this.selectedIndex=0">
         <option value="" disabled selected>+ Add copy</option>${addCopyOpts}</select>`:'';
 
-  return `<div class="mod-card${mod.owned?' owned':''}" style="border-top:3px solid ${color}">
-    <div class="mod-card-header">
-      <span class="mod-code" style="color:${color}">${mod.code}</span>
-      <span class="mod-name">${mod.name}</span>
-      <label class="uw-toggle" style="margin-left:auto">
-        <input type="checkbox" ${mod.owned?'checked':''} onchange="modSetOwned(${mod.id},this.checked)"> Owned
-      </label>
-    </div>
-    <div class="mod-body">
-      <div class="mod-effect">${mod.effectTemplate}</div>
+  const bodyHtml=`<div class="mod-body">
+    <div class="mod-effect">${mod.effectTemplate}</div>
       <div class="mod-ability-row">${abilityChips}</div>
       <div class="mod-controls">
         <span class="mod-label">Rarity</span>
@@ -2312,7 +2392,17 @@ function renderModCard(mod, allMods){
             onchange="modSetShattered(${mod.id},parseInt(this.value))">
         </span>
       </div>
+    </div>`;
+  return `<div id="mod-card-${mod.id}" class="mod-card${mod.owned?' owned':''}" style="border-top:3px solid ${color}${isModHidden(mod.id)?';display:none':''}">
+    <div class="mod-card-header">
+      <span class="mod-code" style="color:${color}">${mod.code}</span>
+      <span class="mod-name">${mod.name}</span>
+      <span class="mod-rarity-badge" style="color:${color}">${rarityLabel}</span>
+      <label class="uw-toggle" style="margin-left:auto">
+        <input type="checkbox" ${mod.owned?'checked':''} onchange="modSetOwned(${mod.id},this.checked)"> Owned
+      </label>
     </div>
+    ${bodyHtml}
   </div>`;
 }
 
