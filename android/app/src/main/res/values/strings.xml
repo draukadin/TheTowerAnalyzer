@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tower Analyzer</string>
+    <string name="title_settings">Settings</string>
+    <string name="label_run_type">Run Type</string>
+    <string name="label_dissonance_type">Dissonance Type</string>
+    <string name="label_mode">Submit Mode</string>
+    <string name="mode_centralized">Centralized (AWS)</string>
+    <string name="mode_legacy">Legacy (make.com)</string>
+    <string name="hint_player_id">Player ID</string>
+    <string name="hint_centralized_endpoint">API Endpoint URL</string>
+    <string name="hint_webhook_url">Webhook URL</string>
+    <string name="hint_api_key">API Key</string>
+    <string name="btn_submit">Submit Report from Clipboard</string>
+    <string name="btn_save">Save</string>
+    <string name="hint_clipboard">Copy a battle report in-game, then tap Submit</string>
+</resources>
