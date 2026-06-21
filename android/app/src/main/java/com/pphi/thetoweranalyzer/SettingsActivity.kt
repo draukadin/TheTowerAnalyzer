@@ -32,9 +32,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun loadPrefs() {
         binding.etPlayerId.setText(prefs.playerId)
         binding.etCentralizedEndpoint.setText(prefs.centralizedEndpoint)
-        binding.etCentralizedApiKey.setText(prefs.centralizedApiKey)
         binding.etLegacyWebhookUrl.setText(prefs.legacyWebhookUrl)
-        binding.etLegacyApiKey.setText(prefs.legacyApiKey)
 
         when (prefs.mode) {
             SubmitMode.CENTRALIZED -> binding.radioCentralized.isChecked = true
@@ -46,9 +44,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun savePrefs() {
         prefs.playerId = binding.etPlayerId.text.toString().trim()
         prefs.centralizedEndpoint = binding.etCentralizedEndpoint.text.toString().trim()
-        prefs.centralizedApiKey = binding.etCentralizedApiKey.text.toString().trim()
         prefs.legacyWebhookUrl = binding.etLegacyWebhookUrl.text.toString().trim()
-        prefs.legacyApiKey = binding.etLegacyApiKey.text.toString().trim()
         prefs.mode = if (binding.radioCentralized.isChecked) SubmitMode.CENTRALIZED else SubmitMode.LEGACY
         finish()
     }

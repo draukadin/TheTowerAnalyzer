@@ -21,16 +21,8 @@ class Prefs(context: Context) {
         get() = prefs.getString("centralized_endpoint", "") ?: ""
         set(v) = prefs.edit().putString("centralized_endpoint", v).apply()
 
-    var centralizedApiKey: String
-        get() = prefs.getString("centralized_api_key", "") ?: ""
-        set(v) = prefs.edit().putString("centralized_api_key", v).apply()
-
     // Legacy (make.com webhook)
     var legacyWebhookUrl: String
         get() = prefs.getString("legacy_webhook_url", "") ?: ""
         set(v) = prefs.edit().putString("legacy_webhook_url", v).apply()
-
-    var legacyApiKey: String
-        get() = prefs.getString("legacy_api_key", "") ?: ""
-        set(v) = prefs.edit().putString("legacy_api_key", v).apply()
 }

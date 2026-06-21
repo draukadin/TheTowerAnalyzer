@@ -16,7 +16,6 @@ object ApiClient {
 
     suspend fun submitCentralized(
         endpoint: String,
-        apiKey: String,
         playerId: String,
         runType: RunType,
         dissonanceType: DissonanceType?,
@@ -24,22 +23,18 @@ object ApiClient {
     ): SubmitResult = withContext(Dispatchers.IO) {
         val url = URL(buildUrl(endpoint, runType, dissonanceType))
         post(url, body) { conn ->
-            conn.setRequestProperty("X-Api-Key", apiKey)
             conn.setRequestProperty("X-Player-Id", playerId)
         }
     }
 
     suspend fun submitLegacy(
         webhookUrl: String,
-        apiKey: String,
         runType: RunType,
         dissonanceType: DissonanceType?,
         body: String,
     ): SubmitResult = withContext(Dispatchers.IO) {
         val url = URL(buildUrl(webhookUrl, runType, dissonanceType))
-        post(url, body) { conn ->
-            conn.setRequestProperty("X-Api-Key", apiKey)
-        }
+        post(url, body) { _ -> }
     }
 
     private fun buildUrl(base: String, runType: RunType, dissonanceType: DissonanceType?): String {

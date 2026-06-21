@@ -92,17 +92,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun submitCentralized(runType: RunType, dissonanceType: DissonanceType?, report: String) {
         val endpoint = prefs.centralizedEndpoint
-        val apiKey = prefs.centralizedApiKey
         val playerId = prefs.playerId
 
-        if (endpoint.isBlank() || apiKey.isBlank() || playerId.isBlank()) {
+        if (endpoint.isBlank() || playerId.isBlank()) {
             showToast("Configure Settings before submitting")
             return
         }
 
         setSubmitting(true)
         lifecycleScope.launch {
-            val result = ApiClient.submitCentralized(endpoint, apiKey, playerId, runType, dissonanceType, report)
+            val result = ApiClient.submitCentralized(endpoint, playerId, runType, dissonanceType, report)
             setSubmitting(false)
             handleResult(result)
         }
@@ -110,7 +109,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun submitLegacy(runType: RunType, dissonanceType: DissonanceType?, report: String) {
         val webhookUrl = prefs.legacyWebhookUrl
-        val apiKey = prefs.legacyApiKey
 
         if (webhookUrl.isBlank()) {
             showToast("Configure Settings before submitting")
@@ -119,7 +117,7 @@ class MainActivity : AppCompatActivity() {
 
         setSubmitting(true)
         lifecycleScope.launch {
-            val result = ApiClient.submitLegacy(webhookUrl, apiKey, runType, dissonanceType, report)
+            val result = ApiClient.submitLegacy(webhookUrl, runType, dissonanceType, report)
             setSubmitting(false)
             handleResult(result)
         }
