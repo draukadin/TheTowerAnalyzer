@@ -14,6 +14,7 @@ import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.nio.file.StandardCopyOption;
 @SpringBootApplication
 @EnableConfigurationProperties
 @EnableCaching
+@EnableScheduling
 public class TowerAnalyzerApplication {
 
     private static final Logger log = LoggerFactory.getLogger(TowerAnalyzerApplication.class);

@@ -1,6 +1,7 @@
 package com.pphi.tower.web;
 
 import com.pphi.tower.config.AwsProperties;
+import com.pphi.tower.config.CredentialVendingClient;
 import com.pphi.tower.repository.GoogleSheetsRepository;
 import com.pphi.tower.repository.PendingVersionChangeRepository;
 import com.pphi.tower.repository.PendingVersionChangeRepository.PendingChange;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
@@ -36,6 +38,9 @@ public class VersionHistoryController {
 
     @Autowired(required = false)
     private DynamoDbClient dynamoDbClient;
+
+    @Autowired(required = false)
+    private CredentialVendingClient credentialClient;
 
     public VersionHistoryController(VersionHistoryRepository repo,
                                     PendingVersionChangeRepository pendingRepo,
@@ -124,18 +129,42 @@ public class VersionHistoryController {
             return false;
         }
         try {
-            dynamoDbClient.putItem(PutItemRequest.builder()
-                    .tableName(awsProperties.getDynamodbTable())
-                    .item(Map.of(
-                            "player_id",       AttributeValue.fromS(awsProperties.getPlayerId()),
-                            "current_version", AttributeValue.fromS(version)))
-                    .build());
+            doPutVersionItem(version);
             log.info("Wrote version {} to DynamoDB for player {}", version, awsProperties.getPlayerId());
             return true;
+        } catch (AwsServiceException e) {
+            if (isAccessDenied(e) && credentialClient != null) {
+                log.warn("DynamoDB access denied — re-vending credentials and retrying");
+                credentialClient.forceRefresh();
+                try {
+                    doPutVersionItem(version);
+                    log.info("Wrote version {} to DynamoDB for player {} (after re-vend)", version, awsProperties.getPlayerId());
+                    return true;
+                } catch (Exception retryEx) {
+                    log.error("Failed to write version {} to DynamoDB after re-vend: {}", version, retryEx.getMessage());
+                    return false;
+                }
+            }
+            log.error("Failed to write version {} to DynamoDB: {}", version, e.getMessage());
+            return false;
         } catch (Exception e) {
             log.error("Failed to write version {} to DynamoDB: {}", version, e.getMessage());
             return false;
         }
+    }
+
+    private void doPutVersionItem(String version) {
+        dynamoDbClient.putItem(PutItemRequest.builder()
+                .tableName(awsProperties.getDynamodbTable())
+                .item(Map.of(
+                        "player_id",       AttributeValue.fromS(awsProperties.getPlayerId()),
+                        "current_version", AttributeValue.fromS(version)))
+                .build());
+    }
+
+    private static boolean isAccessDenied(AwsServiceException e) {
+        String code = e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "";
+        return "AccessDenied".equals(code) || "AccessDeniedException".equals(code);
     }
 
     private boolean syncVersionToSheet(String version) {
