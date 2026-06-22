@@ -56,7 +56,7 @@ public class S3ReportFetcherService {
 
         List<String> keys = s3Repository.listKeys(bucket, playerId);
         List<String> unprocessed = keys.stream()
-                .filter(k -> !runRepository.existsById(k))
+                .filter(k -> !runRepository.existsById(filenameFromKey(k)))
                 .toList();
         unprocessed.forEach(key -> processKey(bucket, key));
         return unprocessed.size();
@@ -93,7 +93,8 @@ public class S3ReportFetcherService {
 
             try {
                 runRepository.insert(
-                        key, s3File.filename(), s3File.runType(), battleDate,
+                        s3File.filename(), s3File.filename(), s3File.runType(), s3File.dissonanceType(),
+                        battleDate,
                         report.tier(), report.wave(),
                         cellsEarned,
                         report.realTime().getSeconds(),
@@ -118,5 +119,10 @@ public class S3ReportFetcherService {
         if (tn == null || tn.amount() == null) return 0.0;
         if (tn.scaleSuffix() == null) return tn.amount().doubleValue();
         return tn.amount().multiply(tn.scaleSuffix().getScientificNotation()).doubleValue();
+    }
+
+    private static String filenameFromKey(String key) {
+        int slash = key.lastIndexOf('/');
+        return slash >= 0 ? key.substring(slash + 1) : key;
     }
 }

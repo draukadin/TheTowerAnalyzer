@@ -129,11 +129,11 @@ function closeDeleteModal(){
   deleteModalTarget=null;
 }
 
-async function confirmDelete(deleteDrive){
+async function confirmDelete(deleteSourceFile){
   const r=deleteModalTarget;
   closeDeleteModal();
   try{
-    const res=await fetch(`${API}/reports/${encodeURIComponent(r.id)}?deleteDriveFile=${deleteDrive}`,{method:'DELETE'});
+    const res=await fetch(`${API}/reports/${encodeURIComponent(r.id)}?deleteSourceFile=${deleteSourceFile}`,{method:'DELETE'});
     if(!res.ok)throw new Error((await res.json()).message||res.statusText);
     allReports=allReports.filter(x=>x.id!==r.id);
     if(activeId===r.id){

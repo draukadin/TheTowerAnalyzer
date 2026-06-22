@@ -58,6 +58,13 @@ public class DatabaseInitializer {
             // Column already exists — safe to continue.
         }
 
+        // Migration: add dissonance_type for Dissonance run sub-type (Attack/Defense/Utility/UW).
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN dissonance_type TEXT");
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
+
         // Migration: add run_number — a stable user-facing integer identifier.
         try {
             jdbc.execute("ALTER TABLE runs ADD COLUMN run_number INTEGER");

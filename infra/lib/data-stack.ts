@@ -52,7 +52,7 @@ export class DataStack extends cdk.Stack {
 
     appUser.addToPolicy(new iam.PolicyStatement({
       sid: 'S3ReadAndTag',
-      actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObjectTagging'],
+      actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObjectTagging', 's3:DeleteObject'],
       resources: [reportsBucket.bucketArn, `${reportsBucket.bucketArn}/*`],
     }));
 

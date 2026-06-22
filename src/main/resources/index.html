@@ -491,10 +491,10 @@
     <div class="modal-title" id="deleteModalTitle">Delete Report?</div>
     <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1.5rem">
       This will permanently remove the report from the local database.<br><br>
-      <strong>Delete local + Drive</strong> also removes the source file from your Google Drive battle reports folder so it won't reappear on the next fetch.
+      <strong>Delete local + S3</strong> also removes the source file from your S3 bucket so it won't reappear on the next fetch.
     </p>
     <div class="modal-actions" style="flex-direction:column;align-items:stretch;gap:8px">
-      <button class="btn btn-danger" onclick="confirmDelete(true)">🗑️ Delete local + Drive</button>
+      <button class="btn btn-danger" onclick="confirmDelete(true)">🗑️ Delete local + S3</button>
       <button class="btn" onclick="confirmDelete(false)">Delete local only</button>
       <button class="btn" style="color:var(--muted)" onclick="closeDeleteModal()">Cancel</button>
     </div>

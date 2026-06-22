@@ -32,6 +32,7 @@ public class RunRepository {
                     rs.getInt("run_number"),
                     rs.getString("filename"),
                     rs.getString("run_type"),
+                    rs.getString("dissonance_type"),
                     rs.getString("battle_date"),
                     rs.getInt("tier"),
                     rs.getInt("wave"),
@@ -67,21 +68,22 @@ public class RunRepository {
         return count != null && count > 0;
     }
 
-    public void insert(String id, String filename, String runType, String battleDate,
+    public void insert(String id, String filename, String runType, String dissonanceType,
+                       String battleDate,
                        int tier, int wave, double cellsEarned, long realTimeSeconds,
                        long gameTimeSeconds, double cellsPerHour, double coinsPerHour,
                        String killedBy, TowerEra towerEra, String payloadJson,
                        long battleEpochSeconds) {
         String contentHash = computeContentHash(battleEpochSeconds, tier, wave);
         jdbc.update("""
-                INSERT INTO runs (id, filename, run_type, battle_date, tier, wave,
+                INSERT INTO runs (id, filename, run_type, dissonance_type, battle_date, tier, wave,
                     cells_earned, real_time_seconds, game_time_seconds,
                     cells_per_hour, coins_per_hour, killed_by, tower_era, payload,
                     battle_epoch_seconds, run_number, content_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                     (SELECT COALESCE(MAX(run_number), 0) + 1 FROM runs), ?)
                 """,
-                id, filename, runType, battleDate, tier, wave,
+                id, filename, runType, dissonanceType, battleDate, tier, wave,
                 cellsEarned, realTimeSeconds, gameTimeSeconds,
                 cellsPerHour, coinsPerHour, killedBy,
                 towerEra != null ? towerEra.toString() : null,

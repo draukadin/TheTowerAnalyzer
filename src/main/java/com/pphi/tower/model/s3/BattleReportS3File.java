@@ -11,9 +11,10 @@ import java.util.stream.Collectors;
  *
  * Tower era is not available in the S3 key. We inject "Tower Era\t" as line 2
  * (same slot as BattleReportDriveFile) so BattleReport's field count stays correct;
- * TowerEra.parse("") returns TowerEra(0,0,0) as a safe placeholder.
+ * TowerEra.parse("") returns TowerEra(1,0,0) as the default era.
  *
- * The id is the full S3 key, used as the runs.id value for dedup.
+ * The id stored in the runs table is filename() only (no player-prefix slash),
+ * matching the Drive-backed id format so REST routing stays slash-free.
  */
 public record BattleReportS3File(String key, String rawContents) {
 
@@ -46,5 +47,12 @@ public record BattleReportS3File(String key, String rawContents) {
         String[] parts = filename().split("_");
         if (parts.length < 2) return "Unknown";
         return parts[1].replace(".txt", "");
+    }
+
+    /** Returns the dissonance sub-type (e.g. "Attack") or null for non-Dissonance runs. */
+    public String dissonanceType() {
+        String[] parts = filename().split("_");
+        if (parts.length < 3 || !"Dissonance".equalsIgnoreCase(parts[1])) return null;
+        return parts[2].replace(".txt", "");
     }
 }

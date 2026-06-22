@@ -11,6 +11,7 @@ public record ReportSummaryDto(
         int runNumber,
         String filename,
         String runType,
+        String dissonanceType,
         String battleDate,
         int tier,
         int wave,

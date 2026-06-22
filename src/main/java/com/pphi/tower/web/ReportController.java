@@ -8,6 +8,7 @@ import com.pphi.tower.repository.RunRepository;
 import com.pphi.tower.service.ComparisonService;
 import com.pphi.tower.service.DiagnosticService;
 import com.pphi.tower.service.ReportFetcherService;
+import com.pphi.tower.repository.S3ReportRepository;
 import com.pphi.tower.service.S3ReportFetcherService;
 import com.pphi.tower.exceptions.ReportNotFoundException;
 import com.pphi.tower.web.dto.ReportSummaryDto;
@@ -32,6 +33,9 @@ public class ReportController {
 
     @Autowired(required = false)
     private S3ReportFetcherService s3ReportFetcherService;
+
+    @Autowired(required = false)
+    private S3ReportRepository s3ReportRepository;
 
     public ReportController(RunRepository repository,
                             DiagnosticService diagnosticService,
@@ -91,15 +95,21 @@ public class ReportController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteReport(
             @PathVariable String id,
-            @RequestParam(defaultValue = "false") boolean deleteDriveFile) throws Exception {
+            @RequestParam(defaultValue = "false") boolean deleteSourceFile) throws Exception {
         if (!repository.existsById(id)) {
             throw new ReportNotFoundException(id);
         }
-        if (deleteDriveFile) {
-            googleDriveRepository.deleteFile(id);
+        if (deleteSourceFile) {
+            if (s3ReportFetcherService != null && awsProperties.isConfigured()) {
+                s3ReportRepository.deleteObject(
+                        awsProperties.getS3Bucket(),
+                        awsProperties.getPlayerId() + "/" + id);
+            } else {
+                googleDriveRepository.deleteFile(id);
+            }
         }
         repository.deleteById(id);
-        return ResponseEntity.ok(Map.of("deleted", id, "driveFileDeleted", deleteDriveFile));
+        return ResponseEntity.ok(Map.of("deleted", id, "sourceFileDeleted", deleteSourceFile));
     }
 
     @GetMapping("/compare")

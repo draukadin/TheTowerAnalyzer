@@ -4,6 +4,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -49,6 +50,10 @@ public class S3ReportRepository {
         try (ResponseInputStream<GetObjectResponse> stream = s3.getObject(req)) {
             return new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         }
+    }
+
+    public void deleteObject(String bucket, String key) {
+        s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
     }
 
     public void markProcessed(String bucket, String key) {

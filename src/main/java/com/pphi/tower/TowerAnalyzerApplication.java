@@ -1,17 +1,11 @@
 package com.pphi.tower;
 
-import com.pphi.tower.analyzers.BattleDiagnostic;
-import com.pphi.tower.analyzers.RunComparison;
+import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.config.DriveProperties;
 import com.pphi.tower.config.SheetProperties;
-import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
-import com.pphi.tower.model.battlehistory.BattleHistory;
-import com.pphi.tower.parser.BattleHistoryParser;
-import com.pphi.tower.reporter.ReflectionBattleComparisonReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -118,7 +112,7 @@ public class TowerAnalyzerApplication {
     }
 
     @Bean
-    public ApplicationRunner startupConfigLogger(DriveProperties drive, SheetProperties sheet) {
+    public ApplicationRunner startupConfigLogger(DriveProperties drive, SheetProperties sheet, AwsProperties awsProperties) {
         return args -> {
             String userPropsPath = System.getenv("APPDATA") + "\\TheTowerAnalyzer\\user.properties";
             log.info("Loading user config from: {}", userPropsPath);
@@ -128,6 +122,11 @@ public class TowerAnalyzerApplication {
             log.info("drive.battle-reports-folder-id = {}", drive.getBattleReportsFolderId() != null ? drive.getBattleReportsFolderId() : "(NOT SET)");
             log.info("drive.backup-folder-id         = {}", drive.getBackupFolderId() != null ? drive.getBackupFolderId() : "(NOT SET)");
             log.info("sheets.ids.player-tracker      = {}", sheet.getIds().get("player-tracker") != null ? sheet.resolve("player-tracker") : "(NOT SET)");
+            log.info("aws.region                     = {}", awsProperties.getRegion());
+            log.info("aws.player-id                  = {}", awsProperties.getPlayerId());
+            log.info("aws.profile                    = {}", awsProperties.getProfile());
+            log.info("aws.dynamodb-table             = {}", awsProperties.getDynamodbTable());
+            log.info("aws.s3-bucket                  = {}", awsProperties.getS3Bucket());
         };
     }
 }
