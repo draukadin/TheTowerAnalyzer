@@ -12,7 +12,7 @@ android/local.properties
 Runner.java
 mcp/node_modules
 scripts/main.*.js
-designs/
+
 
 ### Eclipse ###
 .apt_generated

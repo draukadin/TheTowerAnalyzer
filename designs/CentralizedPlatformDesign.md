@@ -184,6 +184,8 @@ Distribute a separate `.shortcut` file for centralized mode. No good mechanism t
 
 #### Lambda responsibilities (MVP)
 
+**`POST /reports` — report ingestion:**
+
 1. **Validate `X-Api-Key` header** — reject 401 if missing or does not match the shared static key
 2. **Validate `X-Player-Id` header** — reject 400 if missing or empty
 3. **Validate payload structure** (see below) — reject 400 if checks fail
@@ -191,6 +193,36 @@ Distribute a separate `.shortcut` file for centralized mode. No good mechanism t
 5. Write raw report body to S3
 
 No parsing logic beyond structural validation. All full parsing stays in the local Spring Boot app using the existing `BattleHistoryParser`.
+
+**`GET /credentials` — AWS credential vending:**
+
+Returns short-lived STS credentials scoped to the requesting player's data only. The local Spring Boot app calls this on startup and refreshes before expiry; users never handle AWS credentials manually.
+
+1. **Validate `X-Player-Id` header** — reject 400 if missing or empty
+2. **Upsert player_id in DynamoDB** — conditional put: create record with `player_id` + `registered_at` if it does not exist, otherwise leave existing record unchanged. This registers new users on first credential fetch with no separate registration step.
+3. **Rate-limit per player_id** — track call count in DynamoDB; reject 429 if more than 5 calls in a rolling 1-hour window (legitimate traffic is ~1 call/hour)
+4. Call STS `AssumeRole` with a **session policy** that restricts the returned credentials to:
+   - `s3:ListBucket` on the bucket, scoped to `<player_id>/*` prefix
+   - `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:CopyObject` on `s3://bucket/<player_id>/*`
+   - `dynamodb:PutItem`, `dynamodb:GetItem` on the version table, scoped to `LeadingKeys = [<player_id>]`
+   - `Condition: {"IpAddress": {"aws:SourceIp": "<caller_ip>"}}` — credentials only work from the requesting IP
+5. Return `{ AccessKeyId, SecretAccessKey, SessionToken, Expiration }` (1-hour TTL)
+
+`DeleteObject` is intentionally included: users need a self-service way to remove duplicate reports uploaded accidentally.
+
+**Why session policy instead of a fixed role per user:** a single IAM role is assumed by Lambda, and the session policy passed at `AssumeRole` time dynamically scopes it to the requesting player's prefix and IP. No per-user IAM provisioning required; isolation is enforced by AWS at the API level.
+
+**Security controls summary:**
+
+| Control | Threat mitigated |
+|---|---|
+| IP-bound session policy | Harvested credentials unusable from attacker's machine |
+| Per-player-id rate limit (5/hr) | Bulk credential farming |
+
+**Local app credential lifecycle:**
+- On startup: call `GET /credentials`, cache the response
+- Before any S3 or DynamoDB call: if `Expiration` is within 5 minutes, refresh
+- Wire into the AWS SDK via a custom `AWSCredentialsProvider` wrapping the cached response
 
 #### Payload validation
 
@@ -245,14 +277,32 @@ The local app is **not replaced** in the MVP — it gains two new integration po
 - On version create: write to local SQLite (unchanged) + write to DynamoDB (replaces Google Sheets `syncVersionCell()` call)
 - `retrySync` endpoint updated to retry DynamoDB write instead of Sheets write
 
-**New config in `user.properties`:**
+**User config in `user.properties` (written by setup workflow, not manually edited):**
 ```
-aws.region=us-east-1
-aws.s3.bucket=<bucket-name>
 aws.player-id=<player_id>
+aws.api-gateway.region=us|eu|ap
 ```
 
-AWS credentials via standard credential chain (environment, `~/.aws/credentials`, or IAM role).
+**Deployment config in `application.properties` (bundled in jar, not user-editable):**
+```
+aws.region=us-east-2
+aws.s3.bucket=<bucket-name>
+
+# API Gateway endpoints — one per geographical region
+aws.api-gateway.url.us=https://<id>.execute-api.us-east-1.amazonaws.com/<stage>
+aws.api-gateway.url.eu=https://<id>.execute-api.eu-west-1.amazonaws.com/<stage>
+aws.api-gateway.url.ap=https://<id>.execute-api.ap-northeast-1.amazonaws.com/<stage>
+```
+
+`aws.region` controls the S3 and DynamoDB clients and is always `us-east-2` (single data store). `aws.api-gateway.region` controls which API Gateway endpoint the app routes report submissions and credential requests to — resolved at runtime by looking up `aws.api-gateway.url.<region>`. Changing an endpoint URL requires only a jar update, not a user config change.
+
+**Setup workflow (repurposed from Google Drive setup):**
+- Prompts user for player ID (paste from The Tower's copy-to-clipboard)
+- Presents region picker: US / Europe / Asia-Pacific
+- Writes `aws.player-id` and `aws.api-gateway.region` to `user.properties`
+- Replaces the previous flow that collected Google Drive folder IDs and worksheet IDs
+
+No AWS IAM credentials anywhere in user config. On startup the app calls `GET /credentials` on the selected regional API Gateway, receives STS session credentials scoped to that player's data in the central S3 bucket and DynamoDB table, and uses them for all subsequent S3 and DynamoDB access. Users never create or manage AWS credentials.
 
 ---
 
@@ -319,11 +369,17 @@ Legacy mode can be sunset once the centralized path is verified and the user bas
    - **Phase 1 (private beta):** Centralized endpoint not exposed in public Android app build. Developer uses a dev build to validate the full pipeline: Android → API Gateway → Lambda → S3 → local app fetch → SQLite.
    - **Phase 2 (production):** Centralized mode enabled in public release after Phase 1 verified.
 
-4. **Auth / rate limiting:** Shared static API key (`X-Api-Key` header) validated by Lambda — same key for all users, distributed with the Android app and baked into the iOS Shortcut as a variable. Consistent with how the current per-user make.com API key works, just centralized. API Gateway rate limiting per IP provides abuse containment. Key can be rotated if leaked (requires app update). JWT + per-user throttling deferred to web app phase when a proper login flow exists.
+4. **Auth / rate limiting:** No shared API key — removed as security theater (key is distributed with the app and therefore public). Abuse is contained by API Gateway rate limiting per IP and per-player-id rate limiting in the credential-vending Lambda. JWT + per-user throttling deferred to web app phase.
 
 5. **iOS centralized Shortcut:** Separate `.shortcut` file for centralized mode. Document player ID as first thing to check in the troubleshooting guide.
 
-6. **Cost profile (MVP):**
+6. **End-user AWS credentials:** Credential-vending Lambda (`GET /credentials`). The local app sends its player ID, receives short-lived STS session credentials scoped to that player's S3 prefix and DynamoDB row. No per-user IAM provisioning; only `aws.player-id` and `aws.api-gateway.region` go in `user.properties` — all other AWS config is bundled in `application.properties`. Credentials are IP-bound at STS level and rate-limited per player_id (5/hr). First call upserts the player record in DynamoDB (no separate registration step). `DeleteObject` is included so users can self-service remove duplicate reports. Rejected alternatives: shared static IAM key (no data isolation between users); Cognito unauthenticated pool (same isolation problem without real identity); per-user IAM users (requires manual provisioning per user).
+
+7. **Multi-region API Gateway / single data store:** Three API Gateway + Lambda deployments (US, EU, AP-Northeast) for latency, backed by a single S3 bucket and DynamoDB table in `us-east-2`. All report data lands in one place regardless of which endpoint the user hit. `aws.region` (S3/DDB client region) is fixed in `application.properties`; `aws.api-gateway.region` (user's endpoint selection) is written to `user.properties` by the setup workflow. All three endpoint URLs are bundled in `application.properties` — rotating a URL requires only a jar update.
+
+8. **Setup workflow:** Repurposed from the existing Google Drive / Google Sheets setup flow. Now collects player ID and region selection (US / Europe / Asia-Pacific) and writes them to `user.properties`. Replaces the previous flow that collected Drive folder IDs and worksheet IDs.
+
+9. **Cost profile (MVP):**
    - **API Gateway:** ~$3.50/million calls. At 2 reports/day × 100 users = 6,000 calls/month → effectively free.
    - **Lambda:** Well within free tier at this volume.
    - **S3 Standard:** Negligible for text files. Glacier archival further reduces cost over time.
