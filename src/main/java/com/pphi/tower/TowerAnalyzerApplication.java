@@ -122,11 +122,7 @@ public class TowerAnalyzerApplication {
             log.info("drive.battle-reports-folder-id = {}", drive.getBattleReportsFolderId() != null ? drive.getBattleReportsFolderId() : "(NOT SET)");
             log.info("drive.backup-folder-id         = {}", drive.getBackupFolderId() != null ? drive.getBackupFolderId() : "(NOT SET)");
             log.info("sheets.ids.player-tracker      = {}", sheet.getIds().get("player-tracker") != null ? sheet.resolve("player-tracker") : "(NOT SET)");
-            log.info("aws.region                     = {}", awsProperties.getRegion());
             log.info("aws.player-id                  = {}", awsProperties.getPlayerId());
-            log.info("aws.profile                    = {}", awsProperties.getProfile());
-            log.info("aws.dynamodb-table             = {}", awsProperties.getDynamodbTable());
-            log.info("aws.s3-bucket                  = {}", awsProperties.getS3Bucket());
         };
     }
 }
