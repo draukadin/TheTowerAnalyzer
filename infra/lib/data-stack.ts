@@ -74,12 +74,12 @@ export class DataStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'ReportsBucketName', {
       value: reportsBucket.bucketName,
-      description: 'S3 bucket — set aws.s3.bucket in user.properties',
+      description: 'S3 bucket name — operator reference only; value is bundled in application.properties',
       exportName: `TowerAnalyzer-${env}-ReportsBucketName`,
     });
     new cdk.CfnOutput(this, 'PlayerVersionTableName', {
       value: versionTable.tableName,
-      description: 'DynamoDB table — set aws.dynamodb.table in user.properties',
+      description: 'DynamoDB table name — operator reference only; value is bundled in application.properties',
       exportName: `TowerAnalyzer-${env}-PlayerVersionTableName`,
     });
   }

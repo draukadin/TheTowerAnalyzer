@@ -74,26 +74,18 @@ public class TowerAnalyzerApplication {
         Files.createDirectories(dir);
         if (!Files.exists(props)) {
             log.info("First run detected — creating user.properties template at {}", props);
-            String fwdDir = dir.toString().replace('\\', '/');
             String content = String.join(System.lineSeparator(),
-                "# Google Drive / Sheets OAuth 2.0 client secret",
-                "# oauth-credentials.json = OAuth 2.0 client secret (used by both Google Drive and Sheets)",
-                "drive.oauth-credentials-file=" + fwdDir + "/oauth-credentials.json",
-                "drive.tokens-dir=" + fwdDir + "/tokens",
-                "drive.application-name=TheTowerAnalyzer",
+                "# Your player ID — copy from The Tower settings screen",
+                "aws.player-id=REPLACE_WITH_YOUR_PLAYER_ID",
                 "",
-                "# Google Drive folder IDs - replace with your own values",
-                "drive.backup-folder-id=REPLACE_WITH_YOUR_BACKUP_FOLDER_ID",
-                "drive.battle-reports-folder-id=REPLACE_WITH_YOUR_BATTLE_REPORTS_FOLDER_ID",
-                "",
-                "# Google Sheets sheet IDs - replace with your own values",
-                "sheets.ids.player-tracker=REPLACE_WITH_YOUR_PLAYER_TRACKER_SHEET_ID",
+                "# Server region: us | eu | ap",
+                "aws.api-gateway.region=us",
                 "",
                 "# Optional: change the port if 8080 is already in use on your machine",
                 "# server.port=8080"
             );
             Files.writeString(props, content);
-            log.info("user.properties created. Edit {} and replace all REPLACE_WITH_... placeholders before restarting.", props);
+            log.info("user.properties created. Set aws.player-id in {} before restarting.", props);
         }
     }
 

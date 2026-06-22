@@ -72,8 +72,8 @@ Currently `aws.region`, `aws.s3.bucket`, `aws.dynamodb.table` are set by users p
 
 - [x] Move `aws.region`, `aws.s3.bucket`, `aws.dynamodb.table` into `application.properties` (bundled in jar)
 - [x] Move us regional API Gateway ingest URLs into `application.properties` (`aws.api-gateway.url.us`)
-- [ ] Update CDK `CfnOutput` descriptions — bucket/table names are now for operator reference only, not user config
-- [ ] `user.properties` ends up with exactly two entries: `aws.player-id` and `aws.api-gateway.region`
+- [x] Update CDK `CfnOutput` descriptions — bucket/table names are now for operator reference only, not user config
+- [x] `user.properties` ends up with exactly two entries: `aws.player-id` and `aws.api-gateway.region`
 
 ### 4. Setup workflow — repurpose from Google Drive flow
 - [ ] Update `SetupController` / `SetupStateService` to collect player ID and region selection (US / Europe / Asia-Pacific) instead of Google Drive folder IDs and worksheet IDs
