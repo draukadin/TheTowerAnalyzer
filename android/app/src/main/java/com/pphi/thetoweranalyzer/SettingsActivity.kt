@@ -2,6 +2,7 @@ package com.pphi.thetoweranalyzer
 
 import android.os.Bundle
 import android.view.View
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import com.pphi.thetoweranalyzer.databinding.ActivitySettingsBinding
 
@@ -18,6 +19,11 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         prefs = Prefs(this)
+
+        val regionAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, Region.ALL)
+        regionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerRegion.adapter = regionAdapter
+
         loadPrefs()
 
         binding.radioGroupMode.setOnCheckedChangeListener { _, _ -> updateSectionVisibility() }
@@ -31,7 +37,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun loadPrefs() {
         binding.etPlayerId.setText(prefs.playerId)
-        binding.etCentralizedEndpoint.setText(prefs.centralizedEndpoint)
+        binding.spinnerRegion.setSelection(Region.ALL.indexOf(prefs.region))
         binding.etLegacyWebhookUrl.setText(prefs.legacyWebhookUrl)
 
         when (prefs.mode) {
@@ -43,7 +49,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun savePrefs() {
         prefs.playerId = binding.etPlayerId.text.toString().trim()
-        prefs.centralizedEndpoint = binding.etCentralizedEndpoint.text.toString().trim()
+        prefs.region = binding.spinnerRegion.selectedItem as Region
         prefs.legacyWebhookUrl = binding.etLegacyWebhookUrl.text.toString().trim()
         prefs.mode = if (binding.radioCentralized.isChecked) SubmitMode.CENTRALIZED else SubmitMode.LEGACY
         finish()

@@ -28,7 +28,9 @@ class MainActivity : AppCompatActivity() {
 
         prefs = Prefs(this)
 
-        val runTypeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, RunType.ALL)
+        // Position 0 is a non-selectable prompt; run types follow it.
+        val runTypeItems = listOf(getString(R.string.prompt_run_type)) + RunType.ALL.map { it.displayName }
+        val runTypeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, runTypeItems)
         runTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerRunType.adapter = runTypeAdapter
 
@@ -38,9 +40,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.spinnerRunType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-                val selected = RunType.ALL[pos]
+                val selected = selectedRunType()
                 binding.rowDissonanceType.visibility =
-                    if (selected.requiresDissonanceType) View.VISIBLE else View.GONE
+                    if (selected?.requiresDissonanceType == true) View.VISIBLE else View.GONE
+                updateSubmitEnabled()
             }
             override fun onNothingSelected(parent: AdapterView<*>) = Unit
         }
@@ -79,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val runType = binding.spinnerRunType.selectedItem as RunType
+        val runType = selectedRunType() ?: return
         val dissonanceType = if (runType.requiresDissonanceType)
             binding.spinnerDissonanceType.selectedItem as DissonanceType
         else null
@@ -94,8 +97,8 @@ class MainActivity : AppCompatActivity() {
         val endpoint = prefs.centralizedEndpoint
         val playerId = prefs.playerId
 
-        if (endpoint.isBlank() || playerId.isBlank()) {
-            showToast("Configure Settings before submitting")
+        if (playerId.isBlank()) {
+            showToast("Set your Player ID in Settings before submitting")
             return
         }
 
@@ -125,15 +128,34 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleResult(result: SubmitResult) {
         when (result) {
-            is SubmitResult.Success -> showToast("Report submitted successfully")
+            is SubmitResult.Success -> {
+                showToast("Report submitted successfully")
+                // Reset to the run-type prompt; this re-disables Submit via the listener.
+                binding.spinnerRunType.setSelection(0)
+            }
             is SubmitResult.Failure -> showToast("Error ${result.statusCode}: ${result.message}")
             is SubmitResult.NetworkError -> showToast("Network error: ${result.message}")
         }
     }
 
+    /** Selected run type, or null while the prompt (position 0) is showing. */
+    private fun selectedRunType(): RunType? {
+        val pos = binding.spinnerRunType.selectedItemPosition
+        return if (pos <= 0) null else RunType.ALL[pos - 1]
+    }
+
+    private fun updateSubmitEnabled() {
+        binding.btnSubmit.isEnabled = selectedRunType() != null
+    }
+
     private fun setSubmitting(submitting: Boolean) {
-        binding.btnSubmit.isEnabled = !submitting
-        binding.btnSubmit.text = if (submitting) "Submitting…" else getString(R.string.btn_submit)
+        if (submitting) {
+            binding.btnSubmit.isEnabled = false
+            binding.btnSubmit.text = "Submitting…"
+        } else {
+            binding.btnSubmit.text = getString(R.string.btn_submit)
+            updateSubmitEnabled()
+        }
     }
 
     private fun clipboardText(): String? {

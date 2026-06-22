@@ -72,6 +72,7 @@
             android:id="@+id/btnSubmit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:enabled="false"
             android:text="@string/btn_submit"
             android:textSize="18sp"
             android:paddingVertical="16dp" />
