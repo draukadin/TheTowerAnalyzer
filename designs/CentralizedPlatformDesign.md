@@ -186,11 +186,10 @@ Distribute a separate `.shortcut` file for centralized mode. No good mechanism t
 
 **`POST /reports` — report ingestion:**
 
-1. **Validate `X-Api-Key` header** — reject 401 if missing or does not match the shared static key
-2. **Validate `X-Player-Id` header** — reject 400 if missing or empty
-3. **Validate payload structure** (see below) — reject 400 if checks fail
-4. Construct S3 key: `<player_id>/<UTC-timestamp>_<runType>.txt`
-5. Write raw report body to S3
+1. **Validate `X-Player-Id` header** — reject 400 if missing or empty
+2. **Validate payload structure** (see below) — reject 400 if checks fail
+3. Construct S3 key: `<player_id>/<UTC-timestamp>_<runType>.txt`
+4. Write raw report body to S3
 
 No parsing logic beyond structural validation. All full parsing stays in the local Spring Boot app using the existing `BattleHistoryParser`.
 

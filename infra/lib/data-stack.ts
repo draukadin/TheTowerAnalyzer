@@ -11,6 +11,8 @@ export interface DataStackProps extends cdk.StackProps {
 export class DataStack extends cdk.Stack {
   readonly bucketName: string;
   readonly versionTableName: string;
+  readonly versionTableArn: string;
+  readonly credentialRoleArn: string;
 
   constructor(scope: Construct, id: string, props: DataStackProps) {
     super(scope, id, props);
@@ -44,32 +46,31 @@ export class DataStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
-    // IAM user for the local Spring Boot app — least-privilege read from S3, write to DDB.
-    // After deploy: aws iam create-access-key --user-name <AppUserName output>
-    const appUser = new iam.User(this, 'AppUser', {
-      userName: `tower-analyzer-app-${env}`,
+    // Role assumed by the credential-vending Lambda to issue per-player STS sessions.
+    // The role's permissions are the superset; the session policy passed at AssumeRole
+    // time restricts each set of credentials to a single player's prefix + IP.
+    const credentialVendingRole = new iam.Role(this, 'CredentialVendingRole', {
+      roleName: `tower-analyzer-credential-vending-${env}`,
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      description: 'Assumed by the credential-vending Lambda; session policy scopes each credential to one player',
     });
 
-    appUser.addToPolicy(new iam.PolicyStatement({
-      sid: 'S3ReadAndTag',
-      actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObjectTagging', 's3:DeleteObject'],
+    credentialVendingRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'S3PlayerAccess',
+      actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:CopyObject', 's3:PutObjectTagging'],
       resources: [reportsBucket.bucketArn, `${reportsBucket.bucketArn}/*`],
     }));
 
-    appUser.addToPolicy(new iam.PolicyStatement({
-      sid: 'DDBVersionWrite',
-      actions: ['dynamodb:PutItem'],
+    credentialVendingRole.addToPolicy(new iam.PolicyStatement({
+      sid: 'DDBPlayerAccess',
+      actions: ['dynamodb:PutItem', 'dynamodb:GetItem'],
       resources: [versionTable.tableArn],
     }));
 
     this.bucketName = reportsBucket.bucketName;
     this.versionTableName = versionTable.tableName;
-
-    new cdk.CfnOutput(this, 'AppUserName', {
-      value: appUser.userName,
-      description: 'IAM user for Spring Boot app — run: aws iam create-access-key --user-name <value>',
-      exportName: `TowerAnalyzer-${env}-AppUserName`,
-    });
+    this.versionTableArn = versionTable.tableArn;
+    this.credentialRoleArn = credentialVendingRole.roleArn;
 
     new cdk.CfnOutput(this, 'ReportsBucketName', {
       value: reportsBucket.bucketName,

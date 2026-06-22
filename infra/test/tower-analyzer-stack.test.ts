@@ -63,13 +63,20 @@ test('DataStack: dev and prod DynamoDB table names are distinct', () => {
 
 // ── IngestStack ───────────────────────────────────────────────────────────────
 
-test('IngestStack: Lambda configured with correct runtime and handler', () => {
+const INGEST_PROPS = {
+  environment: 'dev' as const,
+  centralBucketName: 'tower-analyzer-reports-dev-611434859239',
+  versionTableName: 'TowerAnalyzerPlayerVersion-dev',
+  versionTableArn: `arn:aws:dynamodb:us-west-2:${ACCOUNT}:table/TowerAnalyzerPlayerVersion-dev`,
+  credentialRoleArn: `arn:aws:iam::${ACCOUNT}:role/tower-analyzer-credential-vending-dev`,
+  dataRegion: 'us-west-2',
+  env: { account: ACCOUNT, region: 'us-west-2' },
+};
+
+
+test('IngestStack: ingest Lambda configured with correct runtime and handler', () => {
   const app = new cdk.App();
-  const stack = new IngestStack(app, 'TestIngestStack', {
-    environment: 'dev',
-    centralBucketName: 'tower-analyzer-reports-dev-611434859239',
-    env: { account: ACCOUNT, region: 'us-west-2' },
-  });
+  const stack = new IngestStack(app, 'TestIngestStack', INGEST_PROPS);
   const template = Template.fromStack(stack);
 
   template.hasResourceProperties('AWS::Lambda::Function', {
@@ -78,29 +85,22 @@ test('IngestStack: Lambda configured with correct runtime and handler', () => {
   });
 });
 
-test('IngestStack: API Gateway POST /reports method exists', () => {
+test('IngestStack: credential-vending Lambda configured with correct runtime and handler', () => {
   const app = new cdk.App();
-  const stack = new IngestStack(app, 'TestIngestStack', {
-    environment: 'dev',
-    centralBucketName: 'tower-analyzer-reports-dev-611434859239',
-    env: { account: ACCOUNT, region: 'us-west-2' },
-  });
+  const stack = new IngestStack(app, 'TestIngestStack', INGEST_PROPS);
   const template = Template.fromStack(stack);
 
-  // POST on /reports + OPTIONS (CORS preflight) + CDK root ANY method = 3
-  template.resourceCountIs('AWS::ApiGateway::Method', 3);
+  template.hasResourceProperties('AWS::Lambda::Function', {
+    Runtime: 'nodejs22.x',
+    Handler: 'credentials.handler',
+  });
 });
 
-test('IngestStack: per-region Secrets Manager secret created', () => {
+test('IngestStack: API Gateway has POST /reports and GET /credentials methods', () => {
   const app = new cdk.App();
-  const stack = new IngestStack(app, 'TestIngestStack', {
-    environment: 'dev',
-    centralBucketName: 'tower-analyzer-reports-dev-611434859239',
-    env: { account: ACCOUNT, region: 'us-west-2' },
-  });
+  const stack = new IngestStack(app, 'TestIngestStack', INGEST_PROPS);
   const template = Template.fromStack(stack);
 
-  template.hasResourceProperties('AWS::SecretsManager::Secret', {
-    Name: 'TowerAnalyzerApiKey-dev-us-west-2',
-  });
+  // POST /reports, OPTIONS /reports, GET /credentials, OPTIONS /credentials, CDK root ANY = 5
+  template.resourceCountIs('AWS::ApiGateway::Method', 5);
 });
