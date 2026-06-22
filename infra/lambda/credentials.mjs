@@ -65,12 +65,18 @@ export const handler = async (event) => {
 
   const sessionName = `player-${playerId.replace(/[^\w+=,.@-]/g, '_')}`.slice(0, 64);
 
-  const assumed = await sts.send(new AssumeRoleCommand({
-    RoleArn: ROLE_ARN,
-    RoleSessionName: sessionName,
-    DurationSeconds: 3600,
-    Policy: sessionPolicy,
-  }));
+  let assumed;
+  try {
+    assumed = await sts.send(new AssumeRoleCommand({
+      RoleArn: ROLE_ARN,
+      RoleSessionName: sessionName,
+      DurationSeconds: 3600,
+      Policy: sessionPolicy,
+    }));
+  } catch (err) {
+    console.error('AssumeRole failed', err);
+    return respond(500, { message: 'Failed to vend credentials' });
+  }
 
   const c = assumed.Credentials;
   return respond(200, {

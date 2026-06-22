@@ -46,13 +46,15 @@ export class DataStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
-    // Role assumed by the credential-vending Lambda to issue per-player STS sessions.
-    // The role's permissions are the superset; the session policy passed at AssumeRole
-    // time restricts each set of credentials to a single player's prefix + IP.
+    // Role assumed programmatically by the credential-vending Lambda's execution role
+    // via sts:AssumeRole. The role's permissions are the superset; the session policy
+    // passed at AssumeRole time restricts each credential to a single player's prefix + IP.
+    // Trusts the account root so any IAM principal in this account can assume it —
+    // access is controlled by the sts:AssumeRole permission on the Lambda execution role.
     const credentialVendingRole = new iam.Role(this, 'CredentialVendingRole', {
       roleName: `tower-analyzer-credential-vending-${env}`,
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-      description: 'Assumed by the credential-vending Lambda; session policy scopes each credential to one player',
+      assumedBy: new iam.AccountRootPrincipal(),
+      description: 'Assumed programmatically by the credential-vending Lambda execution role via sts:AssumeRole',
     });
 
     credentialVendingRole.addToPolicy(new iam.PolicyStatement({
