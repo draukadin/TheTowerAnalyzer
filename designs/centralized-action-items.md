@@ -76,9 +76,9 @@ Currently `aws.region`, `aws.s3.bucket`, `aws.dynamodb.table` are set by users p
 - [x] `user.properties` ends up with exactly two entries: `aws.player-id` and `aws.api-gateway.region`
 
 ### 4. Setup workflow — repurpose from Google Drive flow
-- [ ] Update `SetupController` / `SetupStateService` to collect player ID and region selection (US / Europe / Asia-Pacific) instead of Google Drive folder IDs and worksheet IDs
-- [ ] Write `aws.player-id` and `aws.api-gateway.region` to `user.properties` on completion
-- [ ] Update setup UI in `index.html` / `app.js` accordingly
+- [x] Update `SetupController` / `SetupStateService` to collect player ID and region selection (US / Europe / Asia-Pacific) instead of Google Drive folder IDs and worksheet IDs
+- [x] Write `aws.player-id` and `aws.api-gateway.region` to `user.properties` on completion
+- [x] Update setup UI in `index.html` / `app.js` accordingly
 
 ### 5. Multi-region IngestStack deployments
 The Android app already has stub URLs for EU and AP that will be activated once the stacks exist.

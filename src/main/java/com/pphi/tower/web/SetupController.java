@@ -1,11 +1,8 @@
 package com.pphi.tower.web;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pphi.tower.config.DriveProperties;
-import com.pphi.tower.config.OAuthStateService;
+import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.config.SetupStateService;
-import com.pphi.tower.config.SheetProperties;
 import com.pphi.tower.service.ClaudeSkillsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,21 +21,16 @@ import java.util.Map;
 public class SetupController {
 
     private final SetupStateService setupState;
-    private final DriveProperties drive;
-    private final SheetProperties sheets;
-    private final OAuthStateService oAuthStateService;
-    private final ObjectMapper objectMapper;
+    private final AwsProperties aws;
     private final ClaudeSkillsService claudeSkillsService;
+    private final ObjectMapper objectMapper;
 
-    public SetupController(SetupStateService setupState, DriveProperties drive,
-                           SheetProperties sheets, OAuthStateService oAuthStateService,
-                           ObjectMapper objectMapper, ClaudeSkillsService claudeSkillsService) {
+    public SetupController(SetupStateService setupState, AwsProperties aws,
+                           ClaudeSkillsService claudeSkillsService, ObjectMapper objectMapper) {
         this.setupState = setupState;
-        this.drive = drive;
-        this.sheets = sheets;
-        this.oAuthStateService = oAuthStateService;
-        this.objectMapper = objectMapper;
+        this.aws = aws;
         this.claudeSkillsService = claudeSkillsService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/status")
@@ -45,67 +38,30 @@ public class SetupController {
         return Map.of("step", setupState.currentStep().name().toLowerCase());
     }
 
-    @PostMapping("/credentials")
-    public ResponseEntity<Map<String, String>> saveCredentials(@RequestBody Map<String, String> body) throws IOException {
-        String content = body.get("content");
-        if (content == null || content.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Credentials JSON content is required."));
-        }
-
-        JsonNode root;
-        try {
-            root = objectMapper.readTree(content);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid JSON — please paste the full contents of the file you downloaded from Google Cloud Console."));
-        }
-
-        if (!root.has("installed") && !root.has("web")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "This does not look like a Google OAuth credentials file. It must contain an \"installed\" or \"web\" key."));
-        }
-
-        Path dest = Path.of(drive.getOauthCredentialsFile());
-        Files.createDirectories(dest.getParent());
-        Files.writeString(dest, content);
-
-        return ResponseEntity.ok(Map.of("step", setupState.currentStep().name().toLowerCase()));
-    }
-
     @PostMapping("/config")
     public ResponseEntity<Map<String, String>> saveConfig(@RequestBody ConfigRequest req) throws IOException {
-        if (req.backupFolderId() == null || req.backupFolderId().isBlank()
-                || req.battleReportsFolderId() == null || req.battleReportsFolderId().isBlank()
-                || req.playerTrackerSheetId() == null || req.playerTrackerSheetId().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "All three IDs are required."));
+        if (req.playerId() == null || req.playerId().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Player ID is required."));
+        }
+        if (!List.of("us", "eu", "ap").contains(req.apiGatewayRegion())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Region must be one of: us, eu, ap."));
         }
 
-        // Update the live beans so the running app has the correct values immediately
-        drive.setBackupFolderId(req.backupFolderId());
-        drive.setBattleReportsFolderId(req.battleReportsFolderId());
-        Map<String, String> ids = new HashMap<>(sheets.getIds());
-        ids.put("player-tracker", req.playerTrackerSheetId());
-        sheets.setIds(ids);
+        aws.setPlayerId(req.playerId());
+        aws.getApiGateway().setRegion(req.apiGatewayRegion());
 
-        // Persist to user.properties
         String appData = System.getenv("APPDATA");
         Path dir = Path.of(appData, "TheTowerAnalyzer");
-        String fwdDir = dir.toString().replace('\\', '/');
+        Files.createDirectories(dir);
         String props = String.join(System.lineSeparator(),
-            "drive.oauth-credentials-file=" + fwdDir + "/oauth-credentials.json",
-            "drive.tokens-dir=" + fwdDir + "/tokens",
-            "drive.application-name=TheTowerAnalyzer",
-            "",
-            "drive.backup-folder-id=" + req.backupFolderId(),
-            "drive.battle-reports-folder-id=" + req.battleReportsFolderId(),
-            "",
-            "sheets.ids.player-tracker=" + req.playerTrackerSheetId(),
-            "",
-            "# Optional: change the port if 8080 is already in use on your machine",
-            "# server.port=8080"
+                "aws.player-id=" + req.playerId(),
+                "aws.api-gateway.region=" + req.apiGatewayRegion()
         );
-        Files.writeString(dir.resolve("user.properties"), props);
-
-        // Start the OAuth flow now that credentials and config are in place
-        oAuthStateService.reinitialize();
+        if ("us-west-2".equals(aws.getRegion())) {
+            Files.writeString(dir.resolve("user.properties"), props, StandardOpenOption.APPEND);
+        } else {
+            Files.writeString(dir.resolve("user.properties"), props);
+        }
 
         return ResponseEntity.ok(Map.of("step", "complete"));
     }
@@ -203,7 +159,6 @@ public class SetupController {
             }
         }
 
-        // MSIX/Windows Store: %LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude
         if (localData != null) {
             Path packages = Path.of(localData, "Packages");
             if (Files.exists(packages)) {
@@ -271,5 +226,5 @@ public class SetupController {
         }
     }
 
-    record ConfigRequest(String backupFolderId, String battleReportsFolderId, String playerTrackerSheetId) {}
+    record ConfigRequest(String playerId, String apiGatewayRegion) {}
 }

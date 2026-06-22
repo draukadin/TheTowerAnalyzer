@@ -1,4 +1,4 @@
-﻿const API='http://localhost:8080/api';
+const API='http://localhost:8080/api';
 let allReports=[],activeId=null,activePayload=null,activeView='reports',currentTab='stats';
 
 async function init(){
@@ -5631,19 +5631,16 @@ async function backupDatabase() {
 
 function showSetupWizard(step) {
   document.getElementById('setupWizard').style.display = 'flex';
-  goToWizardStep(step === 'config' ? 2 : 1);
+  goToWizardStep(1);
 }
 
 function goToWizardStep(n) {
   document.getElementById('wizardStep1').style.display = n === 1 ? '' : 'none';
   document.getElementById('wizardStep2').style.display = n === 2 ? '' : 'none';
-  document.getElementById('wizardStep3').style.display = n === 3 ? '' : 'none';
 
   const dot1 = document.getElementById('wizDot1');
   const dot2 = document.getElementById('wizDot2');
-  const dot3 = document.getElementById('wizDot3');
   const lbl2 = document.getElementById('wizLabel2');
-  const lbl3 = document.getElementById('wizLabel3');
 
   const active  = s => { s.style.background = 'var(--accent)';   s.style.color = '#fff';        s.style.border = 'none'; };
   const done    = s => { s.style.background = 'var(--green)';    s.style.color = '#fff';        s.style.border = 'none'; s.textContent = '✓'; };
@@ -5652,50 +5649,11 @@ function goToWizardStep(n) {
   if (n === 1) {
     active(dot1);  dot1.textContent = '1';
     pending(dot2, '2');  lbl2.style.color = 'var(--muted)';
-    pending(dot3, '3');  lbl3.style.color = 'var(--muted)';
     document.getElementById('wizInd1').querySelector('span').style.color = 'var(--accent)';
-  } else if (n === 2) {
-    done(dot1);
-    active(dot2);  dot2.textContent = '2';  lbl2.style.color = 'var(--accent)';
-    pending(dot3, '3');  lbl3.style.color = 'var(--muted)';
-    document.getElementById('wizInd1').querySelector('span').style.color = 'var(--green)';
   } else {
     done(dot1);
-    done(dot2);
-    active(dot3);  dot3.textContent = '3';  lbl3.style.color = 'var(--accent)';
+    active(dot2);  dot2.textContent = '2';  lbl2.style.color = 'var(--accent)';
     document.getElementById('wizInd1').querySelector('span').style.color = 'var(--green)';
-    lbl2.style.color = 'var(--green)';
-  }
-}
-
-async function submitCredentials() {
-  const content = document.getElementById('credentialsJson').value.trim();
-  const errEl   = document.getElementById('credentialsError');
-  const btn     = document.getElementById('credentialsBtn');
-
-  errEl.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-
-  try {
-    const res  = await fetch(`${API}/setup/credentials`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content})
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      errEl.textContent = data.error || 'An error occurred.';
-      errEl.style.display = '';
-    } else {
-      goToWizardStep(2);
-    }
-  } catch (e) {
-    errEl.textContent = 'Could not reach the server.';
-    errEl.style.display = '';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Continue →';
   }
 }
 
@@ -5703,14 +5661,13 @@ async function submitConfig() {
   const errEl = document.getElementById('configError');
   const btn   = document.getElementById('configBtn');
 
-  const backupFolderId         = document.getElementById('backupFolderId').value.trim();
-  const battleReportsFolderId  = document.getElementById('battleReportsFolderId').value.trim();
-  const playerTrackerSheetId   = document.getElementById('playerTrackerSheetId').value.trim();
+  const playerId         = document.getElementById('playerId').value.trim();
+  const apiGatewayRegion = document.querySelector('input[name="apiGatewayRegion"]:checked')?.value;
 
   errEl.style.display = 'none';
 
-  if (!backupFolderId || !battleReportsFolderId || !playerTrackerSheetId) {
-    errEl.textContent = 'All three IDs are required.';
+  if (!playerId) {
+    errEl.textContent = 'Player ID is required.';
     errEl.style.display = '';
     return;
   }
@@ -5722,22 +5679,22 @@ async function submitConfig() {
     const res  = await fetch(`${API}/setup/config`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({backupFolderId, battleReportsFolderId, playerTrackerSheetId})
+      body: JSON.stringify({playerId, apiGatewayRegion})
     });
     const data = await res.json();
     if (!res.ok) {
       errEl.textContent = data.error || 'An error occurred.';
       errEl.style.display = '';
       btn.disabled = false;
-      btn.textContent = 'Complete Setup';
+      btn.textContent = 'Continue →';
     } else {
-      goToWizardStep(3);
+      goToWizardStep(2);
     }
   } catch (e) {
     errEl.textContent = 'Could not reach the server.';
     errEl.style.display = '';
     btn.disabled = false;
-    btn.textContent = 'Complete Setup';
+    btn.textContent = 'Continue →';
   }
 }
 
