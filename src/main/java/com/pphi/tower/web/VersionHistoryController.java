@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +54,7 @@ public class VersionHistoryController {
     }
 
     public record VersionWithChanges(String version, String type, String summary,
-                                     List<VersionChange> changes, boolean syncedToSheet) {}
+                                     List<VersionChange> changes, boolean synced, String syncTarget) {}
     public record CreateRequest(String version, String type,
                                 List<VersionHistoryRepository.NewChange> changes) {}
     public record UpdateRequest(String type, List<VersionHistoryRepository.NewChange> changes) {}
@@ -64,7 +65,7 @@ public class VersionHistoryController {
         return repo.getAllVersions().stream()
                 .map(v -> new VersionWithChanges(
                         v.version(), v.type(), v.summary(),
-                        repo.getChangesForVersion(v.version()), true))
+                        repo.getChangesForVersion(v.version()), true, syncTarget()))
                 .toList();
     }
 
@@ -76,7 +77,7 @@ public class VersionHistoryController {
                 .map(VersionEntry::summary).findFirst().orElse("");
         boolean synced = syncVersionCell(req.version());
         return new VersionWithChanges(req.version(), req.type(), summary,
-                repo.getChangesForVersion(req.version()), synced);
+                repo.getChangesForVersion(req.version()), synced, syncTarget());
     }
 
     @PutMapping("/{version}")
@@ -86,7 +87,7 @@ public class VersionHistoryController {
                 .filter(v -> v.version().equals(version))
                 .map(VersionEntry::summary).findFirst().orElse("");
         return new VersionWithChanges(version, req.type(), summary,
-                repo.getChangesForVersion(version), true);
+                repo.getChangesForVersion(version), true, syncTarget());
     }
 
     @GetMapping("/pending")
@@ -106,6 +107,10 @@ public class VersionHistoryController {
 
     @PostMapping("/{version}/sync-sheet")
     public SyncResult retrySync(@PathVariable String version) throws IOException {
+        if (awsProperties.isConfigured()) {
+            // Centralized mode: version is tracked in DynamoDB; the Google Sheet is legacy-only.
+            return new SyncResult(true);
+        }
         sheetsRepo.writeCell(TRACKER_SHEET_KEY, TRACKER_SHEET_NAME, VERSION_CELL, version);
         return new SyncResult(true);
     }
@@ -116,10 +121,17 @@ public class VersionHistoryController {
         return new SyncResult(true);
     }
 
+    /** Which backend a version write targets: "ddb" in centralized mode, "sheet" in legacy mode. */
+    private String syncTarget() {
+        return awsProperties.isConfigured() ? "ddb" : "sheet";
+    }
+
     private boolean syncVersionCell(String version) {
-        boolean ddb    = syncVersionToDdb(version);
-        boolean sheets = syncVersionToSheet(version);
-        return ddb || sheets;
+        if (awsProperties.isConfigured()) {
+            // Centralized mode: version tracking lives in DynamoDB; skip the legacy Google Sheet.
+            return syncVersionToDdb(version);
+        }
+        return syncVersionToSheet(version);
     }
 
     private boolean syncVersionToDdb(String version) {
@@ -158,7 +170,8 @@ public class VersionHistoryController {
                 .tableName(awsProperties.getDynamodbTable())
                 .item(Map.of(
                         "player_id",       AttributeValue.fromS(awsProperties.getPlayerId()),
-                        "current_version", AttributeValue.fromS(version)))
+                        "current_version", AttributeValue.fromS(version),
+                        "updated_at",      AttributeValue.fromS(Instant.now().toString())))
                 .build());
     }
 

@@ -2899,30 +2899,34 @@ async function saveNewVersion() {
     }
     closeAddVersionModal();
     await renderVersionTrackerView();
-    if (verModalMode === 'add' && !data.syncedToSheet) showVerSyncBanner(data.version);
+    if (verModalMode === 'add' && !data.synced) showVerSyncBanner(data.version, data.syncTarget);
   } catch(e) {
     alert('Save failed: ' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = origText;
   }
 }
-function showVerSyncBanner(version) {
+function showVerSyncBanner(version, syncTarget) {
   const existing = document.getElementById('verSyncBanner');
   if (existing) existing.remove();
   const el = document.getElementById('verContent');
   if (!el) return;
+  const target = syncTarget === 'ddb'
+    ? 'the central database (DynamoDB)'
+    : 'Google Sheet (cell B2)';
   el.insertAdjacentHTML('afterbegin', `
     <div id="verSyncBanner" style="display:flex;align-items:center;gap:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:13px">
       <span style="color:var(--red)">⚠</span>
-      <span style="flex:1;color:var(--text)">Version <strong>${version}</strong> saved to database but failed to sync to Google Sheet (cell B2). Battle reports won't auto-associate until synced.</span>
-      <button id="verSyncRetryBtn" class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="retrySyncVersion('${version}')">Retry Sync</button>
+      <span style="flex:1;color:var(--text)">Version <strong>${version}</strong> saved locally but failed to sync to ${target}. Battle reports won't auto-associate until synced.</span>
+      <button id="verSyncRetryBtn" class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="retrySyncVersion('${version}', '${syncTarget}')">Retry Sync</button>
     </div>`);
 }
-async function retrySyncVersion(version) {
+async function retrySyncVersion(version, syncTarget) {
   const btn = document.getElementById('verSyncRetryBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  const endpoint = syncTarget === 'ddb' ? 'sync-ddb' : 'sync-sheet';
   try {
-    const res = await fetch(`${API}/versions/${encodeURIComponent(version)}/sync-sheet`, { method: 'POST' });
+    const res = await fetch(`${API}/versions/${encodeURIComponent(version)}/${endpoint}`, { method: 'POST' });
     if (!res.ok) throw new Error(await res.text());
     document.getElementById('verSyncBanner')?.remove();
   } catch(e) {

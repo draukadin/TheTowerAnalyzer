@@ -90,5 +90,12 @@ The Android app already has stub URLs for EU and AP that will be activated once 
 - [ ] Update `application.properties` with the real EU and AP URLs
 
 ### 6. Minor / cleanup
-- [ ] Add `updated_at` attribute to DynamoDB `PutItemRequest` in `syncVersionToDdb` (currently only writes `player_id` and `current_version`; `updated_at` is in the schema)
-- [ ] `POST /{version}/sync-sheet` (`retrySync`) still calls Google Sheets — acceptable for legacy-mode users, but consider whether it should be a no-op or removed when AWS is configured
+- [x] Add `updated_at` attribute to DynamoDB `PutItemRequest` in `syncVersionToDdb` (currently only writes `player_id` and `current_version`; `updated_at` is in the schema)
+- [x] `POST /{version}/sync-sheet` (`retrySync`) still calls Google Sheets — acceptable for legacy-mode users, but consider whether it should be a no-op or removed when AWS is configured — now a no-op in centralized mode (`aws.isConfigured()`); legacy users unaffected. Also gated `syncVersionCell` so version creates write only DynamoDB when AWS is configured.
+
+### 7. Version-sync banner UI was Google-Sheet-specific
+The create response previously returned `syncedToSheet`, and the front-end failure banner / retry button were hard-coded to Google Sheets even in centralized mode.
+
+- [x] Rename create response field `syncedToSheet` → `synced`; add `syncTarget` (`"ddb"` | `"sheet"`) from `aws.isConfigured()`
+- [x] Banner text in `app.js` now names the actual target (central DynamoDB vs Google Sheet cell B2)
+- [x] Retry button posts to `/sync-ddb` in centralized mode, `/sync-sheet` in legacy mode
