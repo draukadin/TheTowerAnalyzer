@@ -52,13 +52,13 @@ some items in different sections can be done in parallel.
 
 ### Account & Signing
 - [x] Confirm Google Play Developer account exists ($25 one-time fee if not yet registered)
-- [ ] Generate release signing keystore:
+- [x] Generate release signing keystore:
   ```
   keytool -genkey -v -keystore thetoweranalyzer-release.jks \
     -alias thetoweranalyzer -keyalg RSA -keysize 2048 -validity 10000
   ```
-- [ ] Base64-encode the keystore and store as JSON in AWS Secrets Manager:
-  `TheTowerAnalyzer/android/release-signing` → `{ keystoreBase64, keystorePassword, keyAlias, keyPassword }`
+- [x] Base64-encode the keystore and store as JSON in AWS Secrets Manager:
+  `TheTowerAnalyzer/android/release-signing` (us-west-2) → `{ keystoreBase64, keystorePassword, keyAlias, keyPassword }`
   then delete the local `.jks` file (Secrets Manager is the only copy)
 - [x] Signing config wired into `android/app/build.gradle.kts` — reads from `local.properties`,
   gracefully skips if absent (debug builds unaffected)
@@ -66,9 +66,10 @@ some items in different sections can be done in parallel.
   run once before each release build (`.\gradlew bundleRelease`)
 
 ### Build & Verify
-- [ ] Confirm `BuildConfig.DEV_ENDPOINT` is empty string in release variant
-  (check `android/app/build.gradle.kts` `buildTypes { release { ... } }`)
-- [ ] Build signed AAB: `./gradlew bundleRelease`
+- [x] Confirm `BuildConfig.DEV_ENDPOINT` is empty string in release variant
+  (verified in `android/app/build/generated/source/buildConfig/release/.../BuildConfig.java`)
+- [x] Build signed AAB: `./gradlew bundleRelease`
+  (requires full JDK — use `JAVA_HOME=C:\Users\pphi\.jdks\ms-21.0.10`; IntelliJ JBR lacks `jlink`)
 - [ ] Install release APK on a physical device and run the full submit flow end-to-end
 - [ ] Verify no dev endpoint appears in the installed app settings
 
