@@ -39,7 +39,7 @@ some items in different sections can be done in parallel.
 - [ ] Use `magnifyingglass` glyph with navy (`#2e3a5c`) background — matches the magnifier from the desktop and Android icon
 
 ### Play Store Assets
-- [ ] Feature graphic: 1024×500 px (required, shown in Play Store search results)
+- [x] Feature graphic: 1024×500 px — see `designs/play-store-feature-graphic.svg` / `.png`
 - [ ] Phone screenshots: 2–8 screenshots (min 320 px wide; show submit + settings screens)
 - [x] Short description: ≤ 80 characters — see `designs/play-store-listing.md`
 - [x] Full description: up to 4 000 characters — see `designs/play-store-listing.md`

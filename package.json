@@ -4,5 +4,8 @@
   },
   "scripts": {
     "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "sharp": "^0.35.2"
   }
 }
