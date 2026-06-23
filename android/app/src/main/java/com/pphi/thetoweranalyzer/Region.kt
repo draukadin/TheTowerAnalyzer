@@ -9,10 +9,15 @@ enum class Region(val displayName: String, val endpoint: String) {
     US_EAST(
         "US East (Ohio)",
         "https://u4qu1kwqt8.execute-api.us-east-2.amazonaws.com/prod/reports",
+    ),
+    EU_WEST(
+        "EU West (Ireland)",
+        "https://ni19yt0ldg.execute-api.eu-west-1.amazonaws.com/prod/reports"
+    ),
+    AP_NORTHEAST(
+        "Asia Pacific (Tokyo)",
+        "https://jw6fruj1vc.execute-api.ap-northeast-1.amazonaws.com/prod/reports"
     );
-    // Future regions (deploy stack, then uncomment):
-    // EU_CENTRAL("Europe (Frankfurt)", "https://….execute-api.eu-central-1.amazonaws.com/prod/reports"),
-    // AP_NORTHEAST("Asia Pacific (Tokyo)", "https://….execute-api.ap-northeast-1.amazonaws.com/prod/reports"),
 
     override fun toString() = displayName
 

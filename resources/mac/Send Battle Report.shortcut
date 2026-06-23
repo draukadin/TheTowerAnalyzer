@@ -29,26 +29,6 @@
 			<key>DefaultValue</key>
 			<string></string>
 		</dict>
-		<dict>
-			<key>ParameterKey</key>
-			<string>api_key_question</string>
-			<key>Category</key>
-			<string>Text</string>
-			<key>Text</key>
-			<string>Enter your API key</string>
-			<key>DefaultValue</key>
-			<string></string>
-		</dict>
-		<dict>
-			<key>ParameterKey</key>
-			<string>api_endpoint_question</string>
-			<key>Category</key>
-			<string>Text</string>
-			<key>Text</key>
-			<string>Enter the API endpoint URL (e.g. https://xxx.execute-api.us-east-2.amazonaws.com/prod/reports)</string>
-			<key>DefaultValue</key>
-			<string></string>
-		</dict>
 	</array>
 	<key>WFWorkflowInputContentItemClasses</key>
 	<array>
@@ -104,54 +84,232 @@
 			</dict>
 		</dict>
 
-		<!-- Action 2: Set api_key variable -->
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.text</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>A1B2C3D4-0002-0002-0002-000000000002</string>
-				<key>WFTextActionText</key>
-				<string>REPLACE_WITH_YOUR_API_KEY</string>
-				<key>CustomOutputName</key>
-				<string>api_key</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.setvariable</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>WFVariableName</key>
-				<string>api_key</string>
-				<key>WFInput</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>attachmentsByRange</key>
-						<dict/>
-						<key>string</key>
-						<string>REPLACE_WITH_YOUR_API_KEY</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenString</string>
-				</dict>
-			</dict>
-		</dict>
+		<!-- Action 3: Resolve region (one-time picker, cached in iCloud Drive) -->
 
-		<!-- Action 3: Set api_endpoint variable -->
+		<!-- 3a: Try to read saved region (silent if file missing) -->
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.text</string>
+			<string>is.workflow.actions.file.getfile</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
 				<string>A1B2C3D4-0003-0003-0003-000000000003</string>
+				<key>WFGetFilesActionService</key>
+				<string>com.apple.CloudDocsService</string>
+				<key>WFGetFilesActionPath</key>
+				<string>/Shortcuts/TowerAnalyzer Region.txt</string>
+				<key>WFGetFilesActionErrorIfNotFound</key>
+				<false/>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFVariableName</key>
+				<string>saved_region_file</string>
+			</dict>
+		</dict>
+
+		<!-- 3b: If no saved region → show picker once and persist -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000039</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0004-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFCondition</key>
+				<integer>8</integer>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>saved_region_file</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- Region picker (first run only) -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.choosefromlist</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-003A-003A-003A-00000000003A</string>
+				<key>WFChooseFromListActionPrompt</key>
+				<string>Select Your Region</string>
+				<key>WFChooseFromListActionSelectMultiple</key>
+				<false/>
+				<key>WFChooseFromListActionSelectAll</key>
+				<false/>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<array>
+						<string>US East (Ohio)</string>
+						<string>EU West (Ireland)</string>
+						<string>Asia Pacific (Tokyo)</string>
+					</array>
+					<key>WFSerializationType</key>
+					<string>WFArrayParameterState</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFVariableName</key>
+				<string>chosen_region</string>
+			</dict>
+		</dict>
+
+		<!-- Save chosen_region to iCloud Drive for future runs -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.writefile</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000040</string>
+				<key>WFAskWhereToSave</key>
+				<false/>
+				<key>WFFileDestinationPath</key>
+				<string>/Shortcuts/TowerAnalyzer Region.txt</string>
+				<key>WFFileDestinationService</key>
+				<string>com.apple.CloudDocsService</string>
+				<key>WFSaveFileOverwrite</key>
+				<true/>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>chosen_region</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- Otherwise: file exists, read text content as chosen_region -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000041</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0004-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>1</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000042</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>saved_region_file</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFVariableName</key>
+				<string>chosen_region</string>
+			</dict>
+		</dict>
+
+		<!-- End If (region cache check) -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000043</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0004-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
+			</dict>
+		</dict>
+
+		<!-- 3c: Resolve chosen_region → api_endpoint -->
+
+		<!-- If chosen_region == "US East (Ohio)" -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000030</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0002-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFCondition</key>
+				<integer>4</integer>
+				<key>WFConditionalActionString</key>
+				<string>US East (Ohio)</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>chosen_region</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000031</string>
 				<key>WFTextActionText</key>
-				<string>REPLACE_WITH_YOUR_API_ENDPOINT</string>
-				<key>CustomOutputName</key>
-				<string>api_endpoint</string>
+				<string>https://u4qu1kwqt8.execute-api.us-east-2.amazonaws.com/prod/reports</string>
 			</dict>
 		</dict>
 		<dict>
@@ -161,18 +319,137 @@
 			<dict>
 				<key>WFVariableName</key>
 				<string>api_endpoint</string>
+			</dict>
+		</dict>
+
+		<!-- Otherwise -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000032</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0002-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>1</integer>
+			</dict>
+		</dict>
+
+		<!-- Nested If chosen_region == "EU West (Ireland)" -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000033</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0003-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFCondition</key>
+				<integer>4</integer>
+				<key>WFConditionalActionString</key>
+				<string>EU West (Ireland)</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
-						<key>attachmentsByRange</key>
-						<dict/>
-						<key>string</key>
-						<string>REPLACE_WITH_YOUR_API_ENDPOINT</string>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>chosen_region</string>
 					</dict>
 					<key>WFSerializationType</key>
-					<string>WFTextTokenString</string>
+					<string>WFTextTokenAttachment</string>
 				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000034</string>
+				<key>WFTextActionText</key>
+				<string>https://ni19yt0ldg.execute-api.eu-west-1.amazonaws.com/prod/reports</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFVariableName</key>
+				<string>api_endpoint</string>
+			</dict>
+		</dict>
+
+		<!-- Nested Otherwise (default: Asia Pacific Tokyo) -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000035</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0003-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>1</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000036</string>
+				<key>WFTextActionText</key>
+				<string>https://jw6fruj1vc.execute-api.ap-northeast-1.amazonaws.com/prod/reports</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFVariableName</key>
+				<string>api_endpoint</string>
+			</dict>
+		</dict>
+
+		<!-- End Nested If -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000037</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0003-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
+			</dict>
+		</dict>
+
+		<!-- End If (outer) -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1B2C3D4-0003-0003-0003-000000000038</string>
+				<key>GroupingIdentifier</key>
+				<string>COND0002-0000-0000-0000-000000000000</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
 			</dict>
 		</dict>
 
@@ -408,42 +685,6 @@
 					<dict>
 						<key>WFDictionaryFieldValueItems</key>
 						<array>
-							<dict>
-								<key>WFItemType</key>
-								<integer>0</integer>
-								<key>WFKey</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>attachmentsByRange</key>
-										<dict/>
-										<key>string</key>
-										<string>X-Api-Key</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-								<key>WFValue</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>￼</string>
-										<key>attachmentsByRange</key>
-										<dict>
-											<key>{0, 1}</key>
-											<dict>
-												<key>Type</key>
-												<string>Variable</string>
-												<key>VariableName</key>
-												<string>api_key</string>
-											</dict>
-										</dict>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-							</dict>
 							<dict>
 								<key>WFItemType</key>
 								<integer>0</integer>

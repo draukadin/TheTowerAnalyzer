@@ -16,7 +16,7 @@
 - [x] API key removed — player ID is the only required centralized setting
 
 ### iOS
-- [x] Centralized shortcut (`Send Battle Report (Centralized).shortcut`) — prompts for player ID, run type, optional Dissonance sub-type
+- [x] Centralized shortcut (`Send Battle Report.shortcut`) — prompts for player ID, run type, optional Dissonance sub-type
 
 ### AWS Infrastructure (US East only)
 - [x] CDK two-stack setup: `DataStack` (S3 + DynamoDB) and `IngestStack` (Lambda + API Gateway)
@@ -61,7 +61,7 @@ The Spring Boot app currently authenticates with a static long-lived IAM user ke
 
 ### 2. Spring Boot — switch to vended credentials
 - [x] Add `aws.api-gateway.region` to `AwsProperties` (values: `us`)
-- [ ] Add `aws.api-gateway.region` to `AwsProperties` (values: `eu`, `ap`); pending deployment of EU & AP stacks
+- [x] Add `aws.api-gateway.region` to `AwsProperties` (values: `eu`, `ap`); pending deployment of EU & AP stacks
 - [x] Add a `CredentialVendingClient` (or Spring `@Bean`) that calls `GET /credentials` on startup and refreshes before expiry (within 5 min of `Expiration`)
 - [x] Update `AwsConfig` to use the vended `SessionCredentialsProvider` instead of `ProfileCredentialsProvider` / `DefaultCredentialsProvider`
 - [x] Remove `aws.profile` from `AwsProperties` and `AwsConfig` once vended creds are wired
@@ -83,11 +83,11 @@ Currently `aws.region`, `aws.s3.bucket`, `aws.dynamodb.table` are set by users p
 ### 5. Multi-region IngestStack deployments
 The Android app already has stub URLs for EU and AP that will be activated once the stacks exist.
 
-- [ ] Deploy `IngestStack` to `eu-west-1` pointing at the central `us-east-2` S3 bucket
-- [ ] Deploy `IngestStack` to `ap-northeast-1` pointing at the central `us-east-2` S3 bucket
-- [ ] Deploy `GET /credentials` Lambda to all three regions (credential vending must be on the same regional endpoint as report ingest)
-- [ ] Update stub URLs in `Region.kt` (Android) with the real EU and AP API Gateway URLs once deployed
-- [ ] Update `application.properties` with the real EU and AP URLs
+- [x] Deploy `IngestStack` to `eu-west-1` pointing at the central `us-east-2` S3 bucket
+- [x] Deploy `IngestStack` to `ap-northeast-1` pointing at the central `us-east-2` S3 bucket
+- [x] Deploy `GET /credentials` Lambda to all three regions (credential vending must be on the same regional endpoint as report ingest)
+- [x] Update stub URLs in `Region.kt` (Android) with the real EU and AP API Gateway URLs once deployed
+- [x] Update `application.properties` with the real EU and AP URLs
 
 ### 6. Minor / cleanup
 - [x] Add `updated_at` attribute to DynamoDB `PutItemRequest` in `syncVersionToDdb` (currently only writes `player_id` and `current_version`; `updated_at` is in the schema)
@@ -124,7 +124,7 @@ under the player's own prefix so it is writable with the player's vended credent
 - [x] Write backups to `<player_id>/backups/analyzer_<yyyy-MM-dd_HH-mm-ss>.db` (mirrors the
   legacy timestamped filename; the `backups/` segment keeps them visually separate from
   reports under the same prefix).
-- [ ] **Retention goal:** the single newest backup is kept in Standard **forever** (any age);
+- [x] **Retention goal:** the single newest backup is kept in Standard **forever** (any age);
   every *older* backup is simply deleted 30 days after it was superseded. No Glacier tiering —
   the latest backup is almost always what a user restores, so cold-storing the rest isn't worth
   its cost/complexity (Glacier Instant Retrieval also carries a 90-day minimum-storage charge,
@@ -151,7 +151,7 @@ under the player's own prefix so it is writable with the player's vended credent
   used — the `backups/` segment is nested under the per-player prefix — so the tag is the only
   clean lever. Keep retention out of the per-request path. `cdk synth` confirms
   `ExpirationInDays: 30` filtered on tag `type=backup`.
-- [ ] **Expiry clock — exact by construction:** because demotion rewrites the object via
+- [x] **Expiry clock — exact by construction:** because demotion rewrites the object via
   `CopyObject` (above), its creation date is reset to the supersession moment, so lifecycle
   expiration fires exactly **30 days after a backup stopped being the latest** — regardless of
   how long it was the latest beforehand. "Kept for 30 days after superseded" is therefore
@@ -193,7 +193,7 @@ on `<player_id>/*`, so restore needs **no new permissions**.
   swap "must happen before any datasource bean is initialized, so it cannot live in a Spring
   component" (see the comment on `installBundledDatabaseIfAbsent`). Surface this as a
   restart-required operation in the UI ("Restore staged — restart the app to apply").
-- [ ] Legacy/Drive mode: no restore endpoint needed (users own the Drive folder); gate the
+- [x] Legacy/Drive mode: no restore endpoint needed (users own the Drive folder); gate the
   restore UI on `aws.isConfigured()`.
 
 **Front end**
@@ -204,7 +204,3 @@ on `<player_id>/*`, so restore needs **no new permissions**.
   `GET /api/backup/list` (with a `latest` badge, timestamp, and size), lets the user pick one,
   calls `POST /api/backup/restore`, then shows the "restart to apply" notice. Gated naturally —
   the panel stays hidden when `/backup/list` returns 409 (legacy mode, no S3 backup service).
-
-**Out of scope for parity (note as follow-ups, not required now)**
-- App-side "keep N most recent" pruning UI — the latest-tag + lifecycle scheme above already
-  covers retention server-side.
