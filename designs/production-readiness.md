@@ -57,9 +57,13 @@ some items in different sections can be done in parallel.
   keytool -genkey -v -keystore thetoweranalyzer-release.jks \
     -alias thetoweranalyzer -keyalg RSA -keysize 2048 -validity 10000
   ```
-- [ ] Store keystore + passwords securely (losing the keystore = cannot update the app ever)
-- [ ] Add signing config to `android/app/build.gradle.kts` release build type
-  (read credentials from `local.properties` or env vars — never hard-code in source)
+- [ ] Base64-encode the keystore and store as JSON in AWS Secrets Manager:
+  `TheTowerAnalyzer/android/release-signing` → `{ keystoreBase64, keystorePassword, keyAlias, keyPassword }`
+  then delete the local `.jks` file (Secrets Manager is the only copy)
+- [x] Signing config wired into `android/app/build.gradle.kts` — reads from `local.properties`,
+  gracefully skips if absent (debug builds unaffected)
+- [x] `scripts/setup-android-signing.ps1` — pulls secret, decodes keystore, writes `local.properties`;
+  run once before each release build (`.\gradlew bundleRelease`)
 
 ### Build & Verify
 - [ ] Confirm `BuildConfig.DEV_ENDPOINT` is empty string in release variant

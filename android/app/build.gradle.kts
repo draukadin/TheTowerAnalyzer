@@ -1,6 +1,13 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+}
+
+// Signing credentials written by scripts/setup-android-signing.ps1 — never committed.
+val localProperties = Properties().also { props ->
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use(props::load)
 }
 
 android {
@@ -13,6 +20,22 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        val storeFilePath = localProperties.getProperty("signing.storeFile")
+        val storePass     = localProperties.getProperty("signing.storePassword")
+        val alias         = localProperties.getProperty("signing.keyAlias")
+        val keyPass       = localProperties.getProperty("signing.keyPassword")
+
+        if (storeFilePath != null && storePass != null && alias != null && keyPass != null) {
+            create("release") {
+                storeFile     = file(storeFilePath)
+                storePassword = storePass
+                keyAlias      = alias
+                keyPassword   = keyPass
+            }
+        }
     }
 
     buildTypes {
@@ -35,6 +58,8 @@ android {
             // Empty → no dev option, and the dev URL is physically absent from the APK
             // that everyone else installs.
             buildConfigField("String", "DEV_ENDPOINT", "\"\"")
+            // Null when local.properties has no signing block (e.g. debug-only machines).
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 

@@ -8,6 +8,7 @@ credentials.json
 android/app/build/
 android/.gradle
 android/local.properties
+android/app/*.jks
 
 Runner.java
 mcp/node_modules
