@@ -26,7 +26,12 @@ android {
             )
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             // Empty → no dev option, and the dev URL is physically absent from the APK
             // that everyone else installs.
             buildConfigField("String", "DEV_ENDPOINT", "\"\"")

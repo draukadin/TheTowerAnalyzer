@@ -164,8 +164,10 @@ Run the full flow for each region using a real device or the Shortcuts app.
 ## 6. Security & Infrastructure
 
 ### Android Release
-- [ ] Verify ProGuard / R8 is enabled for release builds (shrink + obfuscate)
-- [ ] Confirm no AWS endpoint URLs, player IDs, or secrets are hard-coded in source
+- [x] Verify ProGuard / R8 is enabled for release builds (shrink + obfuscate)
+- [x] Confirm no AWS endpoint URLs, player IDs, or secrets are hard-coded in source
+  (production API Gateway URLs in `Region.kt` are intentional — they are public endpoints
+  protected by the STS credential layer, not secrets; dev endpoint absent from release APK)
 
 ### AWS
 - [ ] S3 bucket: Block Public Access enabled, SSE-S3 or SSE-KMS encryption at rest
