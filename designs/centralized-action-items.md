@@ -107,16 +107,21 @@ folder (`driveProperties.getBackupFolderId()`) via `GoogleDriveRepository.upload
 centralized mode there is no Drive — the backup should go to the shared reports S3 bucket,
 under the player's own prefix so it is writable with the player's vended credentials.
 
-**What the existing infra already gives us (no changes required):**
+**What the existing infra already gives us:**
 - The vended STS session policy (`infra/lambda/credentials.mjs`) already allows
-  `s3:PutObject` / `s3:PutObjectTagging` on `arn:aws:s3:::<bucket>/<player_id>/*`. A backup
-  written under `<player_id>/...` needs **no Lambda or IAM change**.
+  `s3:PutObject` / `s3:PutObjectTagging` / `s3:CopyObject` / `s3:GetObject` /
+  `s3:ListBucket` on `arn:aws:s3:::<bucket>/<player_id>/*`. **One permission had to be
+  added** (`s3:GetObjectTagging`): `listBackups` reads each object's `type` tag to flag the
+  kept-forever latest, and reading tags is a distinct action from writing them. It was added
+  to both the vended session policy (`credentials.mjs`) and the role identity policy
+  (`data-stack.ts` `S3PlayerAccess`) — effective permission is the intersection of the two,
+  so both must grant it. No new *role/Lambda resources*, just the one action.
 - The bucket is SSE-S3 encrypted, so the backup is encrypted at rest automatically.
 - `S3ReportFetcherService.listKeys` filters on `.endsWith(".txt")`, so a `.db` object under
   the player prefix is **never** picked up as a battle report — no ingest collision.
 
 **Object key & retention**
-- [ ] Write backups to `<player_id>/backups/analyzer_<yyyy-MM-dd_HH-mm-ss>.db` (mirrors the
+- [x] Write backups to `<player_id>/backups/analyzer_<yyyy-MM-dd_HH-mm-ss>.db` (mirrors the
   legacy timestamped filename; the `backups/` segment keeps them visually separate from
   reports under the same prefix).
 - [ ] **Retention goal:** the single newest backup is kept in Standard **forever** (any age);
@@ -125,7 +130,7 @@ under the player's own prefix so it is writable with the player's vended credent
   its cost/complexity (Glacier Instant Retrieval also carries a 90-day minimum-storage charge,
   which a 30-day expiry would trip). S3 lifecycle has no notion of "the newest object" — it acts
   purely on age + tag/prefix — so "always keep latest" must be enforced by the app via tags,
-  with lifecycle handling only the expiry of the demoted ones. Implement with a **two-tag scheme**:
+  with lifecycle handling only the expiry of the demoted ones. Implemented (app side) with a **two-tag scheme**:
   - On upload, tag the new object `type=backup-latest`.
   - In the same operation, **demote the previous latest** from `type=backup-latest` →
     `type=backup`. Do the demotion as an **in-place `CopyObject`** (same bucket + key) with
@@ -139,12 +144,13 @@ under the player's own prefix so it is writable with the player's vended credent
     `<player_id>/backups/` and reading tags; if more than one somehow carries `backup-latest`,
     demote all but the newest.
   - Never tag a backup `processed=true` — that maps to the existing 1-day-to-Glacier rule.
-- [ ] Add a **tag-based** lifecycle rule to `DataStack` `ReportsBucket` filtering
+- [x] Added a **tag-based** lifecycle rule to `DataStack` `ReportsBucket` filtering
   `tagFilters: { type: 'backup' }` (i.e. demoted, non-latest backups only):
   `expiration` (delete) after 30 days, no transition. Objects tagged `type=backup-latest` are
   **not matched** by this rule, so the newest survives regardless of age. A prefix rule can't be
   used — the `backups/` segment is nested under the per-player prefix — so the tag is the only
-  clean lever. Keep retention out of the per-request path.
+  clean lever. Keep retention out of the per-request path. `cdk synth` confirms
+  `ExpirationInDays: 30` filtered on tag `type=backup`.
 - [ ] **Expiry clock — exact by construction:** because demotion rewrites the object via
   `CopyObject` (above), its creation date is reset to the supersession moment, so lifecycle
   expiration fires exactly **30 days after a backup stopped being the latest** — regardless of
@@ -152,16 +158,18 @@ under the player's own prefix so it is writable with the player's vended credent
   literally true and safe to state verbatim in the UI.
 
 **Backend**
-- [ ] Add an upload method for S3 — either `S3ReportRepository.uploadFile(bucket, key, File, tags)`
-  or a small dedicated `S3BackupRepository` (conditional on `S3Client`, like `S3ReportRepository`)
-  using `s3.putObject(PutObjectRequest, RequestBody.fromFile(...))` with `Tagging` `type=backup`.
-- [ ] Rework `BackupController` to branch on `aws.isConfigured()`:
+- [x] Added a dedicated `S3BackupRepository` (conditional on `S3Client`, like `S3ReportRepository`)
+  using `s3.putObject(PutObjectRequest, RequestBody.fromFile(...))` with `Tagging` `type=backup-latest`,
+  plus in-place `CopyObject` demotion (`MetadataDirective`/`TaggingDirective=REPLACE` → `type=backup`),
+  listing, and `getObject`-to-file. Orchestration lives in `S3BackupService` (per the "logic in
+  service/" convention) with AccessDenied → re-vend-credentials retry mirroring `S3ReportFetcherService`.
+- [x] Reworked `BackupController` to branch on `aws.isConfigured()`:
   - centralized → copy `analyzer.db` to a temp file, `putObject` to
     `<player_id>/backups/analyzer_<ts>.db`, return `{ "bucket", "key", "target": "s3" }`.
   - legacy → unchanged Drive path, return existing `{ "fileId", "fileName", "target": "drive" }`.
-  - Inject the S3 bean optionally (`ObjectProvider<S3...>` / `@Autowired(required=false)`) so
-    legacy users with no `S3Client` bean still start, and Drive users keep working.
-- [ ] Keep the endpoint at `POST /api/backup/database` (UI contract stays stable); only the
+  - Injects `S3BackupService` via `ObjectProvider` so legacy users with no `S3Client` bean still
+    start, and Drive users keep working.
+- [x] Kept the endpoint at `POST /api/backup/database` (UI contract stays stable); only the
   response body and destination change.
 
 **Restore — required in centralized mode (new vs. legacy)**
@@ -170,12 +178,12 @@ download/replace by hand. Here the bucket is centralized and users have **no** d
 access, so without an in-app restore the backup is write-only and useless for recovery. The
 vended session policy already grants `s3:ListBucket` (prefix-conditioned) and `s3:GetObject`
 on `<player_id>/*`, so restore needs **no new permissions**.
-- [ ] `GET /api/backup/list` (centralized) — list `<player_id>/backups/` objects with key,
+- [x] `GET /api/backup/list` (centralized) — lists `<player_id>/backups/` objects with key,
   size, `LastModified`, and which one is `type=backup-latest`. Drives a restore picker in the UI.
-- [ ] `POST /api/backup/restore` with a `key` — validate the key is under the caller's
+- [x] `POST /api/backup/restore` with a `key` — validates the key is under the caller's
   `<player_id>/backups/` prefix (defense-in-depth even though vended creds already scope it),
-  `getObject` it to a **staging file** next to the DB (e.g. `analyzer.db.restore`).
-- [ ] **SQLite-in-use concern:** Hibernate/HikariCP holds `analyzer.db` open for the life of
+  `getObject`s it to a **staging file** next to the DB (`analyzer.db.restore`).
+- [x] **SQLite-in-use concern:** Hibernate/HikariCP holds `analyzer.db` open for the life of
   the process, so we cannot overwrite it live (WAL journal mode, open handles). Restore must
   **stage then swap on restart**: write `analyzer.db.restore`, and on next startup detect the
   staging file, move the current db aside, move the staging file into place, then continue boot.
@@ -189,11 +197,13 @@ on `<player_id>/*`, so restore needs **no new permissions**.
   restore UI on `aws.isConfigured()`.
 
 **Front end**
-- [ ] Update the backup button handler / success banner in `app.js` to read `target` and name
+- [x] Updated the backup button handler / success banner in `app.js` to read `target` and name
   the actual destination ("Backed up to cloud storage" vs "Backed up to Google Drive"), the
   same pattern used for the version-sync banner in item 7.
-- [ ] Add a restore panel (centralized only): list backups from `GET /api/backup/list`, let the
-  user pick one, call `POST /api/backup/restore`, then show the "restart to apply" notice.
+- [x] Added a restore panel (centralized only) in the Admin → Database card: lists backups from
+  `GET /api/backup/list` (with a `latest` badge, timestamp, and size), lets the user pick one,
+  calls `POST /api/backup/restore`, then shows the "restart to apply" notice. Gated naturally —
+  the panel stays hidden when `/backup/list` returns 409 (legacy mode, no S3 backup service).
 
 **Out of scope for parity (note as follow-ups, not required now)**
 - App-side "keep N most recent" pruning UI — the latest-tag + lifecycle scheme above already

@@ -5554,8 +5554,14 @@ function renderAdminView() {
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Database</div>
         <div style="display:flex;align-items:center;gap:1rem">
-          <button class="btn btn-primary" id="backupBtn" onclick="backupDatabase()">Backup Database</button>
-          <span id="backupStatus" style="font-size:13px;color:var(--muted)"></span>
+          <button class="btn btn-primary" id="backupBtn" onclick="backupDatabase()" style="flex-shrink:0">Backup Database</button>
+          <span id="backupStatus" style="font-size:13px;color:var(--muted);line-height:1.5;min-width:0;word-break:break-word"></span>
+        </div>
+        <!-- Restore (centralized mode only; hidden until /backup/list succeeds) -->
+        <div id="restoreSection" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.75rem">Restore from cloud backup</div>
+          <div id="restoreList" style="font-size:13px;color:var(--muted)">Loading…</div>
+          <div id="restoreStatus" style="font-size:13px;color:var(--muted);margin-top:0.75rem"></div>
         </div>
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-top:1rem">
@@ -5600,6 +5606,7 @@ function renderAdminView() {
         </div>
       </div>
     </div>`;
+  loadBackups();
 }
 
 function showQrModal() {
@@ -5622,13 +5629,85 @@ async function backupDatabase() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     status.style.color = 'var(--green,#4ade80)';
-    status.textContent = `✓ Backed up as ${data.fileName}`;
+    const where = data.target === 'drive' ? 'Google Drive' : 'cloud storage';
+    const name = data.fileName || (data.key ? data.key.split('/').pop() : '');
+    status.textContent = `✓ Backed up to ${where}${name ? ' as ' + name : ''}`;
+    if (data.target === 's3') loadBackups();
   } catch (e) {
     status.style.color = 'var(--red)';
     status.textContent = `✗ ${e.message}`;
   } finally {
     btn.disabled = false;
   }
+}
+
+// Restore panel — centralized mode only. In legacy mode /backup/list returns 409
+// (no S3 backup service), so the section stays hidden.
+async function loadBackups() {
+  const section = document.getElementById('restoreSection');
+  const list = document.getElementById('restoreList');
+  if (!section || !list) return;
+  try {
+    const res = await fetch(`${API}/backup/list`);
+    if (!res.ok) { section.style.display = 'none'; return; }
+    const backups = await res.json();
+    section.style.display = '';
+    if (!backups.length) {
+      list.innerHTML = `<div style="font-size:13px;color:var(--muted)">No cloud backups yet.</div>`;
+      return;
+    }
+    list.innerHTML = backups.map(b => {
+      const when  = new Date(b.lastModified).toLocaleString();
+      const size  = fmtBytes(b.size);
+      const badge = b.latest
+        ? `<span style="flex-shrink:0;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--green,#4ade80);border:1px solid var(--green,#4ade80);border-radius:6px;padding:1px 6px;white-space:nowrap">latest</span>`
+        : '';
+      const key   = b.key.replace(/'/g, "\\'");
+      const fname = b.fileName.replace(/'/g, "\\'");
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0">
+            <span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.fileName}</span>
+            ${badge}
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${when} · ${size}</div>
+        </div>
+        <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px;flex-shrink:0" onclick="restoreBackup('${key}','${fname}')">Restore</button>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    section.style.display = 'none';
+  }
+}
+
+async function restoreBackup(key, fileName) {
+  if (!confirm(`Restore "${fileName}"?\n\nYour current database will be replaced the next time you restart the app.`)) return;
+  const status = document.getElementById('restoreStatus');
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Staging restore…';
+  try {
+    const res = await fetch(`${API}/backup/restore`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({key})
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    status.style.color = 'var(--green,#4ade80)';
+    status.textContent = `✓ ${data.message || 'Restore staged — restart the app to apply.'}`;
+  } catch (e) {
+    status.style.color = 'var(--red)';
+    status.textContent = `✗ ${e.message}`;
+  }
+}
+
+function fmtBytes(bytes) {
+  if (bytes == null) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let v = bytes / 1024, i = 0;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  return `${v.toFixed(1)} ${units[i]}`;
 }
 
 // ── Setup wizard ──────────────────────────────────────────────────────────────

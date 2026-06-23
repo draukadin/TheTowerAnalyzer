@@ -35,6 +35,16 @@ export class DataStack extends cdk.Stack {
             },
           ],
         },
+        {
+          // Database backups (Action item 8). The newest backup is tagged
+          // type=backup-latest (kept forever, not matched here); superseded backups are
+          // demoted to type=backup, which this rule expires 30 days later. Demotion
+          // rewrites the object via CopyObject, resetting its creation date, so expiry
+          // fires exactly 30 days after a backup stopped being the latest. Tag-based
+          // because backups live nested at <player_id>/backups/ (no top-level prefix match).
+          tagFilters: { type: 'backup' },
+          expiration: cdk.Duration.days(30),
+        },
       ],
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
@@ -59,7 +69,7 @@ export class DataStack extends cdk.Stack {
 
     credentialVendingRole.addToPolicy(new iam.PolicyStatement({
       sid: 'S3PlayerAccess',
-      actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:CopyObject', 's3:PutObjectTagging'],
+      actions: ['s3:ListBucket', 's3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:CopyObject', 's3:GetObjectTagging', 's3:PutObjectTagging'],
       resources: [reportsBucket.bucketArn, `${reportsBucket.bucketArn}/*`],
     }));
 

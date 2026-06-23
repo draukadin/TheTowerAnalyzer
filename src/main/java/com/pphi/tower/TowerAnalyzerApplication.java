@@ -34,6 +34,7 @@ public class TowerAnalyzerApplication {
 
     public static void main(String[] args) throws IOException {
         installBundledDatabaseIfAbsent();
+        applyStagedRestoreIfPresent();
         installUserPropertiesIfAbsent();
         String version = TowerAnalyzerApplication.class.getPackage().getImplementationVersion();
         log.info("Starting TheTowerAnalyzer version {}", version != null ? version : "unknown (dev build)");
@@ -65,6 +66,34 @@ public class TowerAnalyzerApplication {
                 }
             }
         }
+    }
+
+    /**
+     * Applies a staged database restore (centralized mode, Action item 8) before Spring
+     * and HikariCP open the datasource. A restore downloaded from S3 is written to
+     * {@code analyzer.db.restore}; on the next startup we move the current db aside and
+     * swap the staged file into place. This must happen before any datasource bean is
+     * initialized — SQLite holds {@code analyzer.db} open (WAL) for the life of the
+     * process, so it cannot be swapped live and cannot live in a Spring component.
+     */
+    private static void applyStagedRestoreIfPresent() throws IOException {
+        String appData = System.getenv("APPDATA");
+        Path dir     = Path.of(appData, "TheTowerAnalyzer");
+        Path staged  = dir.resolve("analyzer.db.restore");
+        if (!Files.exists(staged)) {
+            return;
+        }
+        Path dbFile  = dir.resolve("analyzer.db");
+        Path aside   = dir.resolve("analyzer.db.pre-restore");
+        log.info("Staged database restore detected at {} — applying before startup", staged);
+        if (Files.exists(dbFile)) {
+            Files.move(dbFile, aside, StandardCopyOption.REPLACE_EXISTING);
+        }
+        // Drop stale WAL/SHM sidecars so SQLite doesn't replay the old db's journal onto the restored file.
+        Files.deleteIfExists(dir.resolve("analyzer.db-wal"));
+        Files.deleteIfExists(dir.resolve("analyzer.db-shm"));
+        Files.move(staged, dbFile, StandardCopyOption.REPLACE_EXISTING);
+        log.info("Database restore applied. Previous database preserved at {}", aside);
     }
 
     private static void installUserPropertiesIfAbsent() throws IOException {

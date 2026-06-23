@@ -43,7 +43,7 @@ export const handler = async (event) => {
 
   const s3ObjectStatement = {
     Effect: 'Allow',
-    Action: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:CopyObject', 's3:PutObjectTagging'],
+    Action: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:CopyObject', 's3:GetObjectTagging', 's3:PutObjectTagging'],
     Resource: `arn:aws:s3:::${BUCKET}/${playerId}/*`,
   };
   if (ipCondition) s3ObjectStatement.Condition = ipCondition;
