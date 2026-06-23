@@ -29,16 +29,14 @@ some items in different sections can be done in parallel.
 ## 1. App Assets (Do First — Blocks Play Store & Shortcut)
 
 ### Android App Icons
-- [ ] Design launcher icon (The Tower theme or custom glyph)
-- [ ] Export adaptive icon: `ic_launcher_foreground.xml` + `ic_launcher_background.xml`
-- [ ] Export rasterized fallback for API < 26 at all densities:
-  - mdpi (48×48), hdpi (72×72), xhdpi (96×96), xxhdpi (144×144), xxxhdpi (192×192)
-- [ ] Place in `android/app/src/main/res/mipmap-*/`
-- [ ] Verify icon renders correctly in launcher (round + square)
+- [x] Design launcher icon — adapted from `tower-analyzer-icon.svg` (tower + magnifier, navy/amber/blue palette)
+- [x] Export adaptive icon: `ic_launcher_foreground.xml` (vector) + `ic_launcher_background` = `#eef0f7` in `colors.xml`
+  (`minSdk = 26` = adaptive icons cover all supported devices; no rasterized PNG fallbacks needed)
+- [ ] Verify icon renders correctly in launcher (round + square) on a physical device
 
 ### iOS Shortcut Icon
 - [ ] Assign a glyph + color to the shortcut (open in Shortcuts app → Edit → icon)
-- [ ] Recommended: `arrow.up.doc.fill` (blue) or `antenna.radiowaves.left.and.right` (teal)
+- [ ] Use `magnifyingglass` glyph with navy (`#2e3a5c`) background — matches the magnifier from the desktop and Android icon
 
 ### Play Store Assets
 - [ ] Feature graphic: 1024×500 px (required, shown in Play Store search results)
