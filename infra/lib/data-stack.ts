@@ -25,7 +25,7 @@ export class DataStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
       lifecycleRules: [
         {
-          // Tag-based rule — processed objects live at <player_id>/processed/<file>
+          // Tag-based rule - processed objects live at <player_id>/processed/<file>
           // so a top-level prefix wouldn't match nested paths.
           tagFilters: { processed: 'true' },
           transitions: [
@@ -59,7 +59,7 @@ export class DataStack extends cdk.Stack {
     // Role assumed programmatically by the credential-vending Lambda's execution role
     // via sts:AssumeRole. The role's permissions are the superset; the session policy
     // passed at AssumeRole time restricts each credential to a single player's prefix + IP.
-    // Trusts the account root so any IAM principal in this account can assume it —
+    // Trusts the account root so any IAM principal in this account can assume it -
     // access is controlled by the sts:AssumeRole permission on the Lambda execution role.
     const credentialVendingRole = new iam.Role(this, 'CredentialVendingRole', {
       roleName: `tower-analyzer-credential-vending-${env}`,
@@ -86,12 +86,12 @@ export class DataStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'ReportsBucketName', {
       value: reportsBucket.bucketName,
-      description: 'S3 bucket name — operator reference only; value is bundled in application.properties',
+      description: 'S3 bucket name - operator reference only; value is bundled in application.properties',
       exportName: `TowerAnalyzer-${env}-ReportsBucketName`,
     });
     new cdk.CfnOutput(this, 'PlayerVersionTableName', {
       value: versionTable.tableName,
-      description: 'DynamoDB table name — operator reference only; value is bundled in application.properties',
+      description: 'DynamoDB table name - operator reference only; value is bundled in application.properties',
       exportName: `TowerAnalyzer-${env}-PlayerVersionTableName`,
     });
   }
