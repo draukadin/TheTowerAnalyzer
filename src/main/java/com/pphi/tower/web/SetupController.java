@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.config.SetupStateService;
 import com.pphi.tower.service.ClaudeSkillsService;
+import com.pphi.tower.service.DdbVersionSyncService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +29,14 @@ public class SetupController {
     private final ClaudeSkillsService claudeSkillsService;
     private final ObjectMapper objectMapper;
 
-    public SetupController(SetupStateService setupState, AwsProperties aws,
-                           ClaudeSkillsService claudeSkillsService, ObjectMapper objectMapper) {
+    @Autowired(required = false)
+    private DdbVersionSyncService ddbVersionSync;
+
+    public SetupController(
+            final SetupStateService setupState,
+            final AwsProperties aws,
+            final ClaudeSkillsService claudeSkillsService,
+            final ObjectMapper objectMapper) {
         this.setupState = setupState;
         this.aws = aws;
         this.claudeSkillsService = claudeSkillsService;
@@ -67,6 +75,10 @@ public class SetupController {
             Files.writeString(dir.resolve("user.properties"), props, StandardOpenOption.APPEND);
         } else {
             Files.writeString(dir.resolve("user.properties"), props);
+        }
+
+        if (ddbVersionSync != null) {
+            ddbVersionSync.syncLatestVersion();
         }
 
         return ResponseEntity.ok(Map.of("step", "complete"));

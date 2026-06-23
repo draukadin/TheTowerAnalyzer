@@ -1,26 +1,19 @@
 package com.pphi.tower.web;
 
 import com.pphi.tower.config.AwsProperties;
-import com.pphi.tower.config.CredentialVendingClient;
 import com.pphi.tower.repository.GoogleSheetsRepository;
 import com.pphi.tower.repository.PendingVersionChangeRepository;
 import com.pphi.tower.repository.PendingVersionChangeRepository.PendingChange;
 import com.pphi.tower.repository.VersionHistoryRepository;
 import com.pphi.tower.repository.VersionHistoryRepository.VersionChange;
 import com.pphi.tower.repository.VersionHistoryRepository.VersionEntry;
+import com.pphi.tower.service.DdbVersionSyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/versions")
@@ -36,21 +29,19 @@ public class VersionHistoryController {
     private final PendingVersionChangeRepository  pendingRepo;
     private final GoogleSheetsRepository          sheetsRepo;
     private final AwsProperties                   awsProperties;
+    private final DdbVersionSyncService           ddbSync;
 
-    @Autowired(required = false)
-    private DynamoDbClient dynamoDbClient;
-
-    @Autowired(required = false)
-    private CredentialVendingClient credentialClient;
-
-    public VersionHistoryController(VersionHistoryRepository repo,
-                                    PendingVersionChangeRepository pendingRepo,
-                                    GoogleSheetsRepository sheetsRepo,
-                                    AwsProperties awsProperties) {
+    public VersionHistoryController(
+            final VersionHistoryRepository repo,
+            final PendingVersionChangeRepository pendingRepo,
+            final GoogleSheetsRepository sheetsRepo,
+            final AwsProperties awsProperties,
+            final DdbVersionSyncService ddbSync) {
         this.repo          = repo;
         this.pendingRepo   = pendingRepo;
         this.sheetsRepo    = sheetsRepo;
         this.awsProperties = awsProperties;
+        this.ddbSync       = ddbSync;
     }
 
     public record VersionWithChanges(String version, String type, String summary,
@@ -135,49 +126,7 @@ public class VersionHistoryController {
     }
 
     private boolean syncVersionToDdb(String version) {
-        if (dynamoDbClient == null
-                || awsProperties.getDynamodbTable() == null
-                || awsProperties.getPlayerId() == null) {
-            return false;
-        }
-        try {
-            doPutVersionItem(version);
-            log.info("Wrote version {} to DynamoDB for player {}", version, awsProperties.getPlayerId());
-            return true;
-        } catch (AwsServiceException e) {
-            if (isAccessDenied(e) && credentialClient != null) {
-                log.warn("DynamoDB access denied — re-vending credentials and retrying");
-                credentialClient.forceRefresh();
-                try {
-                    doPutVersionItem(version);
-                    log.info("Wrote version {} to DynamoDB for player {} (after re-vend)", version, awsProperties.getPlayerId());
-                    return true;
-                } catch (Exception retryEx) {
-                    log.error("Failed to write version {} to DynamoDB after re-vend: {}", version, retryEx.getMessage());
-                    return false;
-                }
-            }
-            log.error("Failed to write version {} to DynamoDB: {}", version, e.getMessage());
-            return false;
-        } catch (Exception e) {
-            log.error("Failed to write version {} to DynamoDB: {}", version, e.getMessage());
-            return false;
-        }
-    }
-
-    private void doPutVersionItem(String version) {
-        dynamoDbClient.putItem(PutItemRequest.builder()
-                .tableName(awsProperties.getDynamodbTable())
-                .item(Map.of(
-                        "player_id",       AttributeValue.fromS(awsProperties.getPlayerId()),
-                        "current_version", AttributeValue.fromS(version),
-                        "updated_at",      AttributeValue.fromS(Instant.now().toString())))
-                .build());
-    }
-
-    private static boolean isAccessDenied(AwsServiceException e) {
-        String code = e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "";
-        return "AccessDenied".equals(code) || "AccessDeniedException".equals(code);
+        return ddbSync.syncVersion(version);
     }
 
     private boolean syncVersionToSheet(String version) {

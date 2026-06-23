@@ -18,8 +18,13 @@ public class VersionHistorySeeder {
     }
 
     private void seed() {
-        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM tower_version", Integer.class);
-        if (count != null && count > 0) return;
+        Integer versionCount = jdbc.queryForObject("SELECT COUNT(*) FROM tower_version", Integer.class);
+        if (versionCount != null && versionCount > 0) return;
+        Integer runCount = jdbc.queryForObject("SELECT COUNT(*) FROM runs", Integer.class);
+        if (runCount != null && runCount > 0) {
+            log.info("Skipping VersionHistory seed — {} existing run(s) found; user has pre-existing data", runCount);
+            return;
+        }
         log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         seedVersions();
         log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
