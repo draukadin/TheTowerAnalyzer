@@ -95,13 +95,13 @@ export class IngestStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'ApiEndpoint', {
       value: `${api.url}reports`,
-      description: 'Battle report ingest URL — set in Android app and iOS Shortcut',
+      description: 'Battle report ingest URL - set in Android app and iOS Shortcut',
       exportName: `TowerAnalyzer-${env}-ApiEndpoint-${this.region}`,
     });
 
     new cdk.CfnOutput(this, 'CredentialsEndpoint', {
       value: `${api.url}credentials`,
-      description: 'Credential-vending URL — set as aws.api-gateway.url.* in application.properties',
+      description: 'Credential-vending URL - set as aws.api-gateway.url.* in application.properties',
       exportName: `TowerAnalyzer-${env}-CredentialsEndpoint-${this.region}`,
     });
   }
