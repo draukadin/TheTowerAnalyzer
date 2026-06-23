@@ -107,8 +107,13 @@ some items in different sections can be done in parallel.
 ### Distribution
 - [x] Distribution method: **Option A — iCloud link** (open Shortcuts app → long-press shortcut
   → Share → Copy iCloud Link). Permanent, one-tap import, no infrastructure needed.
-- [ ] Generate iCloud link and add it to setup documentation
-- [ ] Test that a fresh iOS device can import and run the shortcut from that link
+- [ ] Install shortcut on first iPhone: open the raw `.shortcut` file URL from the GitHub repo
+  in Safari on iPhone (iOS recognises the extension and opens Shortcuts), or AirDrop from a Mac
+- [ ] Generate iCloud link: long-press shortcut → Share → Copy iCloud Link (public snapshot,
+  no Apple account required to import; if the shortcut is ever updated a new link is needed)
+- [ ] Add the iCloud link to setup documentation
+- [ ] Validate on a second iPhone: tap the iCloud link in Safari → confirm import prompt appears
+  → run a submit end-to-end to verify the shortcut works from a clean install
 
 ---
 
