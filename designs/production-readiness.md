@@ -179,7 +179,7 @@ Run the full flow for each region using a real device or the Shortcuts app.
   (`aws iam simulate-principal-policy` with a cross-player key path)
 
 ### CDK / Infrastructure
-- [ ] Tag all CDK stacks with `Project=TheTowerAnalyzer`, `Env=prod` for cost tracking
+- [x] Tag all CDK stacks with `Project=TheTowerAnalyzer` (app-level) + `Env=dev` (us-west-2) / `Env=prod` (all other stacks)
 - [ ] Run `cdk diff` against each deployed stack — confirm no unexpected drift
 - [ ] Confirm all three regional stacks (US, EU, AP) are deployed and healthy
 

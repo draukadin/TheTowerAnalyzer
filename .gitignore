@@ -28,6 +28,9 @@ playwright-report/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
+!infra/bin/
+infra/bin/*.js
+infra/bin/*.d.ts
 *.iml
 .idea/
 
