@@ -1,5 +1,6 @@
 package com.pphi.tower.web;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.config.SetupStateService;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/setup")
@@ -33,25 +35,29 @@ public class SetupController {
         this.objectMapper = objectMapper;
     }
 
+    Path dataDir() {
+        return Path.of(System.getenv("APPDATA"), "TheTowerAnalyzer");
+    }
+
     @GetMapping("/status")
     public Map<String, String> status() {
         return Map.of("step", setupState.currentStep().name().toLowerCase());
     }
 
     @PostMapping("/config")
-    public ResponseEntity<Map<String, String>> saveConfig(@RequestBody ConfigRequest req) throws IOException {
+    public ResponseEntity<Map<String, String>> saveConfig(
+            @SuppressWarnings("ClassEscapesDefinedScope") @RequestBody ConfigRequest req) throws IOException {
         if (req.playerId() == null || req.playerId().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Player ID is required."));
         }
-        if (!List.of("us", "eu", "ap").contains(req.apiGatewayRegion())) {
+        if (req.apiGatewayRegion() == null || !List.of("us", "eu", "ap").contains(req.apiGatewayRegion())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Region must be one of: us, eu, ap."));
         }
 
         aws.setPlayerId(req.playerId());
         aws.getApiGateway().setRegion(req.apiGatewayRegion());
 
-        String appData = System.getenv("APPDATA");
-        Path dir = Path.of(appData, "TheTowerAnalyzer");
+        Path dir = dataDir();
         Files.createDirectories(dir);
         String props = String.join(System.lineSeparator(),
                 "aws.player-id=" + req.playerId(),
@@ -163,13 +169,15 @@ public class SetupController {
             Path packages = Path.of(localData, "Packages");
             if (Files.exists(packages)) {
                 try {
-                    return Files.list(packages)
-                            .filter(p -> p.getFileName().toString().toLowerCase().contains("claude"))
-                            .map(p -> p.resolve("LocalCache").resolve("Roaming").resolve("Claude"))
-                            .filter(Files::exists)
-                            .findFirst()
-                            .map(p -> p.resolve("claude_desktop_config.json"))
-                            .orElse(null);
+                    try (Stream<Path> list = Files.list(packages)) {
+                        return list
+                                .filter(p -> p.getFileName().toString().toLowerCase().contains("claude"))
+                                .map(p -> p.resolve("LocalCache").resolve("Roaming").resolve("Claude"))
+                                .filter(Files::exists)
+                                .findFirst()
+                                .map(p -> p.resolve("claude_desktop_config.json"))
+                                .orElse(null);
+                    }
                 } catch (IOException ignored) {}
             }
         }
@@ -206,7 +214,8 @@ public class SetupController {
         try {
             Map<String, Object> config;
             if (Files.exists(configFile)) {
-                config = new HashMap<>(objectMapper.readValue(configFile.toFile(), Map.class));
+                config = new HashMap<>(objectMapper.readValue(configFile.toFile(),
+                        new TypeReference<Map<String, Object>>() {}));
             } else {
                 config = new HashMap<>();
             }
