@@ -16,8 +16,20 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Only the debug build (the one you install on your own phone) carries a
+            // dev endpoint. Point this at your dev API Gateway stage.
+            buildConfigField(
+                "String",
+                "DEV_ENDPOINT",
+                "\"https://9g1lg3jas3.execute-api.us-west-2.amazonaws.com/prod/reports\"",
+            )
+        }
         release {
             isMinifyEnabled = false
+            // Empty → no dev option, and the dev URL is physically absent from the APK
+            // that everyone else installs.
+            buildConfigField("String", "DEV_ENDPOINT", "\"\"")
         }
     }
 
@@ -32,6 +44,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

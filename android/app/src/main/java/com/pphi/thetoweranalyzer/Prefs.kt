@@ -16,15 +16,14 @@ class Prefs(context: Context) {
         get() = prefs.getString("player_id", "") ?: ""
         set(v) = prefs.edit().putString("player_id", v).apply()
 
-    // Centralized (AWS API Gateway) — user picks a region; the URL is bundled, never shown.
-    var region: Region
-        get() = runCatching { Region.valueOf(prefs.getString("region", Region.DEFAULT.name)!!) }
-            .getOrDefault(Region.DEFAULT)
-        set(v) = prefs.edit().putString("region", v.name).apply()
+    // Centralized (AWS API Gateway) — user picks an endpoint; the URL is bundled, never shown.
+    var endpoint: Endpoint
+        get() = Endpoint.byKey(prefs.getString("endpoint_key", Endpoint.DEFAULT.key)!!)
+        set(v) = prefs.edit().putString("endpoint_key", v.key).apply()
 
-    /** Derived ingest endpoint for the selected region. */
+    /** Derived ingest URL for the selected endpoint. */
     val centralizedEndpoint: String
-        get() = region.endpoint
+        get() = endpoint.url
 
     // Legacy (make.com webhook)
     var legacyWebhookUrl: String

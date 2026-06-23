@@ -20,9 +20,9 @@ class SettingsActivity : AppCompatActivity() {
 
         prefs = Prefs(this)
 
-        val regionAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, Region.ALL)
-        regionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerRegion.adapter = regionAdapter
+        val endpointAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, Endpoint.ALL)
+        endpointAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerRegion.adapter = endpointAdapter
 
         loadPrefs()
 
@@ -37,7 +37,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun loadPrefs() {
         binding.etPlayerId.setText(prefs.playerId)
-        binding.spinnerRegion.setSelection(Region.ALL.indexOf(prefs.region))
+        binding.spinnerRegion.setSelection(Endpoint.ALL.indexOf(prefs.endpoint))
         binding.etLegacyWebhookUrl.setText(prefs.legacyWebhookUrl)
 
         when (prefs.mode) {
@@ -49,7 +49,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun savePrefs() {
         prefs.playerId = binding.etPlayerId.text.toString().trim()
-        prefs.region = binding.spinnerRegion.selectedItem as Region
+        prefs.endpoint = binding.spinnerRegion.selectedItem as Endpoint
         prefs.legacyWebhookUrl = binding.etLegacyWebhookUrl.text.toString().trim()
         prefs.mode = if (binding.radioCentralized.isChecked) SubmitMode.CENTRALIZED else SubmitMode.LEGACY
         finish()
