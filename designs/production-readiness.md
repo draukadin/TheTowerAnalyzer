@@ -35,8 +35,9 @@ some items in different sections can be done in parallel.
 - [ ] Verify icon renders correctly in launcher (round + square) on a physical device
 
 ### iOS Shortcut Icon
-- [ ] Assign a glyph + color to the shortcut (open in Shortcuts app → Edit → icon)
-- [ ] Use `magnifyingglass` glyph with navy (`#2e3a5c`) background — matches the magnifier from the desktop and Android icon
+- [x] Shortcut icon is personal to each user's device and cannot be pre-configured in the
+  `.shortcut` file — not a launch requirement. On your own device: Edit → icon →
+  `magnifyingglass` glyph, navy (`#2e3a5c`) background.
 
 ### Play Store Assets
 - [x] Feature graphic: 1024×500 px — see `designs/play-store-feature-graphic.svg` / `.png`
