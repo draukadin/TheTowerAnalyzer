@@ -41,8 +41,9 @@ some items in different sections can be done in parallel.
 ### Play Store Assets
 - [ ] Feature graphic: 1024×500 px (required, shown in Play Store search results)
 - [ ] Phone screenshots: 2–8 screenshots (min 320 px wide; show submit + settings screens)
-- [ ] Short description: ≤ 80 characters
-- [ ] Full description: up to 4 000 characters (explain what the app does, no Google Drive / Tasker needed)
+- [x] Short description: ≤ 80 characters — see `designs/play-store-listing.md`
+- [x] Full description: up to 4 000 characters — see `designs/play-store-listing.md`
+  (update [SETUP_VIDEO_URL] placeholder with the new centralized-flow video before submitting)
 
 ---
 
