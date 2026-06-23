@@ -105,11 +105,9 @@ some items in different sections can be done in parallel.
 - [ ] Invalid / missing Player ID: verify API returns a useful error and it surfaces in the shortcut
 
 ### Distribution
-- [ ] Choose distribution method:
-  - **Option A (simplest):** Share via iCloud link — open Shortcuts app → long-press shortcut
-    → Share → Copy iCloud Link. Anyone with the link can import directly.
-  - **Option B:** Host `.shortcut` file on a web page; tapping the link on iOS prompts import.
-- [ ] Add the distribution link to setup documentation
+- [x] Distribution method: **Option A — iCloud link** (open Shortcuts app → long-press shortcut
+  → Share → Copy iCloud Link). Permanent, one-tap import, no infrastructure needed.
+- [ ] Generate iCloud link and add it to setup documentation
 - [ ] Test that a fresh iOS device can import and run the shortcut from that link
 
 ---
