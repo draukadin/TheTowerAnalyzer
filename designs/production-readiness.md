@@ -180,8 +180,8 @@ Run the full flow for each region using a real device or the Shortcuts app.
 
 ### CDK / Infrastructure
 - [x] Tag all CDK stacks with `Project=TheTowerAnalyzer` (app-level) + `Env=dev` (us-west-2) / `Env=prod` (all other stacks)
-- [ ] Run `cdk diff` against each deployed stack — confirm no unexpected drift
-- [ ] Confirm all three regional stacks (US, EU, AP) are deployed and healthy
+- [x] Run `cdk diff` against each deployed stack — confirm no unexpected drift
+- [x] Confirm all three regional stacks (US, EU, AP) are deployed and healthy
 
 ---
 
