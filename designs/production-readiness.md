@@ -51,7 +51,7 @@ some items in different sections can be done in parallel.
 ## 2. Android — Play Store Release
 
 ### Account & Signing
-- [ ] Confirm Google Play Developer account exists ($25 one-time fee if not yet registered)
+- [x] Confirm Google Play Developer account exists ($25 one-time fee if not yet registered)
 - [ ] Generate release signing keystore:
   ```
   keytool -genkey -v -keystore thetoweranalyzer-release.jks \
