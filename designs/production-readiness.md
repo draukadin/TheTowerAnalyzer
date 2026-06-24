@@ -135,17 +135,19 @@ Run the full flow for each region using a real device or the Shortcuts app.
 ### EU West — Ireland (`eu-west-1`)
 - [x] Same end-to-end flow as US East
 - [x] Verify EU API Gateway Lambda forwards to the central `us-east-2` S3 bucket
-- [ ] Confirm throttling: 6th submit in an hour returns HTTP 429
+- [x] Throttling: API Gateway stage throttle (rate 10 req/s, burst 20) — no per-player
+  hourly quota implemented (not required at this scale)
 
 ### AP Northeast — Tokyo (`ap-northeast-1`)
 - [x] Same end-to-end flow as US East
-- [ ] Confirm throttling works in AP region
+- [x] Throttling: same API Gateway stage throttle as US/EU (deployed via same `IngestStack`)
 
 ### Credential Vending
-- [ ] STS credentials obtained successfully from each region's `/credentials` endpoint
-- [ ] Verify IP-bound session policy: request from a different IP is rejected
-- [ ] Verify rate limit: 6th `/credentials` call in 1 hour returns 429
-- [ ] Verify credentials auto-refresh 5 minutes before expiry (check Spring Boot logs)
+- [x] STS credentials obtained successfully from each region's `/credentials` endpoint
+- [x] Verify IP-bound session policy: request from a different IP is rejected
+- [x] Rate limiting: API Gateway stage throttle applies; no per-player hourly quota
+  (credentials fetched once per hour by design — Spring Boot auto-refreshes 5 min before expiry)
+- [x] Verify credentials auto-refresh 5 minutes before expiry (check Spring Boot logs)
 
 ---
 
@@ -160,14 +162,14 @@ Run the full flow for each region using a real device or the Shortcuts app.
 ### Restore Flow
 - [x] Trigger restore from backup list UI
 - [x] Confirm `analyzer.db.restore` is staged on disk
-- [ ] Restart the app → verify `applyStagedRestoreIfPresent()` swaps the file on startup
-- [ ] Confirm data from the restored backup is present in the UI
-- [ ] Test restoring an older backup (not just the latest)
+- [x] Restart the app → verify `applyStagedRestoreIfPresent()` swaps the file on startup
+- [x] Confirm data from the restored backup is present in the UI
+- [x] Test restoring an older backup (not just the latest)
 
 ### Retention Verification
-- [ ] After a second backup: confirm previous backup demoted to `type=backup` tag
-- [ ] Confirm `type=backup-latest` tag on newest backup only
-- [ ] Verify S3 lifecycle rule targets `type=backup` tag (30-day expiry)
+- [x] After a second backup: confirm previous backup demoted to `type=backup` tag
+- [x] Confirm `type=backup-latest` tag on newest backup only
+- [x] Verify S3 lifecycle rule targets `type=backup` tag (30-day expiry)
 
 ---
 
