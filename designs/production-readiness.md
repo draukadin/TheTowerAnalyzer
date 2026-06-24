@@ -212,7 +212,7 @@ Run the full flow for each region using a real device or the Shortcuts app.
 - [x] AWS Billing alert: estimated monthly cost > $10 → email alert
   (AWS Budgets — `TowerAnalyzer-Monthly`; direct email, no SNS subscription needed)
 - [x] Lambda log retention set to 30 days in all regions (`logRetention` on both functions)
-- [ ] Document a brief runbook:
+- [x] Document a brief runbook — see `designs/runbook.md`:
   - How to check if a regional Lambda is down (CloudWatch → Log Groups)
   - How to manually tag an S3 report as `status=processed` if Spring Boot missed it
   - How to revoke a player's credentials (delete their DynamoDB row)
