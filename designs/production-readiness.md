@@ -83,7 +83,7 @@ some items in different sections can be done in parallel.
   - Data collected: Player ID (entered by user), battle report text (sent to AWS S3)
   - Data encrypted in transit: Yes (HTTPS)
   - User can request deletion: Yes (delete reports from the analyzer UI)
-- [ ] Link privacy policy URL (see Section 8)
+- [ ] Link privacy policy URL: `https://draukadin.github.io/TheTowerAnlyzer/privacy.html`
 
 ### Release Track
 - [ ] Publish to Internal Testing track first (up to 100 testers, no review delay)
@@ -211,14 +211,15 @@ Run the full flow for each region using a real device or the Shortcuts app.
 ## 8. Privacy Policy & Documentation
 
 ### Privacy Policy (Required for Play Store)
-- [ ] Write a simple privacy policy covering:
+- [x] Write a simple privacy policy covering:
   - What is collected: Player ID (user-provided), battle report text
   - Where it is stored: AWS S3 (`us-east-2`), DynamoDB (`us-east-2`)
-  - Retention: reports kept until processed then tagged; backups per lifecycle rules
-  - Contact email
-- [ ] Host at a stable URL — options:
-  - GitHub Pages (free, stable)
-  - Simple `privacy.html` served from the Spring Boot app at `/privacy`
+  - Retention: reports/DDB/latest backup retained indefinitely (email request to delete);
+    older backups auto-deleted after 30 days via S3 lifecycle rule
+  - Developer access disclosure (debugging/service improvement)
+  - Contact email: draukadin@gmail.com
+- [x] Hosted on GitHub Pages: `https://draukadin.github.io/TheTowerAnlyzer/privacy.html`
+  (`docs/privacy.html` — enable GitHub Pages on the repo → docs folder of master branch)
 
 ### Setup Documentation
 - [ ] Review and finalize `resources/Video2_Setup_Script.md` for the centralized flow

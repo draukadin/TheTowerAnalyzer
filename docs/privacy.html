@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — The Tower Analyzer</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 24px 64px;
+      color: #1a1a2e;
+      line-height: 1.6;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25em; }
+    h2 { font-size: 1.15rem; margin-top: 2em; border-bottom: 1px solid #e0e0e0; padding-bottom: 0.3em; }
+    p, li { font-size: 0.97rem; color: #333; }
+    a { color: #2e6da4; }
+    .meta { color: #666; font-size: 0.88rem; margin-bottom: 2.5em; }
+  </style>
+</head>
+<body>
+
+<h1>Privacy Policy</h1>
+<p class="meta">The Tower Analyzer &mdash; Last updated: June 23, 2026</p>
+
+<h2>Overview</h2>
+<p>
+  The Tower Analyzer ("the app") helps players of <em>The Tower</em> analyze their
+  in-game battle reports. This policy explains what data the app collects, how it is
+  stored, and how you can delete it.
+</p>
+
+<h2>Data Collected</h2>
+<ul>
+  <li>
+    <strong>Player ID</strong> — a unique identifier you enter manually in the app's
+    settings. It is used solely to store and retrieve your own reports.
+  </li>
+  <li>
+    <strong>Battle report text</strong> — the raw battle report copied from
+    <em>The Tower</em> and submitted through the Android app or iOS Shortcut.
+    This text contains in-game statistics only (wave reached, gold earned, etc.)
+    and no personal information.
+  </li>
+</ul>
+<p>No name, email address, device identifier, location, or other personal information
+is collected.</p>
+
+<h2>How Data Is Used</h2>
+<p>
+  Battle reports are parsed to extract gameplay statistics (run type, wave, gold,
+  kills, etc.) and stored in your account in the analyzer database. They are not
+  used for advertising or any purpose other than displaying your own history to you.
+</p>
+<p>
+  As the developer, I may access submitted reports and metadata to diagnose technical
+  issues or improve the service. This access is limited to what is necessary to
+  maintain the app and is never used for advertising or shared with third parties.
+</p>
+
+<h2>Where Data Is Stored</h2>
+<ul>
+  <li>
+    <strong>AWS S3 (us-east-2, Ohio)</strong> — submitted battle reports and database
+    backups are stored as objects under a path prefix that corresponds to your Player ID.
+    Only you and the developer can access your data.
+  </li>
+  <li>
+    <strong>AWS DynamoDB (us-east-2, Ohio)</strong> — a small metadata record tracks
+    your current version and the timestamp of your last submission.
+  </li>
+  <li>
+    <strong>Local SQLite database</strong> — parsed report data is stored in an
+    on-device database (<code>%APPDATA%\TheTowerAnalyzer\analyzer.db</code> on Windows).
+    This file never leaves your device except when you explicitly use the backup feature.
+  </li>
+</ul>
+<p>All data is transmitted over HTTPS. Data stored in AWS is encrypted at rest
+(SSE-S3).</p>
+
+<h2>Data Retention</h2>
+<ul>
+  <li>
+    <strong>Battle reports (S3), account metadata (DynamoDB), and the most recent
+    database backup</strong> are retained indefinitely. They are not automatically
+    deleted. To have this data removed, you must submit a deletion request by email
+    (see below).
+  </li>
+  <li>
+    <strong>Older database backups (S3)</strong> — when a new backup is created, the
+    previous backup is automatically deleted after 30 days via an S3 lifecycle rule.
+  </li>
+  <li>
+    <strong>Local SQLite database</strong> is retained on your device until you
+    uninstall the app or delete the file manually.
+  </li>
+</ul>
+
+<h2>Data Sharing</h2>
+<p>
+  Your data is never sold, rented, or shared with any third party. It is not used
+  for advertising or marketing purposes.
+</p>
+
+<h2>Your Rights &amp; Deletion</h2>
+<p>You can delete your data at any time:</p>
+<ul>
+  <li>
+    <strong>Individual reports</strong> — use the delete button in the analyzer UI.
+  </li>
+  <li>
+    <strong>All cloud data (S3 reports, database backups, and DynamoDB record)</strong> —
+    email <a href="mailto:draukadin@gmail.com">draukadin@gmail.com</a> with your Player ID
+    and a deletion request. All data associated with your Player ID will be removed
+    within 30 days. Without a deletion request, this data is retained indefinitely.
+  </li>
+</ul>
+
+<h2>Children</h2>
+<p>
+  The Tower Analyzer is not directed at children under 13. It does not knowingly
+  collect any information from children.
+</p>
+
+<h2>Changes to This Policy</h2>
+<p>
+  If this policy changes materially, the "Last updated" date above will be revised.
+  Continued use of the app after a change constitutes acceptance of the updated policy.
+</p>
+
+<h2>Contact</h2>
+<p>
+  Questions or deletion requests: <a href="mailto:draukadin@gmail.com">draukadin@gmail.com</a>
+</p>
+
+</body>
+</html>
