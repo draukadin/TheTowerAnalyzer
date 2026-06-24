@@ -12,69 +12,78 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Bar chart — decorative, bottom-left (rx=1.27) -->
-    <path
-        android:fillColor="#d2d8e8"
-        android:pathData="M12.24,79.73 L17.72,79.73 A1.27,1.27,0,0,1,18.99,81.00 L18.99,90.27 A1.27,1.27,0,0,1,17.72,91.54 L12.24,91.54 A1.27,1.27,0,0,1,10.97,90.27 L10.97,81.00 A1.27,1.27,0,0,1,12.24,79.73 Z" />
-    <path
-        android:fillColor="#b8bfd4"
-        android:pathData="M22.36,72.56 L27.84,72.56 A1.27,1.27,0,0,1,29.11,73.83 L29.11,90.27 A1.27,1.27,0,0,1,27.84,91.54 L22.36,91.54 A1.27,1.27,0,0,1,21.09,90.27 L21.09,73.83 A1.27,1.27,0,0,1,22.36,72.56 Z" />
+    <!-- Scale 0.85 centred on the canvas keeps all elements inside the squircle safe zone. -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.85"
+        android:scaleY="0.85">
 
-    <!-- Tower body (rx=2.53) -->
-    <path
-        android:fillColor="#2e3a5c"
-        android:pathData="M34.59,57.38 L73.41,57.38 A2.53,2.53,0,0,1,75.94,59.91 L75.94,99.57 A2.53,2.53,0,0,1,73.41,102.10 L34.59,102.10 A2.53,2.53,0,0,1,32.06,99.57 L32.06,59.91 A2.53,2.53,0,0,1,34.59,57.38 Z" />
+        <!-- Bar chart — decorative, bottom-left (rx=1.27) -->
+        <path
+            android:fillColor="#d2d8e8"
+            android:pathData="M12.24,79.73 L17.72,79.73 A1.27,1.27,0,0,1,18.99,81.00 L18.99,90.27 A1.27,1.27,0,0,1,17.72,91.54 L12.24,91.54 A1.27,1.27,0,0,1,10.97,90.27 L10.97,81.00 A1.27,1.27,0,0,1,12.24,79.73 Z" />
+        <path
+            android:fillColor="#b8bfd4"
+            android:pathData="M22.36,72.56 L27.84,72.56 A1.27,1.27,0,0,1,29.11,73.83 L29.11,90.27 A1.27,1.27,0,0,1,27.84,91.54 L22.36,91.54 A1.27,1.27,0,0,1,21.09,90.27 L21.09,73.83 A1.27,1.27,0,0,1,22.36,72.56 Z" />
 
-    <!-- Battlements — 4 merlons (rx=1.69) -->
-    <path
-        android:fillColor="#2e3a5c"
-        android:pathData="M32.91,49.78 L38.81,49.78 A1.69,1.69,0,0,1,40.50,51.47 L40.50,58.64 A1.69,1.69,0,0,1,38.81,60.33 L32.91,60.33 A1.69,1.69,0,0,1,31.22,58.64 L31.22,51.47 A1.69,1.69,0,0,1,32.91,49.78 Z" />
-    <path
-        android:fillColor="#2e3a5c"
-        android:pathData="M45.14,49.78 L51.04,49.78 A1.69,1.69,0,0,1,52.73,51.47 L52.73,58.64 A1.69,1.69,0,0,1,51.04,60.33 L45.14,60.33 A1.69,1.69,0,0,1,43.45,58.64 L43.45,51.47 A1.69,1.69,0,0,1,45.14,49.78 Z" />
-    <path
-        android:fillColor="#2e3a5c"
-        android:pathData="M57.38,49.78 L63.28,49.78 A1.69,1.69,0,0,1,64.97,51.47 L64.97,58.64 A1.69,1.69,0,0,1,63.28,60.33 L57.38,60.33 A1.69,1.69,0,0,1,55.69,58.64 L55.69,51.47 A1.69,1.69,0,0,1,57.38,49.78 Z" />
-    <path
-        android:fillColor="#2e3a5c"
-        android:pathData="M69.19,49.78 L75.09,49.78 A1.69,1.69,0,0,1,76.78,51.47 L76.78,58.64 A1.69,1.69,0,0,1,75.09,60.33 L69.19,60.33 A1.69,1.69,0,0,1,67.50,58.64 L67.50,51.47 A1.69,1.69,0,0,1,69.19,49.78 Z" />
+        <!-- Tower body (rx=2.53) -->
+        <path
+            android:fillColor="#2e3a5c"
+            android:pathData="M34.59,57.38 L73.41,57.38 A2.53,2.53,0,0,1,75.94,59.91 L75.94,99.57 A2.53,2.53,0,0,1,73.41,102.10 L34.59,102.10 A2.53,2.53,0,0,1,32.06,99.57 L32.06,59.91 A2.53,2.53,0,0,1,34.59,57.38 Z" />
 
-    <!-- Gate arch — drawn in background colour to punch an opening in the tower -->
-    <path
-        android:fillColor="#eef0f7"
-        android:pathData="M46.41,102.09 L46.41,88.59 Q54.0,79.31 61.59,88.59 L61.59,102.09 Z" />
+        <!-- Battlements — 4 merlons (rx=1.69) -->
+        <path
+            android:fillColor="#2e3a5c"
+            android:pathData="M32.91,49.78 L38.81,49.78 A1.69,1.69,0,0,1,40.50,51.47 L40.50,58.64 A1.69,1.69,0,0,1,38.81,60.33 L32.91,60.33 A1.69,1.69,0,0,1,31.22,58.64 L31.22,51.47 A1.69,1.69,0,0,1,32.91,49.78 Z" />
+        <path
+            android:fillColor="#2e3a5c"
+            android:pathData="M45.14,49.78 L51.04,49.78 A1.69,1.69,0,0,1,52.73,51.47 L52.73,58.64 A1.69,1.69,0,0,1,51.04,60.33 L45.14,60.33 A1.69,1.69,0,0,1,43.45,58.64 L43.45,51.47 A1.69,1.69,0,0,1,45.14,49.78 Z" />
+        <path
+            android:fillColor="#2e3a5c"
+            android:pathData="M57.38,49.78 L63.28,49.78 A1.69,1.69,0,0,1,64.97,51.47 L64.97,58.64 A1.69,1.69,0,0,1,63.28,60.33 L57.38,60.33 A1.69,1.69,0,0,1,55.69,58.64 L55.69,51.47 A1.69,1.69,0,0,1,57.38,49.78 Z" />
+        <path
+            android:fillColor="#2e3a5c"
+            android:pathData="M69.19,49.78 L75.09,49.78 A1.69,1.69,0,0,1,76.78,51.47 L76.78,58.64 A1.69,1.69,0,0,1,75.09,60.33 L69.19,60.33 A1.69,1.69,0,0,1,67.50,58.64 L67.50,51.47 A1.69,1.69,0,0,1,69.19,49.78 Z" />
 
-    <!-- Windows (rx=1.69) -->
-    <path
-        android:fillColor="#ffb830"
-        android:pathData="M37.13,64.97 L43.03,64.97 A1.69,1.69,0,0,1,44.72,66.66 L44.72,73.41 A1.69,1.69,0,0,1,43.03,75.10 L37.13,75.10 A1.69,1.69,0,0,1,35.44,73.41 L35.44,66.66 A1.69,1.69,0,0,1,37.13,64.97 Z" />
-    <path
-        android:fillColor="#ffb830"
-        android:pathData="M64.97,64.97 L70.87,64.97 A1.69,1.69,0,0,1,72.56,66.66 L72.56,73.41 A1.69,1.69,0,0,1,70.87,75.10 L64.97,75.10 A1.69,1.69,0,0,1,63.28,73.41 L63.28,66.66 A1.69,1.69,0,0,1,64.97,64.97 Z" />
+        <!-- Gate arch — drawn in background colour to punch an opening in the tower -->
+        <path
+            android:fillColor="#eef0f7"
+            android:pathData="M46.41,102.09 L46.41,88.59 Q54.0,79.31 61.59,88.59 L61.59,102.09 Z" />
 
-    <!-- Magnifying glass ring (stroke only, no fill) -->
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M67.08,25.73 A15.19,15.19,0,0,1,97.46,25.73 A15.19,15.19,0,0,1,67.08,25.73"
-        android:strokeColor="#4e6ef5"
-        android:strokeLineCap="round"
-        android:strokeWidth="5.91" />
+        <!-- Windows (rx=1.69) -->
+        <path
+            android:fillColor="#ffb830"
+            android:pathData="M37.13,64.97 L43.03,64.97 A1.69,1.69,0,0,1,44.72,66.66 L44.72,73.41 A1.69,1.69,0,0,1,43.03,75.10 L37.13,75.10 A1.69,1.69,0,0,1,35.44,73.41 L35.44,66.66 A1.69,1.69,0,0,1,37.13,64.97 Z" />
+        <path
+            android:fillColor="#ffb830"
+            android:pathData="M64.97,64.97 L70.87,64.97 A1.69,1.69,0,0,1,72.56,66.66 L72.56,73.41 A1.69,1.69,0,0,1,70.87,75.10 L64.97,75.10 A1.69,1.69,0,0,1,63.28,73.41 L63.28,66.66 A1.69,1.69,0,0,1,64.97,64.97 Z" />
 
-    <!-- Magnifying glass handle -->
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M93.09,36.91 L103.36,47.25"
-        android:strokeColor="#4e6ef5"
-        android:strokeLineCap="round"
-        android:strokeWidth="5.91" />
+        <!-- Magnifying glass ring (stroke only, no fill) -->
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M67.08,25.73 A15.19,15.19,0,0,1,97.46,25.73 A15.19,15.19,0,0,1,67.08,25.73"
+            android:strokeColor="#4e6ef5"
+            android:strokeLineCap="round"
+            android:strokeWidth="5.91" />
 
-    <!-- Upward trend line inside magnifier -->
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M73.41,29.53 L77.63,23.63 L82.69,26.16 L88.09,18.56"
-        android:strokeColor="#4e6ef5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:strokeWidth="3.80" />
+        <!-- Magnifying glass handle -->
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M93.09,36.91 L103.36,47.25"
+            android:strokeColor="#4e6ef5"
+            android:strokeLineCap="round"
+            android:strokeWidth="5.91" />
+
+        <!-- Upward trend line inside magnifier -->
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M73.41,29.53 L77.63,23.63 L82.69,26.16 L88.09,18.56"
+            android:strokeColor="#4e6ef5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="3.80" />
+
+    </group>
 
 </vector>

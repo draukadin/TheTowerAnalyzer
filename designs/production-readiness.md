@@ -70,8 +70,8 @@ some items in different sections can be done in parallel.
   (verified in `android/app/build/generated/source/buildConfig/release/.../BuildConfig.java`)
 - [x] Build signed AAB: `./gradlew bundleRelease`
   (requires full JDK — use `JAVA_HOME=C:\Users\pphi\.jdks\ms-21.0.10`; IntelliJ JBR lacks `jlink`)
-- [ ] Install release APK on a physical device and run the full submit flow end-to-end
-- [ ] Verify no dev endpoint appears in the installed app settings
+- [x] Install release APK on a physical device and run the full submit flow end-to-end
+- [x] Verify no dev endpoint appears in the installed app settings
 
 ### Play Store Listing
 - [ ] Create new app in Google Play Console (package: `com.pphi.thetoweranalyzer`)
