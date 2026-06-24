@@ -1,6 +1,6 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-const s3 = new S3Client({});
+const s3 = new S3Client({ region: process.env.BUCKET_REGION });
 
 const BUCKET = process.env.REPORTS_BUCKET;
 

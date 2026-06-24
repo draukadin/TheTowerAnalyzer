@@ -127,18 +127,18 @@ some items in different sections can be done in parallel.
 Run the full flow for each region using a real device or the Shortcuts app.
 
 ### US East — Ohio (`us-east-2`)
-- [ ] Submit a Farming report → S3 object appears under `<player_id>/reports/`
-- [ ] Spring Boot fetches, parses, and tags the object as `status=processed`
-- [ ] DynamoDB `current_version` and `updated_at` updated correctly
-- [ ] Repeat with a Dissonance report; verify `dissonance_type` stored in DB
+- [x] Submit a Farming report → S3 object appears under `<player_id>/reports/`
+- [x] Spring Boot fetches, parses, and tags the object as `status=processed`
+- [x] DynamoDB `current_version` and `updated_at` updated correctly
+- [x] Repeat with a Dissonance report; verify `dissonance_type` stored in DB
 
 ### EU West — Ireland (`eu-west-1`)
-- [ ] Same end-to-end flow as US East
-- [ ] Verify EU API Gateway Lambda forwards to the central `us-east-2` S3 bucket
+- [x] Same end-to-end flow as US East
+- [x] Verify EU API Gateway Lambda forwards to the central `us-east-2` S3 bucket
 - [ ] Confirm throttling: 6th submit in an hour returns HTTP 429
 
 ### AP Northeast — Tokyo (`ap-northeast-1`)
-- [ ] Same end-to-end flow as US East
+- [x] Same end-to-end flow as US East
 - [ ] Confirm throttling works in AP region
 
 ### Credential Vending
@@ -152,14 +152,14 @@ Run the full flow for each region using a real device or the Shortcuts app.
 ## 5. Database Backup & Restore
 
 ### Second-Instance Backup (First Instance Already Tested)
-- [ ] Configure a second player ID in `user.properties`
-- [ ] Run a backup → S3 key `<player_id_2>/backups/analyzer_<ts>.db` created
-- [ ] Confirm player 1's backups are NOT visible in player 2's backup list
+- [x] Configure a second player ID in `user.properties`
+- [x] Run a backup → S3 key `<player_id_2>/backups/analyzer_<ts>.db` created
+- [x] Confirm player 1's backups are NOT visible in player 2's backup list
   (session policy S3 prefix isolation working)
 
 ### Restore Flow
-- [ ] Trigger restore from backup list UI
-- [ ] Confirm `analyzer.db.restore` is staged on disk
+- [x] Trigger restore from backup list UI
+- [x] Confirm `analyzer.db.restore` is staged on disk
 - [ ] Restart the app → verify `applyStagedRestoreIfPresent()` swaps the file on startup
 - [ ] Confirm data from the restored backup is present in the UI
 - [ ] Test restoring an older backup (not just the latest)

@@ -36,6 +36,7 @@ export class IngestStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
       environment: {
         REPORTS_BUCKET: props.centralBucketName,
+        BUCKET_REGION: props.dataRegion,
       },
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
