@@ -41,7 +41,7 @@ some items in different sections can be done in parallel.
 
 ### Play Store Assets
 - [x] Feature graphic: 1024×500 px — see `designs/play-store-feature-graphic.svg` / `.png`
-- [ ] Phone screenshots: 2–8 screenshots (min 320 px wide; show submit + settings screens)
+- [x] Phone screenshots: 2–8 screenshots (min 320 px wide; show submit + settings screens)
 - [x] Short description: ≤ 80 characters — see `designs/play-store-listing.md`
 - [x] Full description: up to 4 000 characters — see `designs/play-store-listing.md`
   (update [SETUP_VIDEO_URL] placeholder with the new centralized-flow video before submitting)
