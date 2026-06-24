@@ -60,12 +60,6 @@ public class CredentialVendingClient implements AwsCredentialsProvider {
         }
     }
 
-    /** Called after an AccessDenied error to re-vend credentials for the caller's current IP. */
-    public void forceRefresh() {
-        log.info("Force-refreshing vended credentials (IP change recovery)");
-        vend();
-    }
-
     @Override
     public AwsCredentials resolveCredentials() {
         if (credentials == null || (expiry != null && Instant.now().isAfter(expiry.minus(Duration.ofSeconds(30))))) {
