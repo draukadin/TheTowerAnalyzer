@@ -86,37 +86,45 @@ public class TowerAnalyzerApplication {
         Path dbFile  = dir.resolve("analyzer.db");
         Path aside   = dir.resolve("analyzer.db.pre-restore");
         log.info("Staged database restore detected at {} — applying before startup", staged);
+
         if (Files.exists(dbFile)) {
-            // On Windows, SQLite WAL-mode memory-maps .db-wal and .db-shm, and those handles
-            // can briefly outlive the process. Delete sidecars first, then retry the main move.
-            retryOnLock(() -> {
-                Files.deleteIfExists(dir.resolve("analyzer.db-wal"));
-                Files.deleteIfExists(dir.resolve("analyzer.db-shm"));
-                Files.move(dbFile, aside, StandardCopyOption.REPLACE_EXISTING);
-            });
-        }
-        Files.move(staged, dbFile, StandardCopyOption.REPLACE_EXISTING);
-        log.info("Database restore applied. Previous database preserved at {}", aside);
-    }
+            // Delete WAL sidecars first — they are memory-mapped by SQLite and can hold
+            // locks that outlive the owning process on Windows.
+            Files.deleteIfExists(dir.resolve("analyzer.db-wal"));
+            Files.deleteIfExists(dir.resolve("analyzer.db-shm"));
 
-    @FunctionalInterface
-    private interface IORunnable { void run() throws IOException; }
-
-    private static void retryOnLock(IORunnable op) throws IOException {
-        long deadline = System.currentTimeMillis() + 5_000;
-        while (true) {
-            try {
-                op.run();
-                return;
-            } catch (IOException ex) {
-                if (System.currentTimeMillis() >= deadline) throw ex;
-                log.warn("Database file still locked ({}); retrying in 500 ms…", ex.getMessage());
-                try { Thread.sleep(500); } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    throw ex;
+            // Retry rename-aside for up to 30 s. Log any live Java processes each attempt
+            // so the user can see whether the previous instance is still shutting down.
+            long deadline = System.currentTimeMillis() + 30_000;
+            boolean renamed = false;
+            while (!renamed) {
+                try {
+                    Files.move(dbFile, aside, StandardCopyOption.REPLACE_EXISTING);
+                    renamed = true;
+                } catch (IOException ex) {
+                    if (System.currentTimeMillis() >= deadline) {
+                        // Last resort: copy-overwrite in place.  The pre-restore backup cannot
+                        // be preserved locally, but the original is safely stored in S3.
+                        log.warn("Database still locked after 30 s — overwriting in place (original in S3).");
+                        Files.copy(staged, dbFile, StandardCopyOption.REPLACE_EXISTING);
+                        Files.deleteIfExists(staged);
+                        log.info("Database restore applied (copy-overwrite).");
+                        return;
+                    }
+                    ProcessHandle.allProcesses()
+                        .filter(p -> p.info().command().map(c -> c.toLowerCase().contains("java")).orElse(false))
+                        .forEach(p -> log.warn("  Java process still alive — PID {}: {}",
+                            p.pid(), p.info().commandLine().orElse("(unknown)")));
+                    log.warn("Database locked ({}); retrying in 500 ms…", ex.getMessage());
+                    try { Thread.sleep(500); } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw ex;
+                    }
                 }
             }
         }
+        Files.move(staged, dbFile, StandardCopyOption.REPLACE_EXISTING);
+        log.info("Database restore applied. Previous database preserved at {}", aside);
     }
 
     private static void installUserPropertiesIfAbsent() throws IOException {
