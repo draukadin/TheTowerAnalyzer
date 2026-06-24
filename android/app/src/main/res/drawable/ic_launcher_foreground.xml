@@ -12,12 +12,12 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Scale 0.85 centred on the canvas keeps all elements inside the squircle safe zone. -->
+    <!-- Scale 0.72 centred on the canvas keeps all elements inside the squircle safe zone. -->
     <group
         android:pivotX="54"
         android:pivotY="54"
-        android:scaleX="0.85"
-        android:scaleY="0.85">
+        android:scaleX="0.72"
+        android:scaleY="0.72">
 
         <!-- Bar chart — decorative, bottom-left (rx=1.27) -->
         <path
