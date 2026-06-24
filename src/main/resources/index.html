@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -342,102 +342,65 @@
       <div id="wizInd1" style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;">
         <div id="wizDot1" style="width:24px;height:24px;border-radius:50%;background:var(--accent);
              display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">1</div>
-        <span style="color:var(--accent)">Google Credentials</span>
+        <span style="color:var(--accent)">Player Setup</span>
       </div>
       <div style="flex:1;height:1px;background:var(--border);margin:0 12px;"></div>
       <div id="wizInd2" style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;">
         <div id="wizDot2" style="width:24px;height:24px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);
              display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;">2</div>
-        <span id="wizLabel2" style="color:var(--muted)">Drive &amp; Sheets IDs</span>
-      </div>
-      <div style="flex:1;height:1px;background:var(--border);margin:0 12px;"></div>
-      <div id="wizInd3" style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;">
-        <div id="wizDot3" style="width:24px;height:24px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);
-             display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;">3</div>
-        <span id="wizLabel3" style="color:var(--muted)">Claude MCP</span>
+        <span id="wizLabel2" style="color:var(--muted)">Claude MCP</span>
       </div>
     </div>
 
-    <!-- Step 1: OAuth credentials file -->
+    <!-- Step 1: Player ID + Region -->
     <div id="wizardStep1">
       <div style="margin-bottom:1.75rem;">
-        <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem;">Set up Google Credentials</div>
+        <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem;">Set up your account</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.7;">
-          The Tower Analyzer uses the Google Drive and Sheets APIs to store your data.
-          You'll need to provide an OAuth 2.0 client secret from your Google Cloud project.
+          Enter your Player ID from The Tower and choose the server region closest to you.
         </div>
       </div>
 
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
            padding:1.25rem;margin-bottom:1.5rem;font-size:13px;line-height:1.8;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.75rem;font-weight:600;">How to get your credentials file</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.75rem;font-weight:600;">How to find your Player ID</div>
         <ol style="padding-left:1.25rem;color:var(--text);display:flex;flex-direction:column;gap:4px;">
-          <li>Go to <span style="font-family:var(--mono);color:var(--accent)">console.cloud.google.com</span></li>
-          <li>Open your project → <b>APIs &amp; Services</b> → <b>Credentials</b></li>
-          <li>Click <b>Create Credentials</b> → <b>OAuth 2.0 Client ID</b></li>
-          <li>Choose <b>Desktop app</b>, give it a name, click <b>Create</b></li>
-          <li>Click <b>Download JSON</b> on the credential you just created</li>
-          <li>Open the downloaded file in a text editor, select all, and paste below</li>
+          <li>Open <b>The Tower</b> on your phone.  Go to Settings and find your Player ID at the bottom of the Settings</li>
+          <li>Enter your Player ID in the field below</li>
         </ol>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Paste the contents of your downloaded JSON file</label>
-        <textarea id="credentialsJson" class="form-textarea" rows="7"
-          placeholder='{"installed":{"client_id":"...","client_secret":"...",...}}'
-          style="font-family:var(--mono);font-size:12px;min-height:130px;"></textarea>
+        <label class="form-label">Player ID</label>
+        <input id="playerId" class="form-input" type="text" placeholder="Enter your Player ID here">
       </div>
-      <div id="credentialsError" style="display:none;color:var(--red);font-size:13px;margin-bottom:1rem;
+
+      <div style="margin-bottom:1.5rem;">
+        <div class="form-label" style="margin-bottom:0.75rem;">Server Region</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text);">
+            <input type="radio" name="apiGatewayRegion" value="us" checked> United States
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text);">
+            <input type="radio" name="apiGatewayRegion" value="eu"> Europe
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text);">
+            <input type="radio" name="apiGatewayRegion" value="ap"> Asia-Pacific
+          </label>
+        </div>
+      </div>
+
+      <div id="configError" style="display:none;color:var(--red);font-size:13px;margin-bottom:1rem;
            background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);border-radius:8px;padding:10px 14px;"></div>
       <div style="display:flex;justify-content:flex-end;">
-        <button id="credentialsBtn" class="btn btn-primary" onclick="submitCredentials()" style="padding:10px 24px;font-size:14px;">
+        <button id="configBtn" class="btn btn-primary" onclick="submitConfig()" style="padding:10px 24px;font-size:14px;">
           Continue →
         </button>
       </div>
     </div>
 
-    <!-- Step 2: Folder & Sheet IDs -->
+    <!-- Step 2: Claude MCP -->
     <div id="wizardStep2" style="display:none;">
-      <div style="margin-bottom:1.75rem;">
-        <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem;">Configure Drive &amp; Sheets</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.7;">
-          Enter the Google Drive folder IDs and the Google Sheets spreadsheet ID the app will use.
-          You can find these in the URL when you open the folder or sheet in your browser.
-        </div>
-      </div>
-
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
-           padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:12px;color:var(--muted);line-height:1.7;">
-        <b style="color:var(--text);">Finding a folder ID:</b> Open the folder in Google Drive.
-        The URL looks like <span style="font-family:var(--mono);color:var(--accent)">drive.google.com/drive/folders/<b style="color:var(--gold)">FOLDER_ID</b></span> — copy the highlighted part.<br>
-        <b style="color:var(--text);">Finding a sheet ID:</b> Open the spreadsheet.
-        The URL looks like <span style="font-family:var(--mono);color:var(--accent)">docs.google.com/spreadsheets/d/<b style="color:var(--gold)">SHEET_ID</b>/edit</span> — copy the highlighted part.
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Backup Folder ID</label>
-        <input id="backupFolderId" class="form-input" type="text" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Battle Reports Folder ID</label>
-        <input id="battleReportsFolderId" class="form-input" type="text" placeholder="e.g. 1FAIpQLSf8z3...">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Player Tracker Sheet ID</label>
-        <input id="playerTrackerSheetId" class="form-input" type="text" placeholder="e.g. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
-      </div>
-      <div id="configError" style="display:none;color:var(--red);font-size:13px;margin-bottom:1rem;
-           background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);border-radius:8px;padding:10px 14px;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <button class="btn" onclick="goToWizardStep(1)" style="font-size:13px;">← Back</button>
-        <button id="configBtn" class="btn btn-primary" onclick="submitConfig()" style="padding:10px 24px;font-size:14px;">
-          Complete Setup
-        </button>
-      </div>
-    </div>
-
-    <!-- Step 3: Claude MCP -->
-    <div id="wizardStep3" style="display:none;">
       <div style="margin-bottom:1.75rem;">
         <div style="font-size:1.3rem;font-weight:700;margin-bottom:0.5rem;">Set up Claude MCP <span style="font-size:0.85rem;font-weight:500;color:var(--muted)">(optional)</span></div>
         <div style="font-size:13px;color:var(--muted);line-height:1.7;">
@@ -491,10 +454,10 @@
     <div class="modal-title" id="deleteModalTitle">Delete Report?</div>
     <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1.5rem">
       This will permanently remove the report from the local database.<br><br>
-      <strong>Delete local + Drive</strong> also removes the source file from your Google Drive battle reports folder so it won't reappear on the next fetch.
+      <strong>Delete local + S3</strong> also removes the source file from your S3 bucket so it won't reappear on the next fetch.
     </p>
     <div class="modal-actions" style="flex-direction:column;align-items:stretch;gap:8px">
-      <button class="btn btn-danger" onclick="confirmDelete(true)">🗑️ Delete local + Drive</button>
+      <button class="btn btn-danger" onclick="confirmDelete(true)">🗑️ Delete local + S3</button>
       <button class="btn" onclick="confirmDelete(false)">Delete local only</button>
       <button class="btn" style="color:var(--muted)" onclick="closeDeleteModal()">Cancel</button>
     </div>

@@ -5,11 +5,18 @@ target/
 !**/src/test/**/out/
 .claude/
 credentials.json
+android/app/build/
+android/.gradle
+android/local.properties
+android/app/*.jks
 
 Runner.java
 mcp/node_modules
+node_modules/
 scripts/main.*.js
-designs/
+test-results/
+playwright-report/
+
 
 ### Eclipse ###
 .apt_generated
@@ -22,6 +29,9 @@ designs/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
+!infra/bin/
+infra/bin/*.js
+infra/bin/*.d.ts
 *.iml
 .idea/
 

@@ -22,18 +22,25 @@ public class OAuthStateService {
 
     private final GoogleAuthorizationCodeFlow flow;
     private final SetupStateService setupState;
+    private final AwsProperties awsProperties;
 
     private volatile Status status = Status.PENDING;
     private volatile String authUrl;
     private volatile CompletableFuture<Credential> credentialFuture = new CompletableFuture<>();
 
-    public OAuthStateService(@Lazy GoogleAuthorizationCodeFlow flow, SetupStateService setupState) {
+    public OAuthStateService(@Lazy GoogleAuthorizationCodeFlow flow, SetupStateService setupState,
+                             AwsProperties awsProperties) {
         this.flow = flow;
         this.setupState = setupState;
+        this.awsProperties = awsProperties;
     }
 
     @PostConstruct
     public void init() {
+        if (awsProperties.isConfigured()) {
+            log.info("AWS centralized mode — Google OAuth not required.");
+            return;
+        }
         if (!setupState.isComplete()) {
             log.info("First-run setup not yet complete — OAuth flow deferred until setup finishes.");
             return;
@@ -83,7 +90,10 @@ public class OAuthStateService {
         }
     }
 
-    public Status getStatus() { return status; }
+    public Status getStatus() {
+        if (awsProperties.isConfigured()) return Status.AUTHENTICATED;
+        return status;
+    }
 
     public String getAuthUrl() { return authUrl; }
 

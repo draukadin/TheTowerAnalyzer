@@ -4,9 +4,10 @@ The Tower Era Versioning System
         Examples: Locking down that 3-level Summon Cooldown fix for a flat 90-second sync with Golden Bot; unlocking a massive new mechanic like ELS+; or executing a complete module overhaul once your Cannon and Core modules hit level 161.
 
     Minor Version Bumps (4.X.0): Key Progression Milestones & Lab Finishes.
-        When to use: Significant, permanent structural updates that give you an immediate tactical edge but don't completely rewrite your baseline economy.
-        Examples: unlocking Death Wave Armor Stripping for tournaments; upgrading an enhancement level that costs tens of trillions (like Coin Bonus+ hitting 22).
+        When to use: Significant, permanent structural updates that give you an immediate tactical edge but don't completely rewrite your baseline economy. The criterion is a measurable step-change in a key performance metric — not raw coin cost. As tower progression advances, individual enhancement levels become extremely expensive (37T+) while still representing only incremental single-level improvements on a scale of 1-400. High coin cost alone does not qualify a change as Minor; the change must produce a meaningful, observable shift in tournament wave ceiling, CPH, or a core system unlock.
+        Examples: unlocking Death Wave Armor Stripping for tournaments; unlocking a new enhancement category (e.g. ELS+ first purchase); completing a lab that fundamentally changes a system (e.g. RPC reaching max level); a UW stone investment that crosses a pseudo-permanent CF uptime threshold.
+        Note: Single enhancement level-ups (e.g. Damage+ 56→57) are Patch bumps regardless of coin cost, because they are one step on a 400-level scale and produce only marginal incremental improvement.
 
     Patch Bumps (4.0.X): Continuous Iterative Growth.
         When to use: Small, incremental upgrades that happen continuously throughout the week but are still worth noting if you want to trace minor performance variances between consecutive runs.
-        Examples: Putting a few bits into minor utility stats; minor level-ups on your Modules before the big level 161 push; or bumping cheaper workshop enhancements like Rend Armor Mult+.
+        Examples: Putting a few bits into minor utility stats; minor level-ups on your Modules before the big level 161 push; bumping enhancement levels (even expensive ones like Damage+ or Critical Factor+) by a single level; lab level completions that are part of a long grind rather than a system unlock.

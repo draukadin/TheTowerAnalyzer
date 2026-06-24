@@ -1,4 +1,4 @@
-﻿const API='http://localhost:8080/api';
+const API='http://localhost:8080/api';
 let allReports=[],activeId=null,activePayload=null,activeView='reports',currentTab='stats';
 
 async function init(){
@@ -129,11 +129,11 @@ function closeDeleteModal(){
   deleteModalTarget=null;
 }
 
-async function confirmDelete(deleteDrive){
+async function confirmDelete(deleteSourceFile){
   const r=deleteModalTarget;
   closeDeleteModal();
   try{
-    const res=await fetch(`${API}/reports/${encodeURIComponent(r.id)}?deleteDriveFile=${deleteDrive}`,{method:'DELETE'});
+    const res=await fetch(`${API}/reports/${encodeURIComponent(r.id)}?deleteSourceFile=${deleteSourceFile}`,{method:'DELETE'});
     if(!res.ok)throw new Error((await res.json()).message||res.statusText);
     allReports=allReports.filter(x=>x.id!==r.id);
     if(activeId===r.id){
@@ -2899,30 +2899,34 @@ async function saveNewVersion() {
     }
     closeAddVersionModal();
     await renderVersionTrackerView();
-    if (verModalMode === 'add' && !data.syncedToSheet) showVerSyncBanner(data.version);
+    if (verModalMode === 'add' && !data.synced) showVerSyncBanner(data.version, data.syncTarget);
   } catch(e) {
     alert('Save failed: ' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = origText;
   }
 }
-function showVerSyncBanner(version) {
+function showVerSyncBanner(version, syncTarget) {
   const existing = document.getElementById('verSyncBanner');
   if (existing) existing.remove();
   const el = document.getElementById('verContent');
   if (!el) return;
+  const target = syncTarget === 'ddb'
+    ? 'the central database (DynamoDB)'
+    : 'Google Sheet (cell B2)';
   el.insertAdjacentHTML('afterbegin', `
     <div id="verSyncBanner" style="display:flex;align-items:center;gap:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:13px">
       <span style="color:var(--red)">⚠</span>
-      <span style="flex:1;color:var(--text)">Version <strong>${version}</strong> saved to database but failed to sync to Google Sheet (cell B2). Battle reports won't auto-associate until synced.</span>
-      <button id="verSyncRetryBtn" class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="retrySyncVersion('${version}')">Retry Sync</button>
+      <span style="flex:1;color:var(--text)">Version <strong>${version}</strong> saved locally but failed to sync to ${target}. Battle reports won't auto-associate until synced.</span>
+      <button id="verSyncRetryBtn" class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="retrySyncVersion('${version}', '${syncTarget}')">Retry Sync</button>
     </div>`);
 }
-async function retrySyncVersion(version) {
+async function retrySyncVersion(version, syncTarget) {
   const btn = document.getElementById('verSyncRetryBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  const endpoint = syncTarget === 'ddb' ? 'sync-ddb' : 'sync-sheet';
   try {
-    const res = await fetch(`${API}/versions/${encodeURIComponent(version)}/sync-sheet`, { method: 'POST' });
+    const res = await fetch(`${API}/versions/${encodeURIComponent(version)}/${endpoint}`, { method: 'POST' });
     if (!res.ok) throw new Error(await res.text());
     document.getElementById('verSyncBanner')?.remove();
   } catch(e) {
@@ -5550,8 +5554,14 @@ function renderAdminView() {
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Database</div>
         <div style="display:flex;align-items:center;gap:1rem">
-          <button class="btn btn-primary" id="backupBtn" onclick="backupDatabase()">Backup Database</button>
-          <span id="backupStatus" style="font-size:13px;color:var(--muted)"></span>
+          <button class="btn btn-primary" id="backupBtn" onclick="backupDatabase()" style="flex-shrink:0">Backup Database</button>
+          <span id="backupStatus" style="font-size:13px;color:var(--muted);line-height:1.5;min-width:0;word-break:break-word"></span>
+        </div>
+        <!-- Restore (centralized mode only; hidden until /backup/list succeeds) -->
+        <div id="restoreSection" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:0.75rem">Restore from cloud backup</div>
+          <div id="restoreList" style="font-size:13px;color:var(--muted)">Loading…</div>
+          <div id="restoreStatus" style="font-size:13px;color:var(--muted);margin-top:0.75rem"></div>
         </div>
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-top:1rem">
@@ -5596,6 +5606,7 @@ function renderAdminView() {
         </div>
       </div>
     </div>`;
+  loadBackups();
 }
 
 function showQrModal() {
@@ -5618,7 +5629,10 @@ async function backupDatabase() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     status.style.color = 'var(--green,#4ade80)';
-    status.textContent = `✓ Backed up as ${data.fileName}`;
+    const where = data.target === 'drive' ? 'Google Drive' : 'cloud storage';
+    const name = data.fileName || (data.key ? data.key.split('/').pop() : '');
+    status.textContent = `✓ Backed up to ${where}${name ? ' as ' + name : ''}`;
+    if (data.target === 's3') loadBackups();
   } catch (e) {
     status.style.color = 'var(--red)';
     status.textContent = `✗ ${e.message}`;
@@ -5627,23 +5641,89 @@ async function backupDatabase() {
   }
 }
 
+// Restore panel — centralized mode only. In legacy mode /backup/list returns 409
+// (no S3 backup service), so the section stays hidden.
+async function loadBackups() {
+  const section = document.getElementById('restoreSection');
+  const list = document.getElementById('restoreList');
+  if (!section || !list) return;
+  try {
+    const res = await fetch(`${API}/backup/list`);
+    if (!res.ok) { section.style.display = 'none'; return; }
+    const backups = await res.json();
+    section.style.display = '';
+    if (!backups.length) {
+      list.innerHTML = `<div style="font-size:13px;color:var(--muted)">No cloud backups yet.</div>`;
+      return;
+    }
+    list.innerHTML = backups.map(b => {
+      const when  = new Date(b.lastModified).toLocaleString();
+      const size  = fmtBytes(b.size);
+      const badge = b.latest
+        ? `<span style="flex-shrink:0;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--green,#4ade80);border:1px solid var(--green,#4ade80);border-radius:6px;padding:1px 6px;white-space:nowrap">latest</span>`
+        : '';
+      const key   = b.key.replace(/'/g, "\\'");
+      const fname = b.fileName.replace(/'/g, "\\'");
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0">
+            <span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.fileName}</span>
+            ${badge}
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${when} · ${size}</div>
+        </div>
+        <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px;flex-shrink:0" onclick="restoreBackup('${key}','${fname}')">Restore</button>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    section.style.display = 'none';
+  }
+}
+
+async function restoreBackup(key, fileName) {
+  if (!confirm(`Restore "${fileName}"?\n\nYour current database will be replaced the next time you restart the app.`)) return;
+  const status = document.getElementById('restoreStatus');
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Staging restore…';
+  try {
+    const res = await fetch(`${API}/backup/restore`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({key})
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    status.style.color = 'var(--green,#4ade80)';
+    status.textContent = `✓ ${data.message || 'Restore staged — restart the app to apply.'}`;
+  } catch (e) {
+    status.style.color = 'var(--red)';
+    status.textContent = `✗ ${e.message}`;
+  }
+}
+
+function fmtBytes(bytes) {
+  if (bytes == null) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let v = bytes / 1024, i = 0;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  return `${v.toFixed(1)} ${units[i]}`;
+}
+
 // ── Setup wizard ──────────────────────────────────────────────────────────────
 
 function showSetupWizard(step) {
   document.getElementById('setupWizard').style.display = 'flex';
-  goToWizardStep(step === 'config' ? 2 : 1);
+  goToWizardStep(1);
 }
 
 function goToWizardStep(n) {
   document.getElementById('wizardStep1').style.display = n === 1 ? '' : 'none';
   document.getElementById('wizardStep2').style.display = n === 2 ? '' : 'none';
-  document.getElementById('wizardStep3').style.display = n === 3 ? '' : 'none';
 
   const dot1 = document.getElementById('wizDot1');
   const dot2 = document.getElementById('wizDot2');
-  const dot3 = document.getElementById('wizDot3');
   const lbl2 = document.getElementById('wizLabel2');
-  const lbl3 = document.getElementById('wizLabel3');
 
   const active  = s => { s.style.background = 'var(--accent)';   s.style.color = '#fff';        s.style.border = 'none'; };
   const done    = s => { s.style.background = 'var(--green)';    s.style.color = '#fff';        s.style.border = 'none'; s.textContent = '✓'; };
@@ -5652,50 +5732,11 @@ function goToWizardStep(n) {
   if (n === 1) {
     active(dot1);  dot1.textContent = '1';
     pending(dot2, '2');  lbl2.style.color = 'var(--muted)';
-    pending(dot3, '3');  lbl3.style.color = 'var(--muted)';
     document.getElementById('wizInd1').querySelector('span').style.color = 'var(--accent)';
-  } else if (n === 2) {
-    done(dot1);
-    active(dot2);  dot2.textContent = '2';  lbl2.style.color = 'var(--accent)';
-    pending(dot3, '3');  lbl3.style.color = 'var(--muted)';
-    document.getElementById('wizInd1').querySelector('span').style.color = 'var(--green)';
   } else {
     done(dot1);
-    done(dot2);
-    active(dot3);  dot3.textContent = '3';  lbl3.style.color = 'var(--accent)';
+    active(dot2);  dot2.textContent = '2';  lbl2.style.color = 'var(--accent)';
     document.getElementById('wizInd1').querySelector('span').style.color = 'var(--green)';
-    lbl2.style.color = 'var(--green)';
-  }
-}
-
-async function submitCredentials() {
-  const content = document.getElementById('credentialsJson').value.trim();
-  const errEl   = document.getElementById('credentialsError');
-  const btn     = document.getElementById('credentialsBtn');
-
-  errEl.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-
-  try {
-    const res  = await fetch(`${API}/setup/credentials`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content})
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      errEl.textContent = data.error || 'An error occurred.';
-      errEl.style.display = '';
-    } else {
-      goToWizardStep(2);
-    }
-  } catch (e) {
-    errEl.textContent = 'Could not reach the server.';
-    errEl.style.display = '';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Continue →';
   }
 }
 
@@ -5703,14 +5744,13 @@ async function submitConfig() {
   const errEl = document.getElementById('configError');
   const btn   = document.getElementById('configBtn');
 
-  const backupFolderId         = document.getElementById('backupFolderId').value.trim();
-  const battleReportsFolderId  = document.getElementById('battleReportsFolderId').value.trim();
-  const playerTrackerSheetId   = document.getElementById('playerTrackerSheetId').value.trim();
+  const playerId         = document.getElementById('playerId').value.trim();
+  const apiGatewayRegion = document.querySelector('input[name="apiGatewayRegion"]:checked')?.value;
 
   errEl.style.display = 'none';
 
-  if (!backupFolderId || !battleReportsFolderId || !playerTrackerSheetId) {
-    errEl.textContent = 'All three IDs are required.';
+  if (!playerId) {
+    errEl.textContent = 'Player ID is required.';
     errEl.style.display = '';
     return;
   }
@@ -5722,22 +5762,22 @@ async function submitConfig() {
     const res  = await fetch(`${API}/setup/config`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({backupFolderId, battleReportsFolderId, playerTrackerSheetId})
+      body: JSON.stringify({playerId, apiGatewayRegion})
     });
     const data = await res.json();
     if (!res.ok) {
       errEl.textContent = data.error || 'An error occurred.';
       errEl.style.display = '';
       btn.disabled = false;
-      btn.textContent = 'Complete Setup';
+      btn.textContent = 'Continue →';
     } else {
-      goToWizardStep(3);
+      goToWizardStep(2);
     }
   } catch (e) {
     errEl.textContent = 'Could not reach the server.';
     errEl.style.display = '';
     btn.disabled = false;
-    btn.textContent = 'Complete Setup';
+    btn.textContent = 'Continue →';
   }
 }
 

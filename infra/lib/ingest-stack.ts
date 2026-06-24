@@ -1,0 +1,149 @@
+import * as cdk from 'aws-cdk-lib/core';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
+import { Construct } from 'constructs';
+import * as path from 'path';
+
+export interface IngestStackProps extends cdk.StackProps {
+  environment: 'dev' | 'prod';
+  /** Name of the central S3 bucket owned by DataStack (may be in a different region) */
+  centralBucketName: string;
+  /** DynamoDB table name — passed as env var to credentials Lambda */
+  versionTableName: string;
+  /** Full DynamoDB table ARN — embedded in the STS session policy */
+  versionTableArn: string;
+  /** ARN of the IAM role the credentials Lambda will AssumeRole into */
+  credentialRoleArn: string;
+  /** AWS region where S3 and DynamoDB live (us-east-2) — DDB client in credentials Lambda uses this */
+  dataRegion: string;
+  /** Email address for CloudWatch alarm notifications (omit to create alarms without a subscriber) */
+  alertEmail?: string;
+}
+
+export class IngestStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: IngestStackProps) {
+    super(scope, id, props);
+
+    const env = props.environment;
+
+    // Import the central S3 bucket by name — cross-region import, no CDK ref needed
+    const reportsBucket = s3.Bucket.fromBucketName(this, 'ReportsBucket', props.centralBucketName);
+
+    const ingestFn = new lambda.Function(this, 'IngestReportFn', {
+      functionName: `TowerAnalyzerIngestReport-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'ingest-report.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
+      environment: {
+        REPORTS_BUCKET: props.centralBucketName,
+        BUCKET_REGION: props.dataRegion,
+      },
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      logRetention: logs.RetentionDays.ONE_MONTH,
+    });
+
+    reportsBucket.grantPut(ingestFn);
+
+    const credentialsFn = new lambda.Function(this, 'CredentialVendingFn', {
+      functionName: `TowerAnalyzerCredentialVending-${env}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'credentials.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
+      environment: {
+        REPORTS_BUCKET: props.centralBucketName,
+        PLAYER_VERSION_TABLE: props.versionTableName,
+        PLAYER_VERSION_TABLE_ARN: props.versionTableArn,
+        CREDENTIAL_ROLE_ARN: props.credentialRoleArn,
+        DATA_REGION: props.dataRegion,
+      },
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      logRetention: logs.RetentionDays.ONE_MONTH,
+    });
+
+    // Upsert player record in DDB on first credential vend
+    credentialsFn.addToRolePolicy(new iam.PolicyStatement({
+      sid: 'DDBUpsertPlayer',
+      actions: ['dynamodb:UpdateItem'],
+      resources: [props.versionTableArn],
+    }));
+
+    // Assume the per-player credential vending role
+    credentialsFn.addToRolePolicy(new iam.PolicyStatement({
+      sid: 'STSAssumeCredentialRole',
+      actions: ['sts:AssumeRole'],
+      resources: [props.credentialRoleArn],
+    }));
+
+    const api = new apigateway.RestApi(this, 'ReportApi', {
+      restApiName: `TowerAnalyzerReportApi-${env}`,
+      description: `Battle report ingest endpoint (${env} / ${this.region})`,
+      deployOptions: {
+        throttlingRateLimit: 10,
+        throttlingBurstLimit: 20,
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: ['POST', 'GET'],
+        allowHeaders: ['Content-Type', 'X-Player-Id'],
+      },
+    });
+
+    const reports = api.root.addResource('reports');
+    reports.addMethod('POST', new apigateway.LambdaIntegration(ingestFn));
+
+    const credentials = api.root.addResource('credentials');
+    credentials.addMethod('GET', new apigateway.LambdaIntegration(credentialsFn));
+
+    // ── Monitoring ──────────────────────────────────────────────────────────────
+    const alertTopic = new sns.Topic(this, 'AlertTopic', {
+      displayName: `TowerAnalyzer-${env}-Alerts-${this.region}`,
+    });
+    if (props.alertEmail) {
+      alertTopic.addSubscription(new subs.EmailSubscription(props.alertEmail));
+    }
+
+    const alarmDefaults = {
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    };
+
+    for (const [id, fn] of [['Ingest', ingestFn], ['Credentials', credentialsFn]] as [string, lambda.Function][]) {
+      new cloudwatch.Alarm(this, `${id}ErrorAlarm`, {
+        alarmName: `TowerAnalyzer-${env}-${id}Errors-${this.region}`,
+        alarmDescription: `${id} Lambda error count ≥ 5 in 5 min`,
+        metric: fn.metricErrors({ period: cdk.Duration.minutes(5) }),
+        threshold: 5,
+        ...alarmDefaults,
+      }).addAlarmAction(new actions.SnsAction(alertTopic));
+    }
+
+    new cloudwatch.Alarm(this, 'Api5xxAlarm', {
+      alarmName: `TowerAnalyzer-${env}-Api5xx-${this.region}`,
+      alarmDescription: 'API Gateway 5xx count ≥ 3 in 5 min',
+      metric: api.metricServerError({ period: cdk.Duration.minutes(5) }),
+      threshold: 3,
+      ...alarmDefaults,
+    }).addAlarmAction(new actions.SnsAction(alertTopic));
+
+    new cdk.CfnOutput(this, 'ApiEndpoint', {
+      value: `${api.url}reports`,
+      description: 'Battle report ingest URL - set in Android app and iOS Shortcut',
+      exportName: `TowerAnalyzer-${env}-ApiEndpoint-${this.region}`,
+    });
+
+    new cdk.CfnOutput(this, 'CredentialsEndpoint', {
+      value: `${api.url}credentials`,
+      description: 'Credential-vending URL - set as aws.api-gateway.url.* in application.properties',
+      exportName: `TowerAnalyzer-${env}-CredentialsEndpoint-${this.region}`,
+    });
+  }
+}

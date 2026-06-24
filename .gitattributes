@@ -1,0 +1,5 @@
+# Gradle wrapper: the shell script must stay LF or it won't run on Linux/CI;
+# the Windows launcher wants CRLF; the wrapper jar is binary.
+gradlew         text eol=lf
+gradlew.bat     text eol=crlf
+*.jar           binary

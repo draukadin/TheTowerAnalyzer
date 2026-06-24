@@ -12,7 +12,7 @@ public record TowerEra(int major, int minor, int patch) implements Comparable<To
 
     @JsonCreator
     public static TowerEra parse(String s) {
-        if (s == null || s.isBlank()) return new TowerEra(0, 0, 0);
+        if (s == null || s.isBlank()) return new TowerEra(1, 0, 0);
         Matcher m = VERSION_PATTERN.matcher(s);
         if (m.find()) {
             return new TowerEra(
@@ -20,7 +20,7 @@ public record TowerEra(int major, int minor, int patch) implements Comparable<To
                     Integer.parseInt(m.group(2)),
                     Integer.parseInt(m.group(3)));
         }
-        return new TowerEra(0, 0, 0);
+        return new TowerEra(1, 0, 0);
     }
 
     @Override

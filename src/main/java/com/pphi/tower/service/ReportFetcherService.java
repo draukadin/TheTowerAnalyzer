@@ -102,7 +102,7 @@ public class ReportFetcherService {
 
             try {
                 runRepository.insert(
-                        id, filename, runType, battleDate,
+                        id, filename, runType, null, battleDate,
                         report.tier(), report.wave(),
                         cellsEarned,
                         report.realTime().getSeconds(),

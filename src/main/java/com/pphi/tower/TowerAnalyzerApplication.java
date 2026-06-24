@@ -1,17 +1,11 @@
 package com.pphi.tower;
 
-import com.pphi.tower.analyzers.BattleDiagnostic;
-import com.pphi.tower.analyzers.RunComparison;
+import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.config.DriveProperties;
 import com.pphi.tower.config.SheetProperties;
-import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
-import com.pphi.tower.model.battlehistory.BattleHistory;
-import com.pphi.tower.parser.BattleHistoryParser;
-import com.pphi.tower.reporter.ReflectionBattleComparisonReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,6 +14,7 @@ import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -32,12 +27,14 @@ import java.nio.file.StandardCopyOption;
 @SpringBootApplication
 @EnableConfigurationProperties
 @EnableCaching
+@EnableScheduling
 public class TowerAnalyzerApplication {
 
     private static final Logger log = LoggerFactory.getLogger(TowerAnalyzerApplication.class);
 
     public static void main(String[] args) throws IOException {
         installBundledDatabaseIfAbsent();
+        applyStagedRestoreIfPresent();
         installUserPropertiesIfAbsent();
         String version = TowerAnalyzerApplication.class.getPackage().getImplementationVersion();
         log.info("Starting TheTowerAnalyzer version {}", version != null ? version : "unknown (dev build)");
@@ -71,6 +68,65 @@ public class TowerAnalyzerApplication {
         }
     }
 
+    /**
+     * Applies a staged database restore (centralized mode, Action item 8) before Spring
+     * and HikariCP open the datasource. A restore downloaded from S3 is written to
+     * {@code analyzer.db.restore}; on the next startup we move the current db aside and
+     * swap the staged file into place. This must happen before any datasource bean is
+     * initialized — SQLite holds {@code analyzer.db} open (WAL) for the life of the
+     * process, so it cannot be swapped live and cannot live in a Spring component.
+     */
+    private static void applyStagedRestoreIfPresent() throws IOException {
+        String appData = System.getenv("APPDATA");
+        Path dir     = Path.of(appData, "TheTowerAnalyzer");
+        Path staged  = dir.resolve("analyzer.db.restore");
+        if (!Files.exists(staged)) {
+            return;
+        }
+        Path dbFile  = dir.resolve("analyzer.db");
+        Path aside   = dir.resolve("analyzer.db.pre-restore");
+        log.info("Staged database restore detected at {} — applying before startup", staged);
+
+        if (Files.exists(dbFile)) {
+            // Delete WAL sidecars first — they are memory-mapped by SQLite and can hold
+            // locks that outlive the owning process on Windows.
+            Files.deleteIfExists(dir.resolve("analyzer.db-wal"));
+            Files.deleteIfExists(dir.resolve("analyzer.db-shm"));
+
+            // Retry rename-aside for up to 30 s. Log any live Java processes each attempt
+            // so the user can see whether the previous instance is still shutting down.
+            long deadline = System.currentTimeMillis() + 30_000;
+            boolean renamed = false;
+            while (!renamed) {
+                try {
+                    Files.move(dbFile, aside, StandardCopyOption.REPLACE_EXISTING);
+                    renamed = true;
+                } catch (IOException ex) {
+                    if (System.currentTimeMillis() >= deadline) {
+                        // Last resort: copy-overwrite in place.  The pre-restore backup cannot
+                        // be preserved locally, but the original is safely stored in S3.
+                        log.warn("Database still locked after 30 s — overwriting in place (original in S3).");
+                        Files.copy(staged, dbFile, StandardCopyOption.REPLACE_EXISTING);
+                        Files.deleteIfExists(staged);
+                        log.info("Database restore applied (copy-overwrite).");
+                        return;
+                    }
+                    ProcessHandle.allProcesses()
+                        .filter(p -> p.info().command().map(c -> c.toLowerCase().contains("java")).orElse(false))
+                        .forEach(p -> log.warn("  Java process still alive — PID {}: {}",
+                            p.pid(), p.info().commandLine().orElse("(unknown)")));
+                    log.warn("Database locked ({}); retrying in 500 ms…", ex.getMessage());
+                    try { Thread.sleep(500); } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw ex;
+                    }
+                }
+            }
+        }
+        Files.move(staged, dbFile, StandardCopyOption.REPLACE_EXISTING);
+        log.info("Database restore applied. Previous database preserved at {}", aside);
+    }
+
     private static void installUserPropertiesIfAbsent() throws IOException {
         String appData = System.getenv("APPDATA");
         Path dir   = Path.of(appData, "TheTowerAnalyzer");
@@ -78,26 +134,18 @@ public class TowerAnalyzerApplication {
         Files.createDirectories(dir);
         if (!Files.exists(props)) {
             log.info("First run detected — creating user.properties template at {}", props);
-            String fwdDir = dir.toString().replace('\\', '/');
             String content = String.join(System.lineSeparator(),
-                "# Google Drive / Sheets OAuth 2.0 client secret",
-                "# oauth-credentials.json = OAuth 2.0 client secret (used by both Google Drive and Sheets)",
-                "drive.oauth-credentials-file=" + fwdDir + "/oauth-credentials.json",
-                "drive.tokens-dir=" + fwdDir + "/tokens",
-                "drive.application-name=TheTowerAnalyzer",
+                "# Your player ID — copy from The Tower settings screen",
+                "aws.player-id=REPLACE_WITH_YOUR_PLAYER_ID",
                 "",
-                "# Google Drive folder IDs - replace with your own values",
-                "drive.backup-folder-id=REPLACE_WITH_YOUR_BACKUP_FOLDER_ID",
-                "drive.battle-reports-folder-id=REPLACE_WITH_YOUR_BATTLE_REPORTS_FOLDER_ID",
-                "",
-                "# Google Sheets sheet IDs - replace with your own values",
-                "sheets.ids.player-tracker=REPLACE_WITH_YOUR_PLAYER_TRACKER_SHEET_ID",
+                "# Server region: us | eu | ap",
+                "aws.api-gateway.region=us",
                 "",
                 "# Optional: change the port if 8080 is already in use on your machine",
                 "# server.port=8080"
             );
             Files.writeString(props, content);
-            log.info("user.properties created. Edit {} and replace all REPLACE_WITH_... placeholders before restarting.", props);
+            log.info("user.properties created. Set aws.player-id in {} before restarting.", props);
         }
     }
 
@@ -118,7 +166,7 @@ public class TowerAnalyzerApplication {
     }
 
     @Bean
-    public ApplicationRunner startupConfigLogger(DriveProperties drive, SheetProperties sheet) {
+    public ApplicationRunner startupConfigLogger(DriveProperties drive, SheetProperties sheet, AwsProperties awsProperties) {
         return args -> {
             String userPropsPath = System.getenv("APPDATA") + "\\TheTowerAnalyzer\\user.properties";
             log.info("Loading user config from: {}", userPropsPath);
@@ -128,6 +176,7 @@ public class TowerAnalyzerApplication {
             log.info("drive.battle-reports-folder-id = {}", drive.getBattleReportsFolderId() != null ? drive.getBattleReportsFolderId() : "(NOT SET)");
             log.info("drive.backup-folder-id         = {}", drive.getBackupFolderId() != null ? drive.getBackupFolderId() : "(NOT SET)");
             log.info("sheets.ids.player-tracker      = {}", sheet.getIds().get("player-tracker") != null ? sheet.resolve("player-tracker") : "(NOT SET)");
+            log.info("aws.player-id                  = {}", awsProperties.getPlayerId());
         };
     }
 }
