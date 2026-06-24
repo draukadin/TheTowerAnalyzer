@@ -87,13 +87,36 @@ public class TowerAnalyzerApplication {
         Path aside   = dir.resolve("analyzer.db.pre-restore");
         log.info("Staged database restore detected at {} — applying before startup", staged);
         if (Files.exists(dbFile)) {
-            Files.move(dbFile, aside, StandardCopyOption.REPLACE_EXISTING);
+            // On Windows, SQLite WAL-mode memory-maps .db-wal and .db-shm, and those handles
+            // can briefly outlive the process. Delete sidecars first, then retry the main move.
+            retryOnLock(() -> {
+                Files.deleteIfExists(dir.resolve("analyzer.db-wal"));
+                Files.deleteIfExists(dir.resolve("analyzer.db-shm"));
+                Files.move(dbFile, aside, StandardCopyOption.REPLACE_EXISTING);
+            });
         }
-        // Drop stale WAL/SHM sidecars so SQLite doesn't replay the old db's journal onto the restored file.
-        Files.deleteIfExists(dir.resolve("analyzer.db-wal"));
-        Files.deleteIfExists(dir.resolve("analyzer.db-shm"));
         Files.move(staged, dbFile, StandardCopyOption.REPLACE_EXISTING);
         log.info("Database restore applied. Previous database preserved at {}", aside);
+    }
+
+    @FunctionalInterface
+    private interface IORunnable { void run() throws IOException; }
+
+    private static void retryOnLock(IORunnable op) throws IOException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (true) {
+            try {
+                op.run();
+                return;
+            } catch (IOException ex) {
+                if (System.currentTimeMillis() >= deadline) throw ex;
+                log.warn("Database file still locked ({}); retrying in 500 ms…", ex.getMessage());
+                try { Thread.sleep(500); } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw ex;
+                }
+            }
+        }
     }
 
     private static void installUserPropertiesIfAbsent() throws IOException {
