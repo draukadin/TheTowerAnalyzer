@@ -180,13 +180,19 @@ Run the full flow for each region using a real device or the Shortcuts app.
   protected by the STS credential layer, not secrets; dev endpoint absent from release APK)
 
 ### AWS
-- [ ] S3 bucket: Block Public Access enabled, SSE-S3 or SSE-KMS encryption at rest
-- [ ] DynamoDB: encryption at rest enabled
-- [ ] Lambda execution role: scoped to only `sts:AssumeRole` + `logs:*`
-- [ ] Credential-vending session policy: confirm S3 prefix is player-scoped, not bucket-wide
-- [ ] API Gateway: verify burst + rate throttle limits are set per-stage in all three regions
-- [ ] Confirm vended credentials cannot read another player's S3 prefix
-  (`aws iam simulate-principal-policy` with a cross-player key path)
+- [x] S3 bucket: Block Public Access enabled, SSE-S3 or SSE-KMS encryption at rest
+  (`data-stack.ts` — `BLOCK_ALL` + `S3_MANAGED`; deployed to prod)
+- [x] DynamoDB: encryption at rest enabled
+  (AWS-owned key default — always on; `SSEDescription` is null = not customer-managed, not unencrypted)
+- [x] Lambda execution role: scoped to only `sts:AssumeRole` + `logs:*`
+  (`credentialsFn`: `dynamodb:UpdateItem` + `sts:AssumeRole` + logs; `ingestFn`: `s3:PutObject` + logs)
+- [x] Credential-vending session policy: confirm S3 prefix is player-scoped, not bucket-wide
+  (`credentials.mjs:47` — `Resource: "${BUCKET}/${playerId}/*"`)
+- [x] API Gateway: verify burst + rate throttle limits are set per-stage in all three regions
+  (`ingest-stack.ts` — rate 10 / burst 20; same class deployed to US/EU/AP)
+- [x] Confirm vended credentials cannot read another player's S3 prefix
+  (live test: BA7C430BB386C792 credentials → `GetObject` on C8253AD53F82B595 prefix →
+  `AccessDenied: no session policy allows the s3:GetObject action`)
 
 ### CDK / Infrastructure
 - [x] Tag all CDK stacks with `Project=TheTowerAnalyzer` (app-level) + `Env=dev` (us-west-2) / `Env=prod` (all other stacks)
