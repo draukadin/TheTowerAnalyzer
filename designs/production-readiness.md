@@ -32,7 +32,7 @@ some items in different sections can be done in parallel.
 - [x] Design launcher icon — adapted from `tower-analyzer-icon.svg` (tower + magnifier, navy/amber/blue palette)
 - [x] Export adaptive icon: `ic_launcher_foreground.xml` (vector) + `ic_launcher_background` = `#eef0f7` in `colors.xml`
   (`minSdk = 26` = adaptive icons cover all supported devices; no rasterized PNG fallbacks needed)
-- [ ] Verify icon renders correctly in launcher (round + square) on a physical device
+- [x] Verify icon renders correctly in launcher (round + square) on a physical device
 
 ### iOS Shortcut Icon
 - [x] Shortcut icon is personal to each user's device and cannot be pre-configured in the
