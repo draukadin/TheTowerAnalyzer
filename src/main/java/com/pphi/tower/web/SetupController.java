@@ -71,11 +71,7 @@ public class SetupController {
                 "aws.player-id=" + req.playerId(),
                 "aws.api-gateway.region=" + req.apiGatewayRegion()
         );
-        if ("us-west-2".equals(aws.getRegion())) {
-            Files.writeString(dir.resolve("user.properties"), props, StandardOpenOption.APPEND);
-        } else {
-            Files.writeString(dir.resolve("user.properties"), props);
-        }
+        Files.writeString(dir.resolve("user.properties"), props, StandardOpenOption.APPEND);
 
         if (ddbVersionSync != null) {
             ddbVersionSync.syncLatestVersion();
