@@ -233,14 +233,11 @@ Run the full flow for each region using a real device or the Shortcuts app.
   (`docs/privacy.html` — enable GitHub Pages on the repo → docs folder of master branch)
 
 ### Setup Documentation
-- [ ] Review and finalize `resources/Video2_Setup_Script.md` for the centralized flow
-- [ ] Write user FAQ:
-  - "Where is my data stored?" → AWS S3 (encrypted, your player prefix only)
-  - "How do I change my region?" → Android: Settings screen; iOS: delete `/Shortcuts/TowerAnalyzer Region.txt` from iCloud Drive, then re-run the shortcut
-  - "What if I get a new phone?" → Re-install the app or shortcut, enter the same Player ID, select the same region
-  - "What if my submission fails?" → Check your Player ID is correct; note the throttle limit is 5 submits/hour
-  - "Can I still use Tasker / make.com?" → Yes, Legacy mode remains fully supported
-- [ ] Update `Send Farming Battle Report - Shortcuts Guide.md` to reference the new centralized shortcut as the primary method
+- [x] Centralized setup guide written: `resources/Centralized_Setup_Guide.md`
+  (covers Android app and iOS shortcut; Video2 script remains as-is for legacy flow)
+- [x] Write user FAQ: `resources/User_FAQ.md`
+- [x] Update `Send Farming Battle Report - Shortcuts Guide.md` — marked as legacy,
+  added header directing new users to the centralized shortcut
 
 ---
 

@@ -1,4 +1,11 @@
-# Send Farming Battle Report — Apple Shortcuts Guide
+# Send Farming Battle Report — Apple Shortcuts Guide (Legacy)
+
+> **New users:** Use the **Send Battle Report** shortcut instead — it works with the
+> centralized AWS backend and requires no make.com account or webhook URL.
+> Install via the iCloud link in the setup guide (`resources/Centralized_Setup_Guide.md`).
+>
+> This guide covers the original make.com shortcut for users already on the legacy
+> Google Drive + make.com pipeline who want an iOS equivalent of the Tasker task.
 
 Replicates the Tasker task of the same name. Reads a battle report from the clipboard, asks which run type it is, then POSTs it to your make.com webhook.
 
