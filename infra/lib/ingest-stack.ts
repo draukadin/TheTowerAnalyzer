@@ -44,6 +44,7 @@ export class IngestStack extends cdk.Stack {
       environment: {
         REPORTS_BUCKET: props.centralBucketName,
         BUCKET_REGION: props.dataRegion,
+        VERSION_TABLE: props.versionTableName,
       },
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
@@ -51,6 +52,12 @@ export class IngestStack extends cdk.Stack {
     });
 
     reportsBucket.grantPut(ingestFn);
+
+    ingestFn.addToRolePolicy(new iam.PolicyStatement({
+      sid: 'DDBGetPlayerVersion',
+      actions: ['dynamodb:GetItem'],
+      resources: [props.versionTableArn],
+    }));
 
     const credentialsFn = new lambda.Function(this, 'CredentialVendingFn', {
       functionName: `TowerAnalyzerCredentialVending-${env}`,

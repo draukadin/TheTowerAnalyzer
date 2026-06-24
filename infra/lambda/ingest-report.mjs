@@ -1,8 +1,11 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 
 const s3 = new S3Client({ region: process.env.BUCKET_REGION });
+const ddb = new DynamoDBClient({ region: process.env.BUCKET_REGION });
 
 const BUCKET = process.env.REPORTS_BUCKET;
+const VERSION_TABLE = process.env.VERSION_TABLE;
 
 // Mirrors SectionHeader enum display names from BattleHistoryParser
 const SECTION_HEADERS = new Set([
@@ -28,7 +31,32 @@ const MIN_SECTION_COUNT = 5;
 const MAX_BODY_BYTES = 15_000;
 
 function respond(statusCode, message) {
-  return { statusCode, body: JSON.stringify({ message }) };
+  return {
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
+  };
+}
+
+async function getCurrentVersion(playerId) {
+  if (!VERSION_TABLE) return null;
+  try {
+    const result = await ddb.send(new GetItemCommand({
+      TableName: VERSION_TABLE,
+      Key: { player_id: { S: playerId } },
+    }));
+    return result.Item?.current_version?.S ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function injectTowerEra(body, version) {
+  const lines = body.split('\n');
+  lines.splice(1, 0, `Tower Era\t${version ?? '1.0.0'}`);
+  return lines.join('\n');
 }
 
 export const handler = async (event) => {
@@ -70,10 +98,13 @@ export const handler = async (event) => {
   const typeSuffix = (runType === 'Dissonance' && dissonanceType) ? `_${dissonanceType}` : '';
   const key = `${playerId}/${timestamp}_${runType}${typeSuffix}.txt`;
 
+  const version = await getCurrentVersion(playerId);
+  const enrichedBody = injectTowerEra(body, version);
+
   await s3.send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
-    Body: body,
+    Body: enrichedBody,
     ContentType: 'text/plain',
   }));
 
