@@ -1,8 +1,13 @@
 import * as cdk from 'aws-cdk-lib/core';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -18,6 +23,8 @@ export interface IngestStackProps extends cdk.StackProps {
   credentialRoleArn: string;
   /** AWS region where S3 and DynamoDB live (us-east-2) — DDB client in credentials Lambda uses this */
   dataRegion: string;
+  /** Email address for CloudWatch alarm notifications (omit to create alarms without a subscriber) */
+  alertEmail?: string;
 }
 
 export class IngestStack extends cdk.Stack {
@@ -40,6 +47,7 @@ export class IngestStack extends cdk.Stack {
       },
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
+      logRetention: logs.RetentionDays.ONE_MONTH,
     });
 
     reportsBucket.grantPut(ingestFn);
@@ -58,6 +66,7 @@ export class IngestStack extends cdk.Stack {
       },
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
+      logRetention: logs.RetentionDays.ONE_MONTH,
     });
 
     // Upsert player record in DDB on first credential vend
@@ -93,6 +102,37 @@ export class IngestStack extends cdk.Stack {
 
     const credentials = api.root.addResource('credentials');
     credentials.addMethod('GET', new apigateway.LambdaIntegration(credentialsFn));
+
+    // ── Monitoring ──────────────────────────────────────────────────────────────
+    const alertTopic = new sns.Topic(this, 'AlertTopic', {
+      displayName: `TowerAnalyzer-${env}-Alerts-${this.region}`,
+    });
+    if (props.alertEmail) {
+      alertTopic.addSubscription(new subs.EmailSubscription(props.alertEmail));
+    }
+
+    const alarmDefaults = {
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    };
+
+    for (const [id, fn] of [['Ingest', ingestFn], ['Credentials', credentialsFn]] as [string, lambda.Function][]) {
+      new cloudwatch.Alarm(this, `${id}ErrorAlarm`, {
+        alarmName: `TowerAnalyzer-${env}-${id}Errors-${this.region}`,
+        alarmDescription: `${id} Lambda error count ≥ 5 in 5 min`,
+        metric: fn.metricErrors({ period: cdk.Duration.minutes(5) }),
+        threshold: 5,
+        ...alarmDefaults,
+      }).addAlarmAction(new actions.SnsAction(alertTopic));
+    }
+
+    new cloudwatch.Alarm(this, 'Api5xxAlarm', {
+      alarmName: `TowerAnalyzer-${env}-Api5xx-${this.region}`,
+      alarmDescription: 'API Gateway 5xx count ≥ 3 in 5 min',
+      metric: api.metricServerError({ period: cdk.Duration.minutes(5) }),
+      threshold: 3,
+      ...alarmDefaults,
+    }).addAlarmAction(new actions.SnsAction(alertTopic));
 
     new cdk.CfnOutput(this, 'ApiEndpoint', {
       value: `${api.url}reports`,

@@ -205,10 +205,13 @@ Run the full flow for each region using a real device or the Shortcuts app.
 
 ## 7. Monitoring & Operations
 
-- [ ] CloudWatch alarm: Lambda error rate > 5% in any region → email alert
-- [ ] CloudWatch alarm: API Gateway 5xx rate > 1% → email alert
-- [ ] AWS Billing alert: estimated monthly cost > $10 → email alert
-- [ ] Verify Lambda logs are captured in CloudWatch; set log retention to 30 days
+- [x] CloudWatch alarm: Lambda error count ≥ 5 in 5 min in any region → email alert
+  (ingest + credential Lambda, all three regions; SNS subscriptions confirmed)
+- [x] CloudWatch alarm: API Gateway 5xx count ≥ 3 in 5 min → email alert
+  (all three regions; SNS subscriptions confirmed)
+- [x] AWS Billing alert: estimated monthly cost > $10 → email alert
+  (AWS Budgets — `TowerAnalyzer-Monthly`; direct email, no SNS subscription needed)
+- [x] Lambda log retention set to 30 days in all regions (`logRetention` on both functions)
 - [ ] Document a brief runbook:
   - How to check if a regional Lambda is down (CloudWatch → Log Groups)
   - How to manually tag an S3 report as `status=processed` if Spring Boot missed it
