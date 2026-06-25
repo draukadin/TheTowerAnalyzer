@@ -11,6 +11,20 @@ Run `/architecture` (or invoke the `architecture` skill) at the start of any cod
 - **Front end**: Single-page app at `src/main/resources/index.html` — vanilla JS, no build step
 - **Build**: Maven (`pom.xml`), runs on `localhost:8080`
 
+## Factory Database
+
+`src/main/resources/analyzer.db` is a pre-seeded SQLite file bundled in the JAR. On first launch, `TowerAnalyzerApplication.installBundledDatabaseIfAbsent()` copies it to `%APPDATA%\TheTowerAnalyzer\analyzer.db` before Spring starts, so new installs skip the seeding delay.
+
+When `DatabaseInitializer` or any `db/*Seeder.java` changes, regenerate and commit it:
+
+```powershell
+& "C:\Program Files\JetBrains\IntelliJ IDEA 2025.3.2\plugins\maven\lib\maven3\bin\mvn.cmd" package -Pgenerate-factory-db
+git add src/main/resources/analyzer.db
+git commit -m "chore: regenerate factory database"
+```
+
+The `generate-factory-db` profile boots the app with `-Dspring.profiles.active=seed` (no web server, no APPDATA writes), writes `target/factory.db`, then copies it over the checked-in resource.
+
 ## Key Conventions
 
 - One `@RestController` per domain entity in `web/`

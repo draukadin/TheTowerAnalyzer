@@ -33,9 +33,12 @@ public class TowerAnalyzerApplication {
     private static final Logger log = LoggerFactory.getLogger(TowerAnalyzerApplication.class);
 
     public static void main(String[] args) throws IOException {
-        installBundledDatabaseIfAbsent();
-        applyStagedRestoreIfPresent();
-        installUserPropertiesIfAbsent();
+        boolean seedMode = "seed".equals(System.getProperty("spring.profiles.active"));
+        if (!seedMode) {
+            installBundledDatabaseIfAbsent();
+            applyStagedRestoreIfPresent();
+            installUserPropertiesIfAbsent();
+        }
         String version = TowerAnalyzerApplication.class.getPackage().getImplementationVersion();
         log.info("Starting TheTowerAnalyzer version {}", version != null ? version : "unknown (dev build)");
         SpringApplication app = new SpringApplication(TowerAnalyzerApplication.class);

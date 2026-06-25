@@ -329,6 +329,55 @@
                 <mcp.bundle.dir>${project.build.directory}/mcp-bundle</mcp.bundle.dir>
             </properties>
         </profile>
+
+        <!--
+            Regenerates src/main/resources/analyzer.db from a live Spring Boot seed run.
+            Run this whenever DatabaseInitializer or a Seeder changes, then commit the result.
+            Usage: mvn package -Pgenerate-factory-db
+            Output: src/main/resources/analyzer.db (overwritten in-place)
+        -->
+        <profile>
+            <id>generate-factory-db</id>
+            <build>
+                <plugins>
+                    <!-- Step 1: Boot the app in seed mode — writes target/factory.db -->
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>seed-factory-db</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <jvmArguments>-Dspring.profiles.active=seed</jvmArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Step 2: Overwrite the checked-in resource with the freshly seeded DB -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>install-factory-db</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <target>
+                                        <copy file="${project.build.directory}/factory.db"
+                                              tofile="${project.basedir}/src/main/resources/analyzer.db"
+                                              overwrite="true"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
 </project>
