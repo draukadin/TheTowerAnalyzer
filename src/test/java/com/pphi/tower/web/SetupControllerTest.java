@@ -131,7 +131,6 @@ class SetupControllerTest {
     private AwsProperties.ApiGateway stubForWrite() {
         var gw = mock(AwsProperties.ApiGateway.class);
         when(aws.getApiGateway()).thenReturn(gw);
-        when(aws.getRegion()).thenReturn("not-us-west-2");
         return gw;
     }
 }

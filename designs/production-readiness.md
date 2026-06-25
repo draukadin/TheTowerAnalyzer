@@ -1,6 +1,6 @@
 # Centralized Platform — Production Readiness
 
-> Last updated: 2026-06-23
+> Last updated: 2026-06-24
 
 This checklist covers everything needed to take the `feature/centralized-platform`
 branch from feature-complete to production-shipped. Work roughly top-to-bottom;
@@ -74,20 +74,21 @@ some items in different sections can be done in parallel.
 - [x] Verify no dev endpoint appears in the installed app settings
 
 ### Play Store Listing
-- [ ] Create new app in Google Play Console (package: `com.pphi.thetoweranalyzer`)
-- [ ] Upload signed AAB
-- [ ] Set app category: Tools (or Productivity)
-- [ ] Add feature graphic, screenshots, descriptions
-- [ ] Set content rating (complete IARC questionnaire — likely Everyone)
-- [ ] Complete Data Safety form:
+- [x] Create new app in Google Play Console (package: `com.pphi.thetoweranalyzer`)
+- [x] Upload signed AAB
+- [x] Set app category: Tools (or Productivity)
+- [x] Add feature graphic, screenshots, descriptions
+- [x] Set content rating (complete IARC questionnaire — likely Everyone)
+- [x] Complete Data Safety form:
   - Data collected: Player ID (entered by user), battle report text (sent to AWS S3)
   - Data encrypted in transit: Yes (HTTPS)
   - User can request deletion: Yes (delete reports from the analyzer UI)
-- [ ] Link privacy policy URL: `https://draukadin.github.io/TheTowerAnlyzer/privacy.html`
+- [x] Link privacy policy URL: `https://draukadin.github.io/TheTowerAnalyzer/privacy.html`
 
 ### Release Track
-- [ ] Publish to Internal Testing track first (up to 100 testers, no review delay)
-- [ ] Validate with real testers across US / EU / AP regions
+- [x] Publish to Internal Testing track first (up to 100 testers, no review delay)
+- [x] Added self as internal tester; installed app from Google Play Store
+- [x] Validate end-to-end submit flow on Play Store-installed version — 3 Farming reports processed successfully; Tournament pending
 - [ ] Promote to Production when stable
 
 ---
@@ -144,7 +145,9 @@ Run the full flow for each region using a real device or the Shortcuts app.
 
 ### Credential Vending
 - [x] STS credentials obtained successfully from each region's `/credentials` endpoint
-- [x] Verify IP-bound session policy: request from a different IP is rejected
+- [x] IP-pinning removed from session policy — caused `s3:ListBucket` denial when Spring Boot
+  called S3 from a different network path than the credential-vending call; player-ID prefix
+  scoping is the isolation boundary (see `credentials.mjs` commit 9eae2d0)
 - [x] Rate limiting: API Gateway stage throttle applies; no per-player hourly quota
   (credentials fetched once per hour by design — Spring Boot auto-refreshes 5 min before expiry)
 - [x] Verify credentials auto-refresh 5 minutes before expiry (check Spring Boot logs)
@@ -186,10 +189,11 @@ Run the full flow for each region using a real device or the Shortcuts app.
   (`data-stack.ts` — `BLOCK_ALL` + `S3_MANAGED`; deployed to prod)
 - [x] DynamoDB: encryption at rest enabled
   (AWS-owned key default — always on; `SSEDescription` is null = not customer-managed, not unencrypted)
-- [x] Lambda execution role: scoped to only `sts:AssumeRole` + `logs:*`
-  (`credentialsFn`: `dynamodb:UpdateItem` + `sts:AssumeRole` + logs; `ingestFn`: `s3:PutObject` + logs)
-- [x] Credential-vending session policy: confirm S3 prefix is player-scoped, not bucket-wide
-  (`credentials.mjs:47` — `Resource: "${BUCKET}/${playerId}/*"`)
+- [x] Lambda execution role: scoped to minimum required permissions
+  (`credentialsFn`: `dynamodb:UpdateItem` + `sts:AssumeRole` + logs;
+   `ingestFn`: `s3:PutObject` + `dynamodb:GetItem` + logs — GetItem added to read Tower Era version from DDB)
+- [x] Credential-vending session policy: S3 prefix is player-scoped, not bucket-wide
+  (`credentials.mjs` — `Resource: "${BUCKET}/${playerId}/*"`); IP-pinning removed (see Section 4)
 - [x] API Gateway: verify burst + rate throttle limits are set per-stage in all three regions
   (`ingest-stack.ts` — rate 10 / burst 20; same class deployed to US/EU/AP)
 - [x] Confirm vended credentials cannot read another player's S3 prefix
@@ -243,9 +247,12 @@ Run the full flow for each region using a real device or the Shortcuts app.
 
 ## 9. Pre-Launch Checklist
 
-- [ ] All sections 1–8 complete and verified
-- [ ] Merge `feature/centralized-platform` → `master`
-- [ ] Tag release: `git tag v2.0.0-centralized`
+- [x] Merge `feature/centralized-platform` → `master`
+  (done early to unblock GitHub Pages privacy policy URL and allow internal testers
+  to use the mobile app with the live Spring Boot backend)
+- [x] Enable GitHub Pages: repo Settings → Pages → source = `master` / `/docs`
+  → confirm `https://draukadin.github.io/TheTowerAnlyzer/privacy.html` is live
+- [ ] Tag release: `git tag v1.1.0` (minor bump — new centralized path added, legacy mode preserved, no breaking changes)
 - [ ] Android: promote Internal Testing AAB to Production track in Play Console
 - [ ] iOS: publish shortcut distribution link
 - [ ] Notify existing users (community post / Discord / wherever your user base is)

@@ -71,7 +71,7 @@ public class SetupController {
                 "aws.player-id=" + req.playerId(),
                 "aws.api-gateway.region=" + req.apiGatewayRegion()
         );
-        Files.writeString(dir.resolve("user.properties"), props, StandardOpenOption.APPEND);
+        Files.writeString(dir.resolve("user.properties"), props, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
         if (ddbVersionSync != null) {
             ddbVersionSync.syncLatestVersion();

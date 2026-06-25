@@ -1,6 +1,6 @@
 package com.pphi.tower.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;
@@ -8,7 +8,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-@ConditionalOnProperty(name = "aws.region")
+@ConditionalOnExpression("!'${aws.region:}'.isEmpty()")
 public class AwsConfig {
 
     private final AwsProperties aws;
