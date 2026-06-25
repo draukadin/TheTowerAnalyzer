@@ -43,8 +43,24 @@ jobs:
           $installer_ver = $ver -replace '-.*$', ''
           echo "INSTALLER_VERSION=$installer_ver" >> $env:GITHUB_OUTPUT
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       - name: Build fat JAR
         run: mvn package -DskipTests "-Drevision=${{ steps.version.outputs.APP_VERSION }}"
+
+      - name: Install MCP dependencies
+        run: npm install --omit=dev --prefix mcp
+
+      - name: Stage MCP bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force target/mcp-bundle/mcp
+          Copy-Item mcp/server.js, mcp/package.json -Destination target/mcp-bundle/mcp/
+          Copy-Item mcp/node_modules -Destination target/mcp-bundle/mcp/node_modules -Recurse
+          Copy-Item (Get-Command node).Source -Destination target/mcp-bundle/mcp/node.exe
 
       - name: Create Windows installer
         shell: pwsh
@@ -63,7 +79,9 @@ jobs:
             --win-shortcut `
             --win-console `
             --icon src/main/resources/app.ico `
-            --java-options "-Djava.awt.headless=true"
+            --java-options "-Djava.awt.headless=true" `
+            --win-upgrade-uuid "7E046B11-0100-4D69-BAFE-442CBD5779CB" `
+            --app-content target/mcp-bundle/mcp
 
       - name: Upload Windows installer artifact
         uses: actions/upload-artifact@v4

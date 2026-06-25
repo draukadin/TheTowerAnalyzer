@@ -234,6 +234,8 @@
                                         <argument>src/main/resources/app.ico</argument>
                                         <argument>--java-options</argument>
                                         <argument>-Djava.awt.headless=true</argument>
+                                        <argument>--win-upgrade-uuid</argument>
+                                        <argument>${win.upgrade.uuid}</argument>
                                         <argument>--app-content</argument>
                                         <argument>${mcp.bundle.dir}/mcp</argument>
                                     </arguments>
@@ -246,6 +248,7 @@
             </build>
             <properties>
                 <installer.version>1.0.0</installer.version>
+                <win.upgrade.uuid>7E046B11-0100-4D69-BAFE-442CBD5779CB</win.upgrade.uuid>
                 <nodejs.version>24.16.0</nodejs.version>
                 <nodejs.dir>node-v${nodejs.version}-win-x64</nodejs.dir>
                 <nodejs.zip>${project.build.directory}/${nodejs.dir}.zip</nodejs.zip>
