@@ -5092,10 +5092,11 @@ async function renderTournamentView() {
 
 function buildTournamentPage() {
   document.getElementById('mainContent').innerHTML = `
-    <div class="report-title" style="margin-bottom:1rem">Tournament Conditions</div>
+    <div class="report-title" style="margin-bottom:1rem">Tournament Battle Conditions</div>
     <div class="tourn-tab-bar">
       <div class="tourn-tab${tournamentTab==='history'?' active':''}" onclick="tournamentSetTab('history')">History</div>
       <div class="tourn-tab${tournamentTab==='search'?' active':''}" onclick="tournamentSetTab('search')">Search</div>
+      <div class="tourn-tab${tournamentTab==='import'?' active':''}" onclick="tournamentSetTab('import')">Import</div>
     </div>
     <div id="tournamentBody"></div>`;
   renderTournamentBody();
@@ -5111,6 +5112,7 @@ function tournamentSetTab(tab) {
 
 function renderTournamentBody() {
   if (tournamentTab === 'history') renderTournamentHistory();
+  else if (tournamentTab === 'import') renderTournamentImport();
   else renderTournamentSearch();
 }
 
@@ -5132,7 +5134,7 @@ function renderTournamentHistory() {
 
   const formHtml = tournamentFormOpen ? `
     <div class="tourn-form-card">
-      <div style="font-size:13px;font-weight:700;margin-bottom:1rem">Log Tournament</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:1rem">Tournament Battle Conditions</div>
       <div class="tourn-form-row">
         <div class="tourn-field">
           <label>Date</label>
@@ -5193,8 +5195,9 @@ function renderTournamentHistory() {
 
   document.getElementById('tournamentBody').innerHTML = `
     ${formHtml}
-    ${!tournamentFormOpen ? `<div style="margin-bottom:1rem">
-      <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="tournamentOpenForm()">+ Log Tournament</button>
+    ${!tournamentFormOpen ? `<div style="margin-bottom:1rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+      <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="tournamentOpenForm()">+ Add Tournament Battle Conditions</button>
+      <button class="btn" style="font-size:12px;padding:5px 14px" onclick="tournamentOpenS3Modal()">Fetch Battle Conditions</button>
     </div>` : ''}
     <div>${rows}</div>`;
 }
@@ -5207,6 +5210,52 @@ function tournamentOpenForm() {
 function tournamentCloseForm() {
   tournamentFormOpen = false;
   renderTournamentHistory();
+}
+
+function tournamentOpenS3Modal() {
+  document.getElementById('ts3Date').value = mostRecentTournamentDate();
+  document.getElementById('ts3Status').textContent = '';
+  document.getElementById('ts3LoadBtn').disabled = false;
+  document.getElementById('tournamentS3Modal').style.display = 'flex';
+}
+
+function tournamentCloseS3Modal() {
+  document.getElementById('tournamentS3Modal').style.display = 'none';
+}
+
+async function tournamentLoadFromS3() {
+  const date   = document.getElementById('ts3Date').value;
+  const status = document.getElementById('ts3Status');
+  const btn    = document.getElementById('ts3LoadBtn');
+
+  if (!date) { status.textContent = 'Select a date.'; return; }
+  const d = new Date(date + 'T00:00:00Z');
+  if (d.getUTCDay() !== 3 && d.getUTCDay() !== 6) {
+    status.style.color = 'var(--red)';
+    status.textContent = 'Must be a Wednesday or Saturday.';
+    return;
+  }
+
+  btn.disabled = true;
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Checking for Battle Conditions…';
+
+  try {
+    const res = await fetch(`${API}/tournaments/fetch-from-s3?date=${encodeURIComponent(date)}`);
+    if (res.status === 404) {
+      status.style.color = 'var(--red)';
+      status.innerHTML = `No data found for ${date}. Visit <a href="https://thetower.lol/bcs" target="_blank" style="color:var(--accent)">thetower.lol/bcs</a> to download the battle conditions, then use the <strong>Import</strong> tab.`;
+      btn.disabled = false;
+      return;
+    }
+    if (!res.ok) throw new Error(await httpErrorMessage(res));
+    tournamentCloseS3Modal();
+    await renderTournamentView();
+  } catch(e) {
+    status.style.color = 'var(--red)';
+    status.textContent = 'Failed: ' + e.message;
+    btn.disabled = false;
+  }
 }
 
 async function tournamentSave() {
@@ -5299,6 +5348,127 @@ function tournamentOpenAddCondition() {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ name, acronym: acronym || null, category: cat })
   }).then(r => { if (!r.ok) { alert('Failed to add condition.'); return; } renderTournamentView(); });
+}
+
+async function httpErrorMessage(res) {
+  const text = await res.text();
+  try { const j = JSON.parse(text); return j.message || j.error || text; } catch { return text; }
+}
+
+function mostRecentTournamentDate() {
+  const d = new Date();
+  // Tournaments run Wednesday (UTC day 3) and Saturday (UTC day 6).
+  // daysBack indexed by UTC day 0=Sun…6=Sat: go back to nearest past Wed or Sat.
+  const daysBack = [1, 2, 3, 0, 1, 2, 0][d.getUTCDay()];
+  d.setUTCDate(d.getUTCDate() - daysBack);
+  return d.toISOString().slice(0, 10);
+}
+
+function renderTournamentImport() {
+  document.getElementById('tournamentBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:1.5rem;max-width:520px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Import from CSV</div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem">
+          <div>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Tournament Date</label>
+            <input id="tcsvDate" type="date" class="tourn-input" value="${mostRecentTournamentDate()}" style="width:180px">
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Wednesdays and Saturdays only</div>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">CSV File</label>
+            <input id="tcsvFile" type="file" accept=".csv" style="font-size:12px;color:var(--text)">
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;margin-top:4px">
+            <button class="btn btn-primary" id="tcsvImportBtn" style="font-size:12px;padding:5px 14px"
+              onclick="tournamentImportCsv()">Import CSV</button>
+            <span id="tcsvStatus" style="font-size:13px;color:var(--muted)"></span>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:1rem">Sync from S3</div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <button class="btn" id="tcsvSyncBtn" style="font-size:12px;padding:5px 14px"
+            onclick="tournamentSync()">Sync from S3</button>
+          <span id="tcsvSyncStatus" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function tournamentImportCsv() {
+  const dateEl = document.getElementById('tcsvDate');
+  const fileEl = document.getElementById('tcsvFile');
+  const btn    = document.getElementById('tcsvImportBtn');
+  const status = document.getElementById('tcsvStatus');
+
+  const date = dateEl ? dateEl.value : '';
+  if (!date) { if (status) { status.textContent = 'Select a date.'; } return; }
+
+  const d = new Date(date + 'T00:00:00Z');
+  if (d.getUTCDay() !== 3 && d.getUTCDay() !== 6) {
+    status.style.color = 'var(--red)';
+    status.textContent = 'Must be a Wednesday or Saturday.';
+    return;
+  }
+  if (!fileEl || !fileEl.files.length) {
+    status.textContent = 'Choose a CSV file.';
+    return;
+  }
+
+  btn.disabled = true;
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Importing…';
+
+  try {
+    const fd = new FormData();
+    fd.append('date', date);
+    fd.append('file', fileEl.files[0]);
+    const res = await fetch(`${API}/tournaments/import/csv`, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(await httpErrorMessage(res));
+    const result = await res.json();
+    // Refresh data and stay on import tab
+    tournamentTab = 'import';
+    await renderTournamentView();
+    const s = document.getElementById('tcsvStatus');
+    if (s) {
+      s.style.color = 'var(--green,#4ade80)';
+      s.textContent = result.summary || `Imported ${result.date}`;
+    }
+  } catch(e) {
+    if (btn) btn.disabled = false;
+    if (status) { status.style.color = 'var(--red)'; status.textContent = 'Import failed: ' + e.message; }
+  }
+}
+
+async function tournamentSync() {
+  const btn    = document.getElementById('tcsvSyncBtn');
+  const status = document.getElementById('tcsvSyncStatus');
+  btn.disabled = true;
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Syncing…';
+
+  try {
+    const res = await fetch(`${API}/tournaments/sync`, { method: 'POST' });
+    if (!res.ok) throw new Error(await httpErrorMessage(res));
+    const results = await res.json();
+    const count = results.length;
+    if (count > 0) {
+      tournamentTab = 'import';
+      await renderTournamentView();
+      const s = document.getElementById('tcsvSyncStatus');
+      if (s) { s.style.color = 'var(--green,#4ade80)'; s.textContent = `Synced ${count} file${count!==1?'s':''}.`; }
+    } else {
+      status.style.color = 'var(--green,#4ade80)';
+      status.textContent = 'Nothing new.';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.disabled = false;
+    status.style.color = 'var(--red)';
+    status.textContent = 'Sync failed: ' + e.message;
+  }
 }
 
 async function guardianSubmitNewChip() {

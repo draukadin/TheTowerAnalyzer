@@ -19,8 +19,6 @@ export const handler = async (event) => {
     return respond(400, { message: 'Missing X-Player-Id header' });
   }
 
-  const callerIp = event.requestContext?.identity?.sourceIp;
-
   // Register player on first call; leave existing record unchanged
   await ddb.send(new UpdateItemCommand({
     TableName: TABLE,
@@ -29,15 +27,13 @@ export const handler = async (event) => {
     ExpressionAttributeValues: { ':now': { S: new Date().toISOString() } },
   }));
 
-  const ipCondition = callerIp ? { IpAddress: { 'aws:SourceIp': callerIp } } : undefined;
-
   const listBucketStatement = {
     Effect: 'Allow',
     Action: 's3:ListBucket',
     Resource: `arn:aws:s3:::${BUCKET}`,
     Condition: {
-      StringLike: { 's3:prefix': [`${playerId}/*`] },
-      ...(ipCondition ?? {}),
+      // Allow listing the player's own prefix and the shared tournament prefix.
+      StringLike: { 's3:prefix': [`${playerId}/*`, 'tournaments/*'] },
     },
   };
 
@@ -46,7 +42,13 @@ export const handler = async (event) => {
     Action: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:CopyObject', 's3:GetObjectTagging', 's3:PutObjectTagging'],
     Resource: `arn:aws:s3:::${BUCKET}/${playerId}/*`,
   };
-  if (ipCondition) s3ObjectStatement.Condition = ipCondition;
+
+  // Shared tournament CSV store — read/write by any player, no delete/copy/tagging needed.
+  const s3TournamentStatement = {
+    Effect: 'Allow',
+    Action: ['s3:GetObject', 's3:PutObject'],
+    Resource: `arn:aws:s3:::${BUCKET}/tournaments/*`,
+  };
 
   const ddbStatement = {
     Effect: 'Allow',
@@ -54,13 +56,12 @@ export const handler = async (event) => {
     Resource: TABLE_ARN,
     Condition: {
       'ForAllValues:StringEquals': { 'dynamodb:LeadingKeys': [playerId] },
-      ...(ipCondition ?? {}),
     },
   };
 
   const sessionPolicy = JSON.stringify({
     Version: '2012-10-17',
-    Statement: [listBucketStatement, s3ObjectStatement, ddbStatement],
+    Statement: [listBucketStatement, s3ObjectStatement, s3TournamentStatement, ddbStatement],
   });
 
   const sessionName = `player-${playerId.replace(/[^\w+=,.@-]/g, '_')}`.slice(0, 64);

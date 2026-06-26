@@ -116,6 +116,79 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals><goal>prepare-agent</goal></goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals><goal>report</goal></goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <goals><goal>check</goal></goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.90</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <excludes>
+                                <!-- Controllers, config, seeders, reporters covered by integration/E2E -->
+                                <exclude>com/pphi/tower/web/**</exclude>
+                                <exclude>com/pphi/tower/config/**</exclude>
+                                <exclude>com/pphi/tower/db/**</exclude>
+                                <exclude>com/pphi/tower/reporter/**</exclude>
+                                <exclude>com/pphi/tower/repository/**</exclude>
+                                <exclude>com/pphi/tower/TowerAnalyzerApplication.class</exclude>
+                                <!-- External model types: no business logic, pure data carriers for 3rd-party APIs -->
+                                <exclude>com/pphi/tower/model/googledrive/**</exclude>
+                                <exclude>com/pphi/tower/model/s3/**</exclude>
+                                <exclude>com/pphi/tower/model/sheets/**</exclude>
+                                <!-- Infrastructure services: require live AWS/Slack/Claude credentials -->
+                                <exclude>com/pphi/tower/service/S3BackupService.class</exclude>
+                                <exclude>com/pphi/tower/service/S3ReportFetcherService.class</exclude>
+                                <exclude>com/pphi/tower/service/DdbVersionSyncService.class</exclude>
+                                <exclude>com/pphi/tower/service/TowerTrackerFetcherService.class</exclude>
+                                <exclude>com/pphi/tower/service/ClaudeSkillsService.class</exclude>
+                                <exclude>com/pphi/tower/service/SlCoverageService.class</exclude>
+                                <!-- Spring @Configuration class — wiring only, no testable logic -->
+                                <exclude>com/pphi/tower/jackson/JacksonConfig.class</exclude>
+                                <!-- Binary game-save parsers: require proprietary .dat file, no pure-unit path -->
+                                <exclude>com/pphi/tower/parser/PlayerInfoReader.class</exclude>
+                                <exclude>com/pphi/tower/parser/NrbfStream.class</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -234,6 +307,8 @@
                                         <argument>src/main/resources/app.ico</argument>
                                         <argument>--java-options</argument>
                                         <argument>-Djava.awt.headless=true</argument>
+                                        <argument>--win-upgrade-uuid</argument>
+                                        <argument>${win.upgrade.uuid}</argument>
                                         <argument>--app-content</argument>
                                         <argument>${mcp.bundle.dir}/mcp</argument>
                                     </arguments>
@@ -246,12 +321,62 @@
             </build>
             <properties>
                 <installer.version>1.0.0</installer.version>
+                <win.upgrade.uuid>7E046B11-0100-4D69-BAFE-442CBD5779CB</win.upgrade.uuid>
                 <nodejs.version>24.16.0</nodejs.version>
                 <nodejs.dir>node-v${nodejs.version}-win-x64</nodejs.dir>
                 <nodejs.zip>${project.build.directory}/${nodejs.dir}.zip</nodejs.zip>
                 <nodejs.extracted>${project.build.directory}/nodejs</nodejs.extracted>
                 <mcp.bundle.dir>${project.build.directory}/mcp-bundle</mcp.bundle.dir>
             </properties>
+        </profile>
+
+        <!--
+            Regenerates src/main/resources/analyzer.db from a live Spring Boot seed run.
+            Run this whenever DatabaseInitializer or a Seeder changes, then commit the result.
+            Usage: mvn package -Pgenerate-factory-db
+            Output: src/main/resources/analyzer.db (overwritten in-place)
+        -->
+        <profile>
+            <id>generate-factory-db</id>
+            <build>
+                <plugins>
+                    <!-- Step 1: Boot the app in seed mode — writes target/factory.db -->
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>seed-factory-db</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <jvmArguments>-Dspring.profiles.active=seed</jvmArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Step 2: Overwrite the checked-in resource with the freshly seeded DB -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>install-factory-db</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <target>
+                                        <copy file="${project.build.directory}/factory.db"
+                                              tofile="${project.basedir}/src/main/resources/analyzer.db"
+                                              overwrite="true"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 

@@ -1,15 +1,12 @@
 package com.pphi.tower.service;
 
 import com.pphi.tower.config.AwsProperties;
-import com.pphi.tower.config.CredentialVendingClient;
 import com.pphi.tower.model.s3.S3BackupObject;
 import com.pphi.tower.repository.S3BackupRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
@@ -19,7 +16,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Centralized-mode database backup/restore against the shared reports S3 bucket
@@ -40,9 +36,6 @@ public class S3BackupService {
     private final AwsProperties aws;
     private final S3BackupRepository repo;
 
-    @Autowired(required = false)
-    private CredentialVendingClient credentialClient;
-
     public S3BackupService(AwsProperties aws, S3BackupRepository repo) {
         this.aws = aws;
         this.repo = repo;
@@ -58,11 +51,8 @@ public class S3BackupService {
         Path tempCopy = Files.createTempFile("tower-backup-", ".db");
         try {
             Files.copy(source, tempCopy, StandardCopyOption.REPLACE_EXISTING);
-            withCredentialRetry(() -> {
-                repo.putLatest(bucket, key, tempCopy);
-                demotePreviousLatest(bucket, prefix, key);
-                return null;
-            });
+            repo.putLatest(bucket, key, tempCopy);
+            demotePreviousLatest(bucket, prefix, key);
             log.info("Backed up database to s3://{}/{}", bucket, key);
             return new S3BackupObject(key, fileName(key), Files.size(tempCopy), java.time.Instant.now(), true);
         } finally {
@@ -72,7 +62,7 @@ public class S3BackupService {
 
     /** List backups newest-first for the restore picker. */
     public List<S3BackupObject> list() {
-        return withCredentialRetry(() -> repo.listBackups(aws.getS3Bucket(), backupPrefix()));
+        return repo.listBackups(aws.getS3Bucket(), backupPrefix());
     }
 
     /**
@@ -86,10 +76,7 @@ public class S3BackupService {
         }
         Path staging = databaseDir().resolve(RESTORE_STAGING_FILE);
         try {
-            withCredentialRetry(() -> {
-                repo.downloadToFile(aws.getS3Bucket(), key, staging);
-                return null;
-            });
+            repo.downloadToFile(aws.getS3Bucket(), key, staging);
         } catch (RuntimeException e) {
             Files.deleteIfExists(staging);
             throw e;
@@ -105,25 +92,6 @@ public class S3BackupService {
                 log.info("Demoted previous latest backup {} (expires in 30 days)", b.key());
             }
         }
-    }
-
-    /** Retry once on AccessDenied by re-vending credentials, mirroring S3ReportFetcherService. */
-    private <T> T withCredentialRetry(Supplier<T> action) {
-        try {
-            return action.get();
-        } catch (AwsServiceException e) {
-            if (isAccessDenied(e) && credentialClient != null) {
-                log.warn("S3 access denied — re-vending credentials and retrying");
-                credentialClient.forceRefresh();
-                return action.get();
-            }
-            throw e;
-        }
-    }
-
-    private static boolean isAccessDenied(AwsServiceException e) {
-        String code = e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "";
-        return "AccessDenied".equals(code) || "AccessDeniedException".equals(code);
     }
 
     private String backupPrefix() {

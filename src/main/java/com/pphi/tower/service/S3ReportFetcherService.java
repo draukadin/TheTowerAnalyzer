@@ -2,7 +2,6 @@ package com.pphi.tower.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pphi.tower.config.AwsProperties;
-import com.pphi.tower.config.CredentialVendingClient;
 import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.model.battlehistory.BattleReport;
 import com.pphi.tower.model.battlehistory.Currencies;
@@ -13,11 +12,9 @@ import com.pphi.tower.repository.RunRepository;
 import com.pphi.tower.repository.S3ReportRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
@@ -40,9 +37,6 @@ public class S3ReportFetcherService {
     private final S3ReportRepository s3Repository;
     private final ObjectMapper objectMapper;
 
-    @Autowired(required = false)
-    private CredentialVendingClient credentialClient;
-
     public S3ReportFetcherService(
             AwsProperties aws,
             BattleHistoryParser parser,
@@ -57,19 +51,6 @@ public class S3ReportFetcherService {
     }
 
     public int processReports() {
-        try {
-            return doProcessReports();
-        } catch (AwsServiceException e) {
-            if (isAccessDenied(e) && credentialClient != null) {
-                log.warn("S3 access denied — re-vending credentials and retrying");
-                credentialClient.forceRefresh();
-                return doProcessReports();
-            }
-            throw e;
-        }
-    }
-
-    private int doProcessReports() {
         String bucket   = aws.getS3Bucket();
         String playerId = aws.getPlayerId();
 
@@ -79,11 +60,6 @@ public class S3ReportFetcherService {
                 .toList();
         unprocessed.forEach(key -> processKey(bucket, key));
         return unprocessed.size();
-    }
-
-    private static boolean isAccessDenied(AwsServiceException e) {
-        String code = e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "";
-        return "AccessDenied".equals(code) || "AccessDeniedException".equals(code);
     }
 
     private void processKey(String bucket, String key) {

@@ -464,5 +464,21 @@
   </div>
 </div>
 
+<div id="tournamentS3Modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)tournamentCloseS3Modal()">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">Fetch Tournament Battle Conditions</div>
+    <div class="form-group">
+      <label class="form-label">Tournament Date</label>
+      <input class="form-input" id="ts3Date" type="date">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Wednesdays and Saturdays only</div>
+    </div>
+    <div id="ts3Status" style="font-size:13px;min-height:2.5em;line-height:1.6;margin-bottom:0.5rem"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="ts3LoadBtn" onclick="tournamentLoadFromS3()">Load from S3</button>
+      <button class="btn" onclick="tournamentCloseS3Modal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

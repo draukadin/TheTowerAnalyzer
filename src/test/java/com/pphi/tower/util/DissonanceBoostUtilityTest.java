@@ -29,7 +29,15 @@ class DissonanceBoostUtilityTest {
                 // single-tier list: others=0, only current contributes
                 Arguments.of(3000, List.of(3000), 5, DissonanceType.ATTACK, bd(2.64)),
                 // tierPb above 5000 cap: same result as 5000
-                Arguments.of(7500, List.of(7500), 0, DissonanceType.ATTACK, bd(5.00))
+                Arguments.of(7500, List.of(7500), 0, DissonanceType.ATTACK, bd(5.00)),
+                // DEFENSE type: same multiplier as ATTACK (5), same result
+                Arguments.of(5000, List.of(5000), 0, DissonanceType.DEFENSE, bd(5.00)),
+                // UW type: same multiplier as ATTACK (5), same result
+                Arguments.of(5000, List.of(5000), 0, DissonanceType.UW, bd(5.00)),
+                // wave=0 and echoLevel=0 and multi-tier: others contribution = 0 (all zeros)
+                Arguments.of(0, List.of(0, 0, 0), 0, DissonanceType.ATTACK, bd(1.00)),
+                // echoLevel=0 multi-tier (others != 0): others * 1 * 0.005
+                Arguments.of(5000, List.of(5000, 5000), 0, DissonanceType.ATTACK, bd(5.02))
         );
     }
 

@@ -1,30 +1,25 @@
 package com.pphi.tower.model.s3;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * S3-backed battle report. The S3 key format is:
  *   <playerId>/<timestamp>_<runType>[_<dissonanceType>].txt
  * e.g. player123/2026-06-21T12-34-56-789Z_Dissonance_Attack.txt
  *
- * Tower era is not available in the S3 key. We inject "Tower Era\t" as line 2
- * (same slot as BattleReportDriveFile) so BattleReport's field count stays correct;
- * TowerEra.parse("") returns TowerEra(1,0,0) as the default era.
+ * The Lambda (ingest-report.mjs) reads the player's current version from DDB
+ * and injects "Tower Era\t<version>" at line 2 before uploading, so the content
+ * is complete as stored.
  *
  * The id stored in the runs table is filename() only (no player-prefix slash),
  * matching the Drive-backed id format so REST routing stays slash-free.
  */
 public record BattleReportS3File(String key, String rawContents) {
 
-    /** Contents with the synthetic Tower Era line injected at position 1. */
+    /**
+     * Returns the raw content as-is. The Lambda injects "Tower Era\t<version>"
+     * at line 2 before uploading to S3, so no synthetic injection is needed here.
+     */
     public String contents() {
-        List<String> lines = rawContents.lines().collect(Collectors.toCollection(ArrayList::new));
-        if (lines.size() > 1) {
-            lines.add(1, "Tower Era\t");
-        }
-        return String.join(System.lineSeparator(), lines);
+        return rawContents;
     }
 
     /** Used as the primary key in the runs table. */

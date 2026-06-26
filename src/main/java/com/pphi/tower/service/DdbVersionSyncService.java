@@ -1,13 +1,11 @@
 package com.pphi.tower.service;
 
 import com.pphi.tower.config.AwsProperties;
-import com.pphi.tower.config.CredentialVendingClient;
 import com.pphi.tower.repository.VersionHistoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
@@ -26,9 +24,6 @@ public class DdbVersionSyncService {
 
     @Autowired(required = false)
     private DynamoDbClient dynamoDbClient;
-
-    @Autowired(required = false)
-    private CredentialVendingClient credentialClient;
 
     public DdbVersionSyncService(AwsProperties aws, VersionHistoryRepository versionRepo) {
         this.aws = aws;
@@ -56,23 +51,6 @@ public class DdbVersionSyncService {
             doPut(version);
             log.info("Wrote version {} to DynamoDB for player {}", version, aws.getPlayerId());
             return true;
-        } catch (AwsServiceException e) {
-            if (isAccessDenied(e) && credentialClient != null) {
-                log.warn("DynamoDB access denied — re-vending credentials and retrying");
-                credentialClient.forceRefresh();
-                try {
-                    doPut(version);
-                    log.info("Wrote version {} to DynamoDB for player {} (after re-vend)",
-                            version, aws.getPlayerId());
-                    return true;
-                } catch (Exception retryEx) {
-                    log.error("Failed to write version {} to DynamoDB after re-vend: {}",
-                            version, retryEx.getMessage());
-                    return false;
-                }
-            }
-            log.error("Failed to write version {} to DynamoDB: {}", version, e.getMessage());
-            return false;
         } catch (Exception e) {
             log.error("Failed to write version {} to DynamoDB: {}", version, e.getMessage());
             return false;
@@ -89,8 +67,4 @@ public class DdbVersionSyncService {
                 .build());
     }
 
-    private static boolean isAccessDenied(AwsServiceException e) {
-        String code = e.awsErrorDetails() != null ? e.awsErrorDetails().errorCode() : "";
-        return "AccessDenied".equals(code) || "AccessDeniedException".equals(code);
-    }
 }
