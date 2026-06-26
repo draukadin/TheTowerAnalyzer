@@ -180,10 +180,8 @@ jobs:
 
             The app will open your browser automatically to `http://localhost:8080`
 
-            On first launch a setup wizard will guide you through:
-            - Pasting your Google OAuth 2.0 credentials (from Google Cloud Console)
-            - Entering your Google Drive folder IDs and Sheets spreadsheet ID
+            On first launch a setup wizard will guide you through connecting your submission method (Android app or iOS Shortcut) and entering your Player ID.
 
-            After setup the app is ready to use — no manual file editing required
+            See the [Setup Guide](https://github.com/draukadin/TheTowerAnlyzer/blob/master/resources/Centralized_Setup_Guide.md) for step-by-step instructions.
           files: installers/*
           generate_release_notes: true
