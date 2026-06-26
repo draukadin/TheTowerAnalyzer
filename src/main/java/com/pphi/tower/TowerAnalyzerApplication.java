@@ -138,12 +138,6 @@ public class TowerAnalyzerApplication {
         if (!Files.exists(props)) {
             log.info("First run detected — creating user.properties template at {}", props);
             String content = String.join(System.lineSeparator(),
-                "# Your player ID — copy from The Tower settings screen",
-                "aws.player-id=REPLACE_WITH_YOUR_PLAYER_ID",
-                "",
-                "# Server region: us | eu | ap",
-                "aws.api-gateway.region=us",
-                "",
                 "# Optional: change the port if 8080 is already in use on your machine",
                 "# server.port=8080"
             );
