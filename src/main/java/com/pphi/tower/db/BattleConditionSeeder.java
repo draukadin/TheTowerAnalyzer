@@ -32,6 +32,10 @@ public class BattleConditionSeeder {
         condition("Skip Decay",                "SD",   "OVERHEAT");
         condition("Skip Reduction - Multiply", "SRM",  "OVERHEAT");
         condition("More Bosses",               "MB",   "OVERHEAT");
+        condition("Damage Decay",              "DMD",  "OVERHEAT");
+        condition("Health Decay",              "HLD",  "OVERHEAT");
+        condition("More Elites",               "MEL",  "OVERHEAT");
+        condition("More Fleets",               "MFL",  "OVERHEAT");
 
         // Heat — randomly assigned per tournament (count depends on league)
         condition("Tank's Ultimate",           "TU",   "HEAT");
