@@ -99,6 +99,39 @@ public class DatabaseInitializer {
             log.warn("Could not create unique index on runs.content_hash — duplicate runs may exist and should be removed via the UI: {}", e.getMessage());
         }
 
+        // Migration: rehash content_hash using real_time_seconds instead of battle_epoch_seconds.
+        // The epoch varies between re-exports of the same run; real_time is stable game data.
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN _content_hash_v2_migrated INTEGER DEFAULT 0");
+            jdbc.update("UPDATE runs SET content_hash = NULL");
+            backfillContentHashes();
+        } catch (Exception ignored) {
+            // Sentinel column already exists — migration already applied.
+        }
+
+        // Migration: drop unique constraint on content_hash so duplicates can co-exist and be
+        // surfaced by findDuplicateGroups() rather than silently left with a NULL hash.
+        // Import-time dedup is handled by existsByContentHash() pre-check, not the index.
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN _content_hash_v3_nonunique INTEGER DEFAULT 0");
+            jdbc.execute("DROP INDEX IF EXISTS idx_runs_content_hash");
+            jdbc.execute("CREATE INDEX IF NOT EXISTS idx_runs_content_hash ON runs (content_hash)");
+            backfillContentHashes();
+        } catch (Exception ignored) {
+            // Sentinel column already exists — migration already applied.
+        }
+
+        // Migration: extend hash key to epoch|realTime|gameTime|tier|wave.
+        // Epoch re-introduces per-session uniqueness (eliminates false positives for scripted runs);
+        // realTime + gameTime retain specificity for Drive re-share dedup where epoch is stable.
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN _content_hash_v4_five_fields INTEGER DEFAULT 0");
+            jdbc.update("UPDATE runs SET content_hash = NULL");
+            backfillContentHashes();
+        } catch (Exception ignored) {
+            // Sentinel column already exists — migration already applied.
+        }
+
         jdbc.execute("""
                 CREATE INDEX IF NOT EXISTS idx_runs_battle_date
                 ON runs (battle_date)
@@ -1095,14 +1128,15 @@ public class DatabaseInitializer {
 
     private void backfillContentHashes() {
         List<Map<String, Object>> rows = jdbc.queryForList(
-                "SELECT id, battle_epoch_seconds, tier, wave FROM runs WHERE content_hash IS NULL");
+                "SELECT id, battle_epoch_seconds, real_time_seconds, game_time_seconds, tier, wave FROM runs WHERE content_hash IS NULL");
         for (Map<String, Object> row : rows) {
-            String id = (String) row.get("id");
-            long epoch = row.get("battle_epoch_seconds") != null
-                    ? ((Number) row.get("battle_epoch_seconds")).longValue() : 0L;
-            int tier  = ((Number) row.get("tier")).intValue();
-            int wave  = ((Number) row.get("wave")).intValue();
-            String hash = RunRepository.computeContentHash(epoch, tier, wave);
+            String id       = (String) row.get("id");
+            long epoch      = row.get("battle_epoch_seconds") != null ? ((Number) row.get("battle_epoch_seconds")).longValue() : 0L;
+            long realTime   = row.get("real_time_seconds")   != null ? ((Number) row.get("real_time_seconds")).longValue()   : 0L;
+            long gameTime   = row.get("game_time_seconds")   != null ? ((Number) row.get("game_time_seconds")).longValue()   : 0L;
+            int  tier       = ((Number) row.get("tier")).intValue();
+            int  wave       = ((Number) row.get("wave")).intValue();
+            String hash = RunRepository.computeContentHash(epoch, realTime, gameTime, tier, wave);
             try {
                 jdbc.update("UPDATE runs SET content_hash = ? WHERE id = ?", hash, id);
             } catch (Exception e) {

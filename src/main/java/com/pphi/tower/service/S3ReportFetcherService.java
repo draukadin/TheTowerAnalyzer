@@ -78,7 +78,7 @@ public class S3ReportFetcherService {
 
             String battleDate   = DATE_FMT.format(report.battleReportDate());
             long   epochSeconds = report.battleReportDate().getEpochSecond();
-            String contentHash  = RunRepository.computeContentHash(epochSeconds, report.tier(), report.wave());
+            String contentHash  = RunRepository.computeContentHash(epochSeconds, report.realTime().getSeconds(), report.gameTime().getSeconds(), report.tier(), report.wave());
 
             if (runRepository.existsByContentHash(contentHash)) {
                 log.warn("Skipping duplicate S3 report: {} (hash={})", key, contentHash);

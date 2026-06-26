@@ -91,7 +91,7 @@ public class ReportFetcherService {
             double coinsPerHour = toRaw(report.coinsPerHour());
 
             long epochSeconds = report.battleReportDate().getEpochSecond();
-            String contentHash = RunRepository.computeContentHash(epochSeconds, report.tier(), report.wave());
+            String contentHash = RunRepository.computeContentHash(epochSeconds, report.realTime().getSeconds(), report.gameTime().getSeconds(), report.tier(), report.wave());
 
             if (runRepository.existsByContentHash(contentHash)) {
                 log.warn("Skipping duplicate report: {} (file={}) — content already indexed (hash={})", id, filename, contentHash);

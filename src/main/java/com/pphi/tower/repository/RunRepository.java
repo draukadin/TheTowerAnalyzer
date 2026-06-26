@@ -45,9 +45,9 @@ public class RunRepository {
                     rs.getLong("game_time_seconds"),
                     rs.getLong("battle_epoch_seconds"));
 
-    public static String computeContentHash(long battleEpochSeconds, int tier, int wave) {
+    public static String computeContentHash(long epochSeconds, long realTimeSeconds, long gameTimeSeconds, int tier, int wave) {
         try {
-            String input = battleEpochSeconds + "|" + tier + "|" + wave;
+            String input = epochSeconds + "|" + realTimeSeconds + "|" + gameTimeSeconds + "|" + tier + "|" + wave;
             byte[] digest = MessageDigest.getInstance("SHA-256")
                     .digest(input.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
@@ -74,7 +74,7 @@ public class RunRepository {
                        long gameTimeSeconds, double cellsPerHour, double coinsPerHour,
                        String killedBy, TowerEra towerEra, String payloadJson,
                        long battleEpochSeconds) {
-        String contentHash = computeContentHash(battleEpochSeconds, tier, wave);
+        String contentHash = computeContentHash(battleEpochSeconds, realTimeSeconds, gameTimeSeconds, tier, wave);
         jdbc.update("""
                 INSERT INTO runs (id, filename, run_type, dissonance_type, battle_date, tier, wave,
                     cells_earned, real_time_seconds, game_time_seconds,
