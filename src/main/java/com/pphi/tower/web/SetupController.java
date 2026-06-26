@@ -68,8 +68,10 @@ public class SetupController {
         Path dir = dataDir();
         Files.createDirectories(dir);
         String props = String.join(System.lineSeparator(),
+                "",
                 "aws.player-id=" + req.playerId(),
-                "aws.api-gateway.region=" + req.apiGatewayRegion()
+                "aws.api-gateway.region=" + req.apiGatewayRegion(),
+                ""
         );
         Files.writeString(dir.resolve("user.properties"), props, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
