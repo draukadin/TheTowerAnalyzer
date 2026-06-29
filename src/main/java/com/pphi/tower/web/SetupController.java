@@ -47,6 +47,12 @@ public class SetupController {
         return Path.of(System.getenv("APPDATA"), "TheTowerAnalyzer");
     }
 
+    // The user's Downloads folder (%USERPROFILE%\Downloads), where exported skill
+    // zips are written so they are easy to find and delete after upload.
+    Path downloadsDir() {
+        return Path.of(System.getProperty("user.home"), "Downloads");
+    }
+
     @GetMapping("/status")
     public Map<String, String> status() {
         return Map.of("step", setupState.currentStep().name().toLowerCase());
@@ -124,6 +130,33 @@ public class SetupController {
         }
 
         return ResponseEntity.ok(Map.of("status", "claude_not_found"));
+    }
+
+    /**
+     * Exports the bundled skills as one zip per skill to the user's
+     * {@code Downloads\TheTowerAnalyzer-skills\} folder, for manual upload to the
+     * Claude Desktop / claude.ai "Customize → Skills" UI (which does not read
+     * {@code ~/.claude/skills/}). Downloads is used so the zips are easy to find;
+     * they are throwaway once uploaded. The upload itself is a manual web step and
+     * cannot be automated locally.
+     */
+    @PostMapping("/skill-packages")
+    public ResponseEntity<Map<String, Object>> exportSkillPackages() {
+        Path targetDir = downloadsDir().resolve("TheTowerAnalyzer-skills");
+        List<Path> written = claudeSkillsService.exportSkillPackages(targetDir);
+        if (written.isEmpty()) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "error",
+                    "message", "No skill packages could be exported."));
+        }
+        List<String> names = written.stream()
+                .map(p -> p.getFileName().toString())
+                .sorted()
+                .toList();
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "directory", targetDir.toString(),
+                "packages", names));
     }
 
     // jpackage bundles the JRE at <install>/runtime, so java.home -> <install>/mcp

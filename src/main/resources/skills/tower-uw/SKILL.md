@@ -1,15 +1,6 @@
 ---
 name: tower-uw
-description: >
-  Expert knowledge on Ultimate Weapons (UWs) in The Tower: Idle Tower Defense. Use this skill
-  whenever the user asks anything about UWs — including upgrade costs, damage/stat scaling,
-  which UWs to prioritize, how to invest stones, UW+ abilities, synergies with modules and
-  workshop, or build archetypes (glass cannon, farming, tournament). Also trigger for questions
-  about specific UW names (e.g. "Chrono Field", "CF+", "Death Wave", "Black Hole", "Golden Tower",
-  "Smart Missiles", "Chain Lightning", "Poison Swamp", "Inner Land Mines", "Spotlight"),
-  UW leveling strategy, stone budgeting, UW interactions, or how UWs fit into late/endgame min-maxing.
-  Trigger even for indirect questions like "what should I upgrade next", "how do I sync my UWs",
-  or "is my GT worth maxing" — these almost always require UW expertise.
+description: "Ultimate Weapons in The Tower: upgrade costs, scaling, stone priorities, UW+ abilities, synergies, and specific UWs (Chrono Field, Death Wave, Black Hole, Golden Tower, Smart Missiles)."
 ---
 # The Tower: Ultimate Weapons (UW) Expert Skill
 

@@ -5808,6 +5808,10 @@ function renderAdminView() {
             <button class="btn btn-primary" onclick="showMcpSetupModal()">Setup Claude MCP Server</button>
             <span id="mcpAdminStatus" style="font-size:13px;color:var(--muted)"></span>
           </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <button class="btn btn-primary" onclick="showSkillExportModal()">Export Skills for Claude Desktop</button>
+            <span id="skillExportStatus" style="font-size:13px;color:var(--muted)"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -5837,6 +5841,26 @@ function renderAdminView() {
         <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
           <button class="btn" onclick="closeMcpModal()">Close</button>
           <button id="mcpModalBtn" class="btn btn-primary" onclick="runMcpSetup('mcpModalBtn','mcpModalResult','mcpAdminStatus')">Register</button>
+        </div>
+      </div>
+    </div>
+    <!-- Export Skills for Claude Desktop Modal -->
+    <div id="skillExportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;
+         align-items:center;justify-content:center;" onclick="if(event.target===this)closeSkillExportModal()">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+           padding:2rem;max-width:460px;width:90%;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:0.5rem">Export Skills for Claude Desktop</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:1.25rem">
+          The Claude Code MCP setup already installs these skills automatically. The Claude
+          <strong>Desktop app</strong> and <strong>claude.ai</strong> don't read that folder — they
+          load skills uploaded through their own UI. This saves one <span style="font-family:var(--mono);
+          color:var(--accent)">.zip</span> per skill that you upload manually in Claude under
+          <strong>Customize → Skills → Create skill</strong> (requires code execution enabled).
+        </div>
+        <div id="skillExportResult" style="display:none;font-size:13px;margin-bottom:1rem;border-radius:8px;padding:10px 14px;line-height:1.6;"></div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+          <button class="btn" onclick="closeSkillExportModal()">Close</button>
+          <button id="skillExportBtn" class="btn btn-primary" onclick="runSkillExport()">Export</button>
         </div>
       </div>
     </div>`;
@@ -6025,6 +6049,55 @@ function showMcpSetupModal() {
 
 function closeMcpModal() {
   document.getElementById('mcpModal').style.display = 'none';
+}
+
+function showSkillExportModal() {
+  document.getElementById('skillExportResult').style.display = 'none';
+  const btn = document.getElementById('skillExportBtn');
+  btn.disabled = false;
+  btn.textContent = 'Export';
+  document.getElementById('skillExportModal').style.display = 'flex';
+}
+
+function closeSkillExportModal() {
+  document.getElementById('skillExportModal').style.display = 'none';
+}
+
+async function runSkillExport() {
+  const btn    = document.getElementById('skillExportBtn');
+  const result = document.getElementById('skillExportResult');
+
+  btn.disabled = true;
+  btn.textContent = 'Exporting…';
+  result.style.display = 'none';
+
+  try {
+    const res  = await fetch(`${API}/setup/skill-packages`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      const list = (data.packages || []).map(p => `<li style="font-family:var(--mono)">${p}</li>`).join('');
+      result.style.cssText += ';display:block;color:var(--green);background:rgba(80,200,120,0.1);border:1px solid rgba(80,200,120,0.25);';
+      result.innerHTML =
+        `✓ Exported ${(data.packages || []).length} skill package(s) to:` +
+        `<div style="font-family:var(--mono);color:var(--accent);word-break:break-all;margin:6px 0">${data.directory}</div>` +
+        `<ul style="margin:6px 0 6px 18px;padding:0">${list}</ul>` +
+        `Upload each in Claude under <strong>Customize → Skills → Create skill</strong>. ` +
+        `You can delete these zips once they're uploaded.`;
+      btn.textContent = 'Done';
+      document.getElementById('skillExportStatus').textContent = '✓ Exported';
+    } else {
+      result.style.cssText += ';display:block;color:var(--red);background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);';
+      result.textContent = data.message || 'An error occurred.';
+      btn.disabled = false;
+      btn.textContent = 'Retry';
+    }
+  } catch (e) {
+    result.style.cssText += ';display:block;color:var(--red);background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);';
+    result.textContent = 'Could not reach the server.';
+    btn.disabled = false;
+    btn.textContent = 'Retry';
+  }
 }
 
 async function runMcpSetup(btnId, resultId, statusId) {

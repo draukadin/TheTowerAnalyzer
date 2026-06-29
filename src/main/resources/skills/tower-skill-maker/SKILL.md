@@ -1,12 +1,6 @@
 ---
 name: tower-skill-maker
-description: >
-  Process and standards for creating new skill files for The Tower Analyzer. Use this skill
-  whenever asked to create, rewrite, or audit a Tower skill file — including tta-cards.md,
-  tta-uw.md, tta-modules.md, or any new topic area (guardian, workshop, labs, bots, etc.).
-  Also use when reviewing an existing skill file for quality or consistency with established
-  patterns. Do NOT use for answering game questions directly — this skill is about producing
-  skill files, not game advice.
+description: "Process and standards for creating, rewriting, or auditing The Tower Analyzer skill files. Use when authoring or reviewing a skill file, not for answering in-game questions directly."
 ---
 
 # Tower Skill File Standards

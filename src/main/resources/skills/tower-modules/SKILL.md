@@ -1,15 +1,6 @@
 ---
 name: tower-modules
-description: >
-  Expert knowledge on The Tower: Idle Tower Defense module system. Use this skill
-  whenever the user asks anything about modules in The Tower — including which modules
-  to use or avoid, natural epics vs fodder, how to obtain modules, module leveling,
-  merging, shattering, sub-stats, the module lab system, or strategic recommendations
-  for specific builds or game stages. Also use when the user asks about specific module
-  names (e.g. "Dimension Core", "Project Funding", "DC", "PF"), tier lists, or how
-  modules interact with builds like Glass Cannon, farming, or tournament runs. Trigger
-  even if the user doesn't say "module" explicitly — questions about "best cannon" or
-  "how do I sync my UWs" likely need this skill.
+description: "Modules in The Tower: which to use, natural epics vs fodder, leveling, merging, shattering, sub-stats, module labs, tier lists, and specific modules (Dimension Core/DC, Project Funding/PF, OA, BHD)."
 ---
 # The Tower: Module System Expert Skill
 

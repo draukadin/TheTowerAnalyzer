@@ -1,16 +1,6 @@
 ---
 name: tower-labs
-description: >
-  Expert knowledge on the Lab research system in The Tower: Idle Tower Defense. Use this
-  skill whenever the user asks anything about labs — including which labs to prioritize,
-  how to allocate lab slots, lab speed, coin costs, stage-based research priority, common
-  lab mistakes (researching Interest, over-investing in Defense Absolute or Defense% past
-  level 23), or how to balance labs across categories. Also trigger for questions like
-  "what should I be researching", "is this lab worth it", "my labs are taking forever",
-  or "what order should I unlock lab slots". Do NOT use for card mastery lab costs (those
-  are in tta-cards.md) or UW-specific mechanic detail (those are in tta-uw.md and UW
-  reference files) — but DO use when advising whether to research a UW lab vs. another
-  lab category.
+description: "Lab research in The Tower: which labs to prioritize, slot allocation, lab speed, coin costs, stage-based order, balancing categories, and common mistakes. For 'what should I research next'."
 ---
 
 # Labs
