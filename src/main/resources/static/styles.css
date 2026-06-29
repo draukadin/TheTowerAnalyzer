@@ -1,4 +1,4 @@
-﻿  :root {
+  :root {
     --bg:#0d0f14; --surface:#141720; --surface2:#1c2030;
     --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
     --text:#e8eaf0; --muted:#7a8099;
@@ -850,6 +850,7 @@
   .lp-add-row select,.lp-add-row input{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:4px 7px;font-family:var(--font);}
   .lp-add-row select{flex:1;max-width:180px;}
   .lp-add-row input{width:65px;}
+  .lp-add-row .spin-val{width:36px;background:transparent;border:none;border-radius:0;padding:2px 0;}
   .lp-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--font);transition:all 0.12s;}
   .lp-btn:hover{border-color:var(--accent);color:var(--accent);}
   .lp-btn.danger:hover{border-color:var(--red);color:var(--red);}

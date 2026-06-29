@@ -5661,7 +5661,7 @@ function lpSlotCard(sl) {
       <tr class="${idx === 0 ? 'lp-current-row' : ''}">
         <td>${escHtml(p.labName)}${upNextCpd}</td>
         <td>${p.startLevel}</td>
-        <td>${p.targetLevel}</td>
+        <td>${mkSpin(p.targetLevel, p.startLevel+1, lpLabList.find(l=>l.id===p.labId)?.maxLevel??p.targetLevel, false, `lpUpdateTarget(${sl.slotNumber},${p.id},${p.labId},${p.startLevel},__V__)`)}</td>
         <td>${fmtRaw(p.coinsAtStartLevel)}</td>
         <td>${fmtRaw(p.coinsTotalResearch)}</td>
         <td>${fmtDuration(p.durationSeconds)}</td>
@@ -5683,6 +5683,7 @@ function lpSlotCard(sl) {
   const firstLab = lpLabList[0];
   const initMax = firstLab ? firstLab.maxLevel : '';
   const initCur = firstLab ? firstLab.currentLevel : 0;
+  const initEnd = firstLab ? Math.min(initCur + 2, initMax) : '';
 
   return `<div class="lp-card">
     <div class="lp-card-header">
@@ -5708,11 +5709,38 @@ function lpSlotCard(sl) {
           style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 7px;font-family:var(--font)">
         <select id="lp-lab-${sl.slotNumber}" onchange="lpLabSelected(${sl.slotNumber})">${labOptions}</select>
       </div>
-      <input type="number" id="lp-start-${sl.slotNumber}" min="0" max="${initCur}" value="${initCur}" placeholder="From" style="width:60px">
-      <input type="number" id="lp-end-${sl.slotNumber}" min="1" max="${initMax}" placeholder="To" style="width:60px">
+      <div class="spin-wrap">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinDec('lp-start-${sl.slotNumber}')">−</button>
+        <input type="text" inputmode="numeric" class="spin-val" id="lp-start-${sl.slotNumber}"
+          data-min="0" data-max="${initMax ? initMax - 1 : 0}" value="${initCur}"
+          onblur="lpSpinClamp(this)" onkeydown="if(event.key==='Enter')this.blur()">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinInc('lp-start-${sl.slotNumber}')">+</button>
+      </div>
+      <div class="spin-wrap">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinDec('lp-end-${sl.slotNumber}')">−</button>
+        <input type="text" inputmode="numeric" class="spin-val" id="lp-end-${sl.slotNumber}"
+          data-min="${initCur + 1}" data-max="${initMax}" value="${initEnd}"
+          onblur="lpSpinClamp(this)" onkeydown="if(event.key==='Enter')this.blur()">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinInc('lp-end-${sl.slotNumber}')">+</button>
+      </div>
       <button class="lp-btn primary" onclick="lpAdd(${sl.slotNumber})">+ Add</button>
     </div>
   </div>`;
+}
+
+function lpSpinDec(id) {
+  const el = document.getElementById(id);
+  const min = +el.dataset.min, max = +el.dataset.max;
+  el.value = Math.max(min, (parseInt(el.value) || 0) - 1);
+}
+function lpSpinInc(id) {
+  const el = document.getElementById(id);
+  const min = +el.dataset.min, max = +el.dataset.max;
+  el.value = Math.min(max, (parseInt(el.value) || 0) + 1);
+}
+function lpSpinClamp(el) {
+  const min = +el.dataset.min, max = +el.dataset.max;
+  el.value = Math.min(Math.max(parseInt(el.value) || 0, min), max);
 }
 
 function lpFilterLabs(slotNumber) {
@@ -5736,10 +5764,11 @@ function lpLabSelected(slotNumber) {
   const curLevel = +opt.dataset.cur;
   const startEl = document.getElementById(`lp-start-${slotNumber}`);
   const endEl   = document.getElementById(`lp-end-${slotNumber}`);
-  startEl.max = curLevel;
+  startEl.dataset.max = maxLevel - 1;
   startEl.value = curLevel;
-  endEl.max = maxLevel;
-  if (+endEl.value > maxLevel) endEl.value = maxLevel;
+  endEl.dataset.min = curLevel + 1;
+  endEl.dataset.max = maxLevel;
+  endEl.value = Math.min(curLevel + 2, maxLevel);
 }
 
 async function lpSetSpeed(slotNumber, mult) {
@@ -5763,6 +5792,15 @@ async function lpAdd(slotNumber) {
   }
   await fetch(`${API}/lab-slots/${slotNumber}/plans`, {
     method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({labId, startLevel, targetLevel})
+  });
+  await lpRefresh();
+}
+
+async function lpUpdateTarget(slotNumber, planId, labId, startLevel, targetLevel) {
+  if (!targetLevel || targetLevel <= startLevel) return;
+  await fetch(`${API}/lab-slots/${slotNumber}/plans/${planId}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({labId, startLevel, targetLevel})
   });
   await lpRefresh();
