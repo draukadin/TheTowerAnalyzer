@@ -96,6 +96,16 @@ public class BattleHistoryParser {
         }
     }
 
+    // As of game v28.3, numeric stat cells may carry a trailing percentage annotation
+    // in square brackets (e.g. "126 [3.5%]" on "Killed With Effect Active" rows). Strip
+    // it so the leading number parses cleanly; values without an annotation are unaffected.
+    private static final java.util.regex.Pattern PERCENT_ANNOTATION =
+            java.util.regex.Pattern.compile("\\s*\\[[^\\]]*\\]");
+
+    private static String stripAnnotation(String value) {
+        return PERCENT_ANNOTATION.matcher(value).replaceAll("").trim();
+    }
+
     private Object parseString(String line) {
         String[] parts = line.split("\t");
         if (parts.length < 2) {
@@ -125,12 +135,12 @@ public class BattleHistoryParser {
     }
 
     private Object parseLong(String line) {
-        final String value = line.split("\t")[1];
+        final String value = stripAnnotation(line.split("\t")[1]);
         return Long.parseLong(value);
     }
 
     private Object parseInt(String line) {
-        final String value = line.split("\t")[1];
+        final String value = stripAnnotation(line.split("\t")[1]);
         return Integer.parseInt(value);
     }
 
@@ -165,7 +175,7 @@ public class BattleHistoryParser {
 
     public TowerNumber parseTowerNumber(final String line) {
         try {
-            final String value = line.split("\t")[1];
+            final String value = stripAnnotation(line.split("\t")[1]);
             int endIndex = value.length() - 1;
             String amountValue = value.substring(0, endIndex).replace("$", "");
             double amount;

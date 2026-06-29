@@ -136,6 +136,7 @@ public class BattleComparisonReporter implements Reporter {
         printRow("Lifesteal",        fmt(s1.lifeSteal()),        fmt(s2.lifeSteal()),        fmt(sd.lifeSteal()),        ColorStrategy.HIGHER_IS_BETTER);
         printRow("Tower Health Regen", fmt(s1.towerHealthRegen()), fmt(s2.towerHealthRegen()), fmt(sd.towerHealthRegen()), ColorStrategy.HIGHER_IS_BETTER);
         printRow("Wall Health Regen",  fmt(s1.wallHealthRegen()),  fmt(s2.wallHealthRegen()),  fmt(sd.wallHealthRegen()),  ColorStrategy.HIGHER_IS_BETTER);
+        printRow("Recovery Packages",  fmt(s1.recoveryPackages()), fmt(s2.recoveryPackages()), fmt(sd.recoveryPackages()), ColorStrategy.HIGHER_IS_BETTER);
     }
 
     private void printDamageBlocked(BattleHistory r1, BattleHistory r2, BattleHistory d) {
@@ -220,6 +221,8 @@ public class BattleComparisonReporter implements Reporter {
         printRow("Amplify Bot",  fmt(s1.amplifyBot()),  fmt(s2.amplifyBot()),  fmt(sd.amplifyBot()),  ColorStrategy.HIGHER_IS_BETTER);
         printRow("Golden Bot",   fmt(s1.goldenBot()),   fmt(s2.goldenBot()),   fmt(sd.goldenBot()),   ColorStrategy.HIGHER_IS_BETTER);
         printRow("Death Penalty",fmt(s1.deathPenalty()),fmt(s2.deathPenalty()),fmt(sd.deathPenalty()),ColorStrategy.HIGHER_IS_BETTER);
+        printRow("Black Hole",   fmt(s1.blackHole()),   fmt(s2.blackHole()),   fmt(sd.blackHole()),   ColorStrategy.HIGHER_IS_BETTER);
+        printRow("Orbs",         fmt(s1.orbs()),        fmt(s2.orbs()),        fmt(sd.orbs()),        ColorStrategy.HIGHER_IS_BETTER);
     }
 
     private void printTotalEnemies(BattleHistory r1, BattleHistory r2, BattleHistory d) {

@@ -114,6 +114,7 @@ class BattleHistoryParserTest {
             Life Steal	1.0T
             Tower Health Regen	1.0T
             Wall Health Regen	1.0T
+            Recovery Packages	1.0T
             Damage Blocked
             Defense %	1.0T
             Defense Absolute	1.0T
@@ -161,8 +162,10 @@ class BattleHistoryParserTest {
             Death Wave	0
             Spotlight	0
             Amplify Bot	0
-            Golden Bot	0
+            Golden Bot	126 [3.5%]
             Death Penalty	0
+            Black Hole	53 [1.5%]
+            Orbs	2115 [58.8%]
             Total Enemies
             Total Enemies	50000
             Basic	30000
@@ -308,6 +311,35 @@ class BattleHistoryParserTest {
         var cash = (Cash) history.sectionMap().get(SectionHeader.CASH);
         assertThat(cash.cashEarned().scaleSuffix()).isEqualTo(ScaleSuffix.MILLION);
         assertThat(cash.cashEarned().amount().doubleValue()).isEqualTo(3.0);
+    }
+
+    // ── v28.3: percentage annotations + new stat fields ──────────────────────
+
+    @Test
+    void parseTowerNumber_stripsPercentAnnotation() {
+        // v28.3 appends "[x%]" to some kill stats, e.g. "2.11K [58.8%]"
+        TowerNumber n = parser.parseTowerNumber("Label\t2.11K [58.8%]");
+        assertThat(n.scaleSuffix()).isEqualTo(ScaleSuffix.THOUSAND);
+        assertThat(n.amount().doubleValue()).isEqualTo(2.11);
+    }
+
+    @Test
+    void parse_killedWithEffectActive_stripsAnnotationAndNewFields() {
+        var history = parser.parse(fixtureLines());
+        var kwea = (KilledWithEffectActive) history.sectionMap().get(SectionHeader.KILLED_WITH_EFFECT_ACTIVE);
+        // "Golden Bot	126 [3.5%]" — annotation stripped off an existing long field
+        assertThat(kwea.goldenBot()).isEqualTo(126L);
+        // new v28.3 fields
+        assertThat(kwea.blackHole()).isEqualTo(53L);
+        assertThat(kwea.orbs()).isEqualTo(2115L);
+    }
+
+    @Test
+    void parse_healthRegenerated_recoveryPackagesField() {
+        var history = parser.parse(fixtureLines());
+        var hr = (HealthRegenerated) history.sectionMap().get(SectionHeader.HEALTH_REGENERATED);
+        assertThat(hr.recoveryPackages().scaleSuffix()).isEqualTo(ScaleSuffix.TRILLION);
+        assertThat(hr.recoveryPackages().amount().doubleValue()).isEqualTo(1.0);
     }
 
     @Test

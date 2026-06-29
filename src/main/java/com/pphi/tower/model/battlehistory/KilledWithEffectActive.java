@@ -10,7 +10,9 @@ public record KilledWithEffectActive(
         @JsonProperty("spotlight")    long spotlight,
         @JsonProperty("amplifyBot")   long amplifyBot,
         @JsonProperty("goldenBot")    long goldenBot,
-        @JsonProperty("deathPenalty") long deathPenalty) implements Section {
+        @JsonProperty("deathPenalty") long deathPenalty,
+        @JsonProperty("blackHole")    long blackHole,
+        @JsonProperty("orbs")         long orbs) implements Section {
 
     @JsonCreator
     public KilledWithEffectActive { }

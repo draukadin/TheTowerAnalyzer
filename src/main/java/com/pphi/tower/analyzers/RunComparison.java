@@ -113,7 +113,8 @@ public class RunComparison {
         return new HealthRegenerated(
                 healthRegeneratedOne.lifeSteal().minus(healthRegeneratedTwo.lifeSteal()),
                 healthRegeneratedOne.towerHealthRegen().minus(healthRegeneratedTwo.towerHealthRegen()),
-                healthRegeneratedOne.wallHealthRegen().minus(healthRegeneratedTwo.wallHealthRegen())
+                healthRegeneratedOne.wallHealthRegen().minus(healthRegeneratedTwo.wallHealthRegen()),
+                healthRegeneratedOne.recoveryPackages().minus(healthRegeneratedTwo.recoveryPackages())
         );
     }
 
@@ -182,7 +183,9 @@ public class RunComparison {
                 killedWithEffectActiveOne.spotlight() - killedWithEffectActiveTwo.spotlight(),
                 killedWithEffectActiveOne.amplifyBot() - killedWithEffectActiveTwo.amplifyBot(),
                 killedWithEffectActiveOne.goldenBot() - killedWithEffectActiveTwo.goldenBot(),
-                killedWithEffectActiveOne.deathPenalty() - killedWithEffectActiveTwo.deathPenalty()
+                killedWithEffectActiveOne.deathPenalty() - killedWithEffectActiveTwo.deathPenalty(),
+                killedWithEffectActiveOne.blackHole() - killedWithEffectActiveTwo.blackHole(),
+                killedWithEffectActiveOne.orbs() - killedWithEffectActiveTwo.orbs()
         );
     }
 
