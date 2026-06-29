@@ -116,8 +116,11 @@ public class ReportFetcherService {
             } catch (DuplicateKeyException e) {
                 log.warn("Duplicate report rejected by unique constraint: {} (file={}, hash={})", id, filename, contentHash);
             }
-        } catch (IOException e) {
-            log.error("Failed to parse report: {}", filename, e);
+        } catch (Exception e) {
+            // Skip this report and continue the batch — a single malformed/unparseable
+            // report (e.g. a new game version adding stat fields) must not abort ingestion
+            // of every other file.
+            log.error("Failed to parse report, skipping: {}", filename, e);
         }
     }
 

@@ -17,7 +17,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.io.IOException;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -110,8 +109,11 @@ public class S3ReportFetcherService {
                 log.warn("Duplicate S3 report rejected by unique constraint: {} (hash={})", key, contentHash);
                 s3Repository.markProcessed(bucket, key);
             }
-        } catch (IOException e) {
-            log.error("Failed to process S3 report: {}", key, e);
+        } catch (Exception e) {
+            // Skip this report and continue the batch — a single malformed/unparseable
+            // report (e.g. a new game version adding stat fields) must not abort ingestion
+            // of every other key.
+            log.error("Failed to process S3 report, skipping: {}", key, e);
         }
     }
 
