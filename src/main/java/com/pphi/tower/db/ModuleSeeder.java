@@ -17,12 +17,48 @@ public class ModuleSeeder {
         seed();
     }
 
+    // ── v28.3 module adjustments (kept as constants so seed + migrate stay in sync) ──
+    private static final String BA_EFFECT =
+        "When you super crit, your next 5 attacks are guaranteed super crits, and your Super Crit chance is increased by [x].";
+    private static final String AS_EFFECT =
+        "Killing a boss, elite, or Fleet enemy increases Tower damage by 5x for [x]s.";
+    private static final String MH_EFFECT =
+        "[x] Inner Land Mines are fired at Bosses and Fleets (100% chance) as they enter Tower range. 25% of Elites have Inner Land Mines fired at them as they enter Tower range.";
+
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM module_def", Integer.class);
-        if (count != null && count > 0) return;
-        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
-        seedDefs();
-        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        if (count == null || count == 0) {
+            log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
+            seedDefs();
+            log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        }
+        migrateV283();
+    }
+
+    /** Idempotent v28.3 value/description changes — also reaches already-seeded databases. */
+    private void migrateV283() {
+        // Primordial Collapse (id 24): damage reduction improved 50/55/65/80 -> 60/65/75/90
+        setAbility(24, "Epic", "60%");
+        setAbility(24, "Legendary", "65%");
+        setAbility(24, "Mythic", "75%");
+        setAbility(24, "Ancestral", "90%");
+        // Being Annihilator (id 2): Super Crit chance is now the changing variable [5/7/10/14%];
+        // guaranteed shots fixed at 5 for all levels.
+        jdbc.update("UPDATE module_def SET effect_template = ? WHERE id = 2", BA_EFFECT);
+        setAbility(2, "Epic", "5%");
+        setAbility(2, "Legendary", "7%");
+        setAbility(2, "Mythic", "10%");
+        setAbility(2, "Ancestral", "14%");
+        // Amplifying Strike (id 6): now also triggers on Fleet kills (values unchanged).
+        jdbc.update("UPDATE module_def SET effect_template = ? WHERE id = 6", AS_EFFECT);
+        // Magnetic Hook (id 23): Fleets added as ILM targets, 100% on Fleets/Bosses (values unchanged).
+        jdbc.update("UPDATE module_def SET effect_template = ? WHERE id = 23", MH_EFFECT);
+    }
+
+    private void setAbility(int moduleDefId, String rarity, String value) {
+        jdbc.update(
+            "UPDATE module_ability_value SET value = ? WHERE module_def_id = ? AND rarity = ?",
+            value, moduleDefId, rarity);
     }
 
     // ── Static definitions ────────────────────────────────────────────────────
@@ -33,8 +69,8 @@ public class ModuleSeeder {
             "Bounce shot's range is increased by 3% of tower's total range. Each bounce increases the projectile's damage by [x]%.", 1,
             "20%", "40%", "60%", "80%");
         def(2, "BA", "Being Annihilator", "Cannon",
-            "When you super crit, your next [x] attacks are guaranteed super crits.", 2,
-            "3", "4", "5", "6");
+            BA_EFFECT, 2,
+            "5%", "7%", "10%", "14%");
         def(3, "DP", "Death Penalty", "Cannon",
             "Chance of [x]% to mark an enemy for death when it spawns, causing the first hit to destroy it.", 3,
             "5%", "8%", "11%", "15%");
@@ -45,7 +81,7 @@ public class ModuleSeeder {
             "Attacks have a 1% chance to apply a non-stacking effect that decreases the enemy's mass by [x]%.", 5,
             "10%", "20%", "30%", "40%");
         def(6, "AS", "Amplifying Strike", "Cannon",
-            "Killing a boss or elite enemy increases Tower damage by 5x for [x]s.", 6,
+            AS_EFFECT, 6,
             "5s", "11s", "18s", "26s");
 
         // Generator modules (sort 7-12)
@@ -102,11 +138,11 @@ public class ModuleSeeder {
             "Death Wave, Golden Tower and Black Hole will always activate at the same time, but the cooldown will be the average of those +/-[x]s.", 22,
             "20s", "10s", "1s", "-10s");
         def(23, "MH",  "Magnetic Hook", "Core",
-            "[x] Inner Land Mines are fired at Bosses as they enter Tower range. 25% of Elites have Inner Land Mines fired at them as they enter Tower range.", 23,
+            MH_EFFECT, 23,
             "1", "2", "3", "4");
         def(24, "PC",  "Primordial Collapse", "Core",
             "Spawns one additional Black Hole. Damage from enemies within a Black Hole is decreased by [x]%.", 24,
-            "50%", "55%", "65%", "80%");
+            "60%", "65%", "75%", "90%");
     }
 
     private void def(int id, String code, String name, String type, String effectTemplate, int sortOrder,
