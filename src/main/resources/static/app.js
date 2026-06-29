@@ -239,6 +239,7 @@ function switchTab(tab){
 }
 
 function renderReportView(summary,payload){
+  const isTournament=summary.runType&&summary.runType.toLowerCase()==='tournament';
   document.getElementById('mainContent').innerHTML=`
     <div class="report-header">
       <div class="report-title">${summary.runType} — T${summary.tier} Wave ${summary.wave.toLocaleString()}</div>
@@ -248,6 +249,9 @@ function renderReportView(summary,payload){
         ${summary.towerEra?`<span>🏗️ ${summary.towerEra}</span>`:''}
         <span><span class="killed-by">💀 ${summary.killedBy||'Unknown'}</span></span>
       </div>
+      ${isTournament?`<div id="tournamentLink" style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px">
+        <span style="color:var(--muted)">Loading conditions…</span>
+      </div>`:''}
     </div>
     <div class="tab-bar">
       <div class="tab active" data-tab="stats" onclick="switchTab('stats')">Stats</div>
@@ -256,6 +260,66 @@ function renderReportView(summary,payload){
     </div>
     <div id="tabPanel"></div>`;
   renderStatsPanel(summary,payload);
+  if(isTournament)renderTournamentConditionsRow(summary);
+}
+
+async function renderTournamentConditionsRow(summary){
+  const el=document.getElementById('tournamentLink');
+  if(!el)return;
+  try{
+    const [tournamentsRes,condRes]=await Promise.all([
+      fetch(`${API}/tournaments`),
+      summary.tournamentId?fetch(`${API}/reports/${encodeURIComponent(summary.id)}/tournament-conditions`):Promise.resolve(null)
+    ]);
+    const allTournaments=await tournamentsRes.json();
+    const runDate=new Date(summary.battleDate+'T12:00:00');
+    // Candidate tournaments: date within 1 day of the run's battle_date
+    const nearby=allTournaments.filter(t=>{
+      const td=new Date(t.date+'T12:00:00');
+      return Math.abs((td-runDate)/86400000)<=1;
+    }).sort((a,b)=>a.date.localeCompare(b.date));
+
+    if(summary.tournamentId){
+      const conds=condRes?await condRes.json():[];
+      const linked=allTournaments.find(t=>t.id===summary.tournamentId);
+      const pills=conds.map(c=>`<span class="tourn-cond-pill ${c.category}" title="${c.name}">${c.acronym}</span>`).join('');
+      el.innerHTML=`<span style="color:var(--muted)">🏆 ${linked?linked.date+' '+linked.league:'Linked'}</span>${pills}
+        <button class="btn" style="font-size:10px;padding:2px 8px;margin-left:2px" onclick="unlinkTournamentRun('${summary.id}')">Unlink</button>`;
+    }else{
+      if(nearby.length===0){
+        el.innerHTML=`<span style="color:var(--muted)">No tournaments near this date</span>`;
+        return;
+      }
+      const opts=nearby.map(t=>{
+        const acros=(t.conditions||[]).map(c=>c.acronym).join(', ');
+        return `<option value="${t.id}">${t.date} ${t.league}${acros?' — '+acros:''}</option>`;
+      }).join('');
+      el.innerHTML=`<select id="tournLinkSel" style="font-size:11px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:4px">
+          <option value="">— link tournament —</option>${opts}</select>
+        <button class="btn btn-primary" style="font-size:10px;padding:2px 8px" onclick="linkTournamentRun('${summary.id}')">Link</button>`;
+    }
+  }catch(e){
+    el.innerHTML=`<span style="color:var(--muted);font-size:11px">Could not load tournament data</span>`;
+  }
+}
+
+async function linkTournamentRun(runId){
+  const sel=document.getElementById('tournLinkSel');
+  const tid=sel&&sel.value;
+  if(!tid)return;
+  await fetch(`${API}/reports/${encodeURIComponent(runId)}/tournament/${tid}`,{method:'PUT'});
+  const res=await fetch(`${API}/reports`);
+  allReports=await res.json();
+  const summary=allReports.find(r=>r.id===runId);
+  if(summary&&activePayload)renderReportView(summary,activePayload);
+}
+
+async function unlinkTournamentRun(runId){
+  await fetch(`${API}/reports/${encodeURIComponent(runId)}/tournament`,{method:'DELETE'});
+  const res=await fetch(`${API}/reports`);
+  allReports=await res.json();
+  const summary=allReports.find(r=>r.id===runId);
+  if(summary&&activePayload)renderReportView(summary,activePayload);
 }
 
 function renderStatsPanel(summary,p){

@@ -5,6 +5,7 @@ import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
 import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.repository.GoogleDriveRepository;
 import com.pphi.tower.repository.RunRepository;
+import com.pphi.tower.repository.TournamentRepository;
 import com.pphi.tower.service.ComparisonService;
 import com.pphi.tower.service.DiagnosticService;
 import com.pphi.tower.service.ReportFetcherService;
@@ -30,6 +31,7 @@ public class ReportController {
     private final ReportFetcherService reportFetcherService;
     private final GoogleDriveRepository googleDriveRepository;
     private final AwsProperties awsProperties;
+    private final TournamentRepository tournamentRepository;
 
     @Autowired(required = false)
     private S3ReportFetcherService s3ReportFetcherService;
@@ -42,13 +44,15 @@ public class ReportController {
                             ComparisonService comparisonService,
                             ReportFetcherService reportFetcherService,
                             GoogleDriveRepository googleDriveRepository,
-                            AwsProperties awsProperties) {
+                            AwsProperties awsProperties,
+                            TournamentRepository tournamentRepository) {
         this.repository = repository;
         this.diagnosticService = diagnosticService;
         this.comparisonService = comparisonService;
         this.reportFetcherService = reportFetcherService;
         this.googleDriveRepository = googleDriveRepository;
         this.awsProperties = awsProperties;
+        this.tournamentRepository = tournamentRepository;
     }
 
     @PostMapping("/fetch")
@@ -110,6 +114,27 @@ public class ReportController {
         }
         repository.deleteById(id);
         return ResponseEntity.ok(Map.of("deleted", id, "sourceFileDeleted", deleteSourceFile));
+    }
+
+    @GetMapping("/{id}/tournament-conditions")
+    public List<TournamentRepository.BattleConditionData> getTournamentConditions(@PathVariable String id) {
+        return tournamentRepository.findConditionsByRunId(id);
+    }
+
+    @PutMapping("/{id}/tournament/{tournamentId}")
+    public ResponseEntity<Map<String, Object>> linkTournament(
+            @PathVariable String id,
+            @PathVariable long tournamentId) {
+        if (!repository.existsById(id)) throw new ReportNotFoundException(id);
+        repository.setTournamentId(id, tournamentId);
+        return ResponseEntity.ok(Map.of("runId", id, "tournamentId", tournamentId));
+    }
+
+    @DeleteMapping("/{id}/tournament")
+    public ResponseEntity<Map<String, Object>> unlinkTournament(@PathVariable String id) {
+        if (!repository.existsById(id)) throw new ReportNotFoundException(id);
+        repository.clearTournamentId(id);
+        return ResponseEntity.ok(Map.of("runId", id, "unlinked", true));
     }
 
     @GetMapping("/compare")

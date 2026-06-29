@@ -1124,6 +1124,13 @@ public class DatabaseInitializer {
                 CREATE INDEX IF NOT EXISTS idx_tournament_date
                 ON tournament (date)
                 """);
+
+        // Migration: add tournament_id FK to link a run to its tournament.
+        try {
+            jdbc.execute("ALTER TABLE runs ADD COLUMN tournament_id INTEGER REFERENCES tournament(id)");
+        } catch (Exception ignored) {
+            // Column already exists — safe to continue.
+        }
     }
 
     private void backfillContentHashes() {

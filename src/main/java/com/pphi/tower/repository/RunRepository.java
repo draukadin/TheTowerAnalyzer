@@ -26,24 +26,28 @@ public class RunRepository {
         this.jdbc = jdbc;
     }
 
-    private static final RowMapper<ReportSummaryDto> SUMMARY_MAPPER = (rs, rowNum) ->
-            new ReportSummaryDto(
-                    rs.getString("id"),
-                    rs.getInt("run_number"),
-                    rs.getString("filename"),
-                    rs.getString("run_type"),
-                    rs.getString("dissonance_type"),
-                    rs.getString("battle_date"),
-                    rs.getInt("tier"),
-                    rs.getInt("wave"),
-                    TowerEra.parse(rs.getString("tower_era")),
-                    rs.getString("killed_by"),
-                    rs.getDouble("cells_earned"),
-                    rs.getDouble("cells_per_hour"),
-                    rs.getDouble("coins_per_hour"),
-                    rs.getLong("real_time_seconds"),
-                    rs.getLong("game_time_seconds"),
-                    rs.getLong("battle_epoch_seconds"));
+    private static final RowMapper<ReportSummaryDto> SUMMARY_MAPPER = (rs, rowNum) -> {
+        long tournamentIdRaw = rs.getLong("tournament_id");
+        Long tournamentId = rs.wasNull() ? null : tournamentIdRaw;
+        return new ReportSummaryDto(
+                rs.getString("id"),
+                rs.getInt("run_number"),
+                rs.getString("filename"),
+                rs.getString("run_type"),
+                rs.getString("dissonance_type"),
+                rs.getString("battle_date"),
+                rs.getInt("tier"),
+                rs.getInt("wave"),
+                TowerEra.parse(rs.getString("tower_era")),
+                rs.getString("killed_by"),
+                rs.getDouble("cells_earned"),
+                rs.getDouble("cells_per_hour"),
+                rs.getDouble("coins_per_hour"),
+                rs.getLong("real_time_seconds"),
+                rs.getLong("game_time_seconds"),
+                rs.getLong("battle_epoch_seconds"),
+                tournamentId);
+    };
 
     public static String computeContentHash(long epochSeconds, long realTimeSeconds, long gameTimeSeconds, int tier, int wave) {
         try {
@@ -209,6 +213,14 @@ public class RunRepository {
     public List<ReportSummaryDto> findByRunType(String runType) {
         return jdbc.query(
                 "SELECT * FROM runs WHERE run_type = ? ORDER BY run_number DESC", SUMMARY_MAPPER, runType);
+    }
+
+    public void setTournamentId(String runId, long tournamentId) {
+        jdbc.update("UPDATE runs SET tournament_id = ? WHERE id = ?", tournamentId, runId);
+    }
+
+    public void clearTournamentId(String runId) {
+        jdbc.update("UPDATE runs SET tournament_id = NULL WHERE id = ?", runId);
     }
 
 }

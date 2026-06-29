@@ -453,7 +453,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           });
         }
 
-        return distillRecentRuns(runs, sections.includes('diagnosis'), diagnoses);
+        // Fetch tournament conditions for any run that has a linked tournament
+        let tournamentConditionMap = {};
+        const linkedTournamentIds = [...new Set(runs.filter(r => r.tournamentId != null).map(r => r.tournamentId))];
+        if (linkedTournamentIds.length > 0) {
+          const tournaments = await fetchApi('/api/tournaments');
+          for (const t of tournaments) {
+            if (linkedTournamentIds.includes(t.id)) {
+              tournamentConditionMap[t.id] = {
+                date:       t.date,
+                league:     t.league,
+                conditions: (t.conditions ?? []).map(c => c.acronym),
+              };
+            }
+          }
+        }
+
+        return distillRecentRuns(runs, sections.includes('diagnosis'), diagnoses, tournamentConditionMap);
       }
 
       // ── Compare runs ──────────────────────────────────────────────────────
@@ -922,7 +938,7 @@ function combinationSummary(c) {
 
 // ── Distillation: recent runs ─────────────────────────────────────────────────
 
-function distillRecentRuns(runs, includeDiagnosis, diagnoses) {
+function distillRecentRuns(runs, includeDiagnosis, diagnoses, tournamentConditionMap = {}) {
   return result(runs.map(r => {
     const durationHours = r.realTimeSeconds / 3600;
     const entry = {
@@ -937,6 +953,15 @@ function distillRecentRuns(runs, includeDiagnosis, diagnoses) {
       cells_K:   round(r.cellsEarned / 1e3, 2),
       killed_by: r.killedBy ?? null,
     };
+    if (r.tournamentId != null && tournamentConditionMap[r.tournamentId]) {
+      const t = tournamentConditionMap[r.tournamentId];
+      entry.tournament = {
+        id:         r.tournamentId,
+        date:       t.date,
+        league:     t.league,
+        conditions: t.conditions,
+      };
+    }
     if (includeDiagnosis && diagnoses[r.id]) {
       const dx = diagnoses[r.id];
       entry.diagnosis = {
