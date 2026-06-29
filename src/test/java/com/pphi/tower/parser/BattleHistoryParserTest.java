@@ -1,6 +1,5 @@
 package com.pphi.tower.parser;
 
-import com.pphi.tower.exceptions.FieldToLineCountMismatchException;
 import com.pphi.tower.model.ScaleSuffix;
 import com.pphi.tower.model.TowerNumber;
 import com.pphi.tower.model.battlehistory.*;
@@ -15,7 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BattleHistoryParserTest {
 
@@ -342,14 +340,52 @@ class BattleHistoryParserTest {
         assertThat(hr.recoveryPackages().amount().doubleValue()).isEqualTo(1.0);
     }
 
+    // ── lenient parsing across game versions (append-at-end stat evolution) ───
+
     @Test
-    void parse_fieldCountMismatch_throwsException() {
-        // Only provide one field for BATTLE_REPORT (needs 11)
-        List<String> bad = List.of(
-                "Battle Report",
-                "Tier\t10"
+    void parse_olderReport_missingTrailingFields_defaulted() {
+        // A pre-v28.3 report: Health Regenerated has 3 lines (no Recovery Packages) and
+        // Killed With Effect Active has 6 lines (no Black Hole / Orbs). The newer trailing
+        // fields must default rather than throw.
+        List<String> oldFormat = List.of(
+                "Health Regenerated",
+                "Lifesteal\t103.56T",
+                "Tower Health Regen\t3.26T",
+                "Wall Health Regen\t18.60q",
+                "Killed With Effect Active",
+                "Golden Tower\t274259",
+                "Death Wave\t188.42K",
+                "Spotlight\t259788",
+                "Amplify Bot\t0",
+                "Golden Bot\t235880",
+                "Death Penalty\t0"
         );
-        assertThatThrownBy(() -> parser.parse(bad))
-                .isInstanceOf(FieldToLineCountMismatchException.class);
+        var history = parser.parse(oldFormat);
+
+        var hr = (HealthRegenerated) history.sectionMap().get(SectionHeader.HEALTH_REGENERATED);
+        assertThat(hr.lifeSteal().scaleSuffix()).isEqualTo(ScaleSuffix.TRILLION);
+        assertThat(hr.recoveryPackages()).isEqualTo(TowerNumber.ZERO);
+
+        var kwea = (KilledWithEffectActive) history.sectionMap().get(SectionHeader.KILLED_WITH_EFFECT_ACTIVE);
+        assertThat(kwea.goldenBot()).isEqualTo(235880L);
+        assertThat(kwea.blackHole()).isEqualTo(0L);
+        assertThat(kwea.orbs()).isEqualTo(0L);
+    }
+
+    @Test
+    void parse_newerReport_extraTrailingLines_ignored() {
+        // A future version appends an unmodelled stat to the end of a section — extra
+        // trailing lines beyond the known fields are ignored rather than throwing.
+        List<String> withExtra = List.of(
+                "Health Regenerated",
+                "Lifesteal\t1.0T",
+                "Tower Health Regen\t1.0T",
+                "Wall Health Regen\t1.0T",
+                "Recovery Packages\t1.0T",
+                "Some Future Stat\t9.0T"
+        );
+        var history = parser.parse(withExtra);
+        var hr = (HealthRegenerated) history.sectionMap().get(SectionHeader.HEALTH_REGENERATED);
+        assertThat(hr.recoveryPackages().scaleSuffix()).isEqualTo(ScaleSuffix.TRILLION);
     }
 }

@@ -1,11 +1,12 @@
 package com.pphi.tower.parser;
 
-import com.pphi.tower.exceptions.FieldToLineCountMismatchException;
 import com.pphi.tower.model.ScaleSuffix;
 import com.pphi.tower.model.TowerEra;
 import com.pphi.tower.model.TowerNumber;
 import com.pphi.tower.model.battlehistory.*;
 import com.pphi.tower.model.googledrive.BattleReportDriveFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -27,14 +28,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class BattleHistoryParser {
 
+    private static final Logger log = LoggerFactory.getLogger(BattleHistoryParser.class);
+
     private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm");
 
     public BattleHistory parse(final Path path) {
         try {
             final List<String> allLines = Files.readAllLines(path, StandardCharsets.UTF_8);
             return parse(allLines);
-        } catch (FieldToLineCountMismatchException ex) {
-            throw new RuntimeException(String.format("%s - %s", ex.getMessage(), path));
         } catch (IOException e) {
             throw new RuntimeException("Failed to read file.", e);
         }
@@ -49,14 +50,19 @@ public class BattleHistoryParser {
         Map<SectionHeader, Section> sectionMap = new HashMap<>();
         sectionHeaderListMap.forEach(((sectionHeader, lines) -> {
             final Field[] fields = sectionHeader.getType().getDeclaredFields();
+            // The game appends new stat lines to the end of a section as it evolves (e.g. v28.3
+            // added rows to Health Regenerated and Killed With Effect Active). Map positionally
+            // over the overlap so we tolerate reports from any version: older reports leave the
+            // newer trailing fields at their type default; newer reports with extra trailing
+            // lines we don't model yet are ignored. A mismatch is logged for visibility.
             if (fields.length != lines.size()) {
-                throw new FieldToLineCountMismatchException(String.format("%s has %d fields and %d lines", sectionHeader, fields.length, lines.size()));
+                log.warn("Section {} has {} fields but report has {} lines — parsing leniently (positional overlap)",
+                        sectionHeader, fields.length, lines.size());
             }
+            final int common = Math.min(fields.length, lines.size());
             final Object[] initArgs = new Object[fields.length];
             for (int i = 0; i < fields.length; i++) {
-                Field field = fields[i];
-                String line = lines.get(i);
-                initArgs[i] = parseLine(field, line);
+                initArgs[i] = (i < common) ? parseLine(fields[i], lines.get(i)) : defaultFor(fields[i].getType());
             }
             try {
                 sectionMap.put(sectionHeader, (Section) sectionHeader.getType().getConstructors()[0].newInstance(initArgs));
@@ -66,6 +72,16 @@ public class BattleHistoryParser {
 
         }));
         return new BattleHistory(sectionMap);
+    }
+
+    /** Default value for a section field absent from the report (older game version). */
+    private Object defaultFor(Class<?> type) {
+        if (type == long.class)             return 0L;
+        if (type == int.class)              return 0;
+        if (type == double.class)           return 0.0;
+        if (type == boolean.class)          return false;
+        if (type == TowerNumber.class)      return TowerNumber.ZERO;
+        return null; // String, Duration, Instant, TowerEra, etc.
     }
 
     private Object parseLine(Field field, String line) {
