@@ -55,8 +55,15 @@ public class BattleHistoryParser {
             // over the overlap so we tolerate reports from any version: older reports leave the
             // newer trailing fields at their type default; newer reports with extra trailing
             // lines we don't model yet are ignored. A mismatch is logged for visibility.
-            if (fields.length != lines.size()) {
-                log.warn("Section {} has {} fields but report has {} lines — parsing leniently (positional overlap)",
+            if (lines.size() > fields.length) {
+                // The report carries more stat rows than we model — a newer game version likely
+                // appended fields we should add. Worth surfacing.
+                log.warn("Section {} has {} fields but report has {} lines — extra trailing lines ignored; consider modelling the new stat(s)",
+                        sectionHeader, fields.length, lines.size());
+            } else if (lines.size() < fields.length) {
+                // Fewer rows than we model — an older report predating later stat additions.
+                // Expected and benign; the newer trailing fields default. Keep it quiet.
+                log.debug("Section {} has {} fields but report has {} lines — older report, trailing fields defaulted",
                         sectionHeader, fields.length, lines.size());
             }
             final int common = Math.min(fields.length, lines.size());
