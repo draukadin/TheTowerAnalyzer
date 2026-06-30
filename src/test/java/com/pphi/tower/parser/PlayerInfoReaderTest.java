@@ -16,7 +16,7 @@ class PlayerInfoReaderTest {
 
     @Test
     void readsKeyPlayerFields() throws IOException {
-        PlayerInfoReader reader = new PlayerInfoReader();
+        PlayerInfoReader reader = new PlayerInfoReader(false);
         Map<String, Object> data = reader.read(DAT_FILE);
 
         assertFalse(data.isEmpty(), "parsed map should not be empty");
