@@ -11,6 +11,9 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import com.pphi.thetoweranalyzer.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+        applyContentInsets()
 
         prefs = Prefs(this)
 
@@ -49,6 +53,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnSubmit.setOnClickListener { onSubmit() }
+    }
+
+    /** Pad the content above the gesture/navigation bar in edge-to-edge mode. */
+    private fun applyContentInsets() {
+        val basePadding = binding.content.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.content) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(bottom = basePadding + bars.bottom)
+            insets
+        }
     }
 
     override fun onResume() {
