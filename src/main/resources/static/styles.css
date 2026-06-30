@@ -383,6 +383,11 @@
   .type-badge.Guild{background:rgba(79,142,247,.12);color:var(--accent);}
   .owned-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
   .owned-toggle input{accent-color:var(--green);cursor:pointer;}
+  .relic-action-btn{border:1px solid var(--border2);background:transparent;color:var(--muted);
+    font-size:13px;line-height:1;padding:4px 7px;border-radius:6px;cursor:pointer;transition:all .15s;}
+  .relic-action-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.08);}
+  .relic-action-btn.relic-action-del:hover{border-color:var(--red);color:var(--red);background:rgba(242,107,107,.1);}
+  .relic-action-btn+.relic-action-btn{margin-left:4px;}
 
   /* ── Gem Store ──────────────────────────────── */
   .gs-current-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}

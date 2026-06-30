@@ -137,7 +137,7 @@
 </div>
 <div id="addRelicModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddRelicModal()">
   <div class="modal">
-    <div class="modal-title">Add New Relic</div>
+    <div class="modal-title" id="relicModalTitle">Add New Relic</div>
     <div class="form-group">
       <label class="form-label">Name</label>
       <input class="form-input" id="newRelicName" type="text" placeholder="Relic name">
@@ -182,7 +182,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeAddRelicModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewRelic()">Add Relic</button>
+      <button class="btn btn-primary" id="relicModalSaveBtn" onclick="saveNewRelic()">Add Relic</button>
     </div>
   </div>
 </div>

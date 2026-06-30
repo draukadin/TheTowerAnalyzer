@@ -1863,6 +1863,7 @@ function renderRelicTable(){
         <th ${thSort('bonusValue')} style="text-align:right">Value</th>
         <th>How to Obtain</th>
         <th style="text-align:center">Owned</th>
+        <th style="text-align:center">Actions</th>
       </tr></thead>
       <tbody>${rows.map(r=>`
         <tr class="${r.owned?'owned-row':'not-owned-row'}">
@@ -1876,6 +1877,10 @@ function renderRelicTable(){
             <label class="owned-toggle" title="${r.owned?'Mark not owned':'Mark owned'}">
               <input type="checkbox" ${r.owned?'checked':''} onchange="relicSetOwned(${r.id},this.checked)">
             </label>
+          </td>
+          <td style="text-align:center;white-space:nowrap">
+            <button class="relic-action-btn" title="Edit" onclick="openEditRelicModal(${r.id})">✎</button>
+            <button class="relic-action-btn relic-action-del" title="Delete" onclick="deleteRelic(${r.id})">🗑</button>
           </td>
         </tr>`).join('')}
       </tbody>
@@ -1902,11 +1907,53 @@ const RELIC_STATS = [
   'Free Utility Upgrade','Recovery Amount','Enemy Attack Level Skip','Enemy Health Level Skip'
 ];
 
+let editingRelicId = null;
+
 function openAddRelicModal(){
+  editingRelicId = null;
+  document.getElementById('relicModalTitle').textContent = 'Add New Relic';
+  document.getElementById('relicModalSaveBtn').textContent = 'Add Relic';
+  document.getElementById('newRelicName').value = '';
+  document.getElementById('newRelicRarity').value = 'Rare';
+  document.getElementById('newRelicType').value = 'Standard';
+  document.getElementById('newRelicStat').value = '';
+  document.getElementById('newRelicValue').value = '';
+  document.getElementById('newRelicCondition').value = '';
+  document.getElementById('addRelicModal').style.display='flex';
+}
+function openEditRelicModal(id){
+  const r = relicData.find(x=>x.id===id);
+  if(!r) return;
+  editingRelicId = id;
+  document.getElementById('relicModalTitle').textContent = 'Edit Relic';
+  document.getElementById('relicModalSaveBtn').textContent = 'Save Changes';
+  document.getElementById('newRelicName').value = r.name;
+  document.getElementById('newRelicRarity').value = r.rarity;
+  document.getElementById('newRelicType').value = r.type;
+  document.getElementById('newRelicStat').value = r.bonusStat;
+  document.getElementById('newRelicValue').value = r.bonusValue;
+  document.getElementById('newRelicCondition').value = r.obtainCondition;
   document.getElementById('addRelicModal').style.display='flex';
 }
 function closeAddRelicModal(){
+  editingRelicId = null;
   document.getElementById('addRelicModal').style.display='none';
+}
+async function deleteRelic(id){
+  const r = relicData.find(x=>x.id===id);
+  if(!r) return;
+  if(!confirm(`Delete relic "${r.name}"? This cannot be undone.`)) return;
+  try{
+    const res = await fetch(`${API}/relics/${id}`,{method:'DELETE'});
+    if(!res.ok){
+      const msg = await res.text();
+      alert(msg || 'Failed to delete relic.');
+      return;
+    }
+    const list = await fetch(`${API}/relics`);
+    relicData = await list.json();
+    buildRelicsPage();
+  }catch(e){alert('Failed to delete: '+e.message);}
 }
 
 function showRelicsTab(tab){
@@ -2332,9 +2379,16 @@ async function saveNewRelic(){
   const obtainCondition = document.getElementById('newRelicCondition').value.trim();
   if(!name||!bonusStat||isNaN(bonusValue)){alert('Name, stat and value are required.');return;}
   try{
-    await fetch(`${API}/relics`,{method:'POST',
+    const editing = editingRelicId != null;
+    const resp = await fetch(editing ? `${API}/relics/${editingRelicId}` : `${API}/relics`,{
+      method: editing ? 'PUT' : 'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name,rarity,type,bonusStat,bonusValue,obtainCondition})});
+    if(!resp.ok){
+      const msg = await resp.text();
+      alert(msg || 'Failed to save relic.');
+      return;
+    }
     closeAddRelicModal();
     const res=await fetch(`${API}/relics`);
     relicData=await res.json();

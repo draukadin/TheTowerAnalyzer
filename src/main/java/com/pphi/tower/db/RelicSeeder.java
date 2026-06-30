@@ -26,6 +26,8 @@ public class RelicSeeder {
         }
         // v28.3 renamed the "Ebola" relic to "Outbreak" — idempotent, reaches existing databases.
         jdbc.update("UPDATE relic SET name = 'Outbreak' WHERE name = 'Ebola'");
+        // Fix misspelling — idempotent, reaches existing databases.
+        jdbc.update("UPDATE relic SET name = 'Happiness Balloons' WHERE name = 'Hapiness Balloons'");
     }
 
     private void seedRelics() {
@@ -253,7 +255,7 @@ public class RelicSeeder {
         relic("Quasar", "Epic", "Guild", "Health", 0.05, "Spend 150 Tokens in Guild Season 7", 0);
         relic("Champagne", "Rare", "Premium", "Attack Speed", 0.01, "Premium 550 medals New Year (III) event", 0);
         relic("Crop Circles", "Epic", "Standard", "Knockback Force", 0.05, "Earn 700 medals Aliens (III) event", 0);
-        relic("Hapiness Balloons", "Rare", "Standard", "Defense Absolute", 0.02, "Earn 350 medals Amusement Park event", 0);
+        relic("Happiness Balloons", "Rare", "Standard", "Defense Absolute", 0.02, "Earn 350 medals Amusement Park event", 0);
         relic("Alien Implants", "Epic", "Premium", "Ultimate Damage", 0.05, "Premium 1100 medals Aliens (III) event", 0);
         relic("Delicious Food", "Rare", "Premium", "Cash", 0.02, "Premium 550 medals Amusement Park event", 0);
         relic("Lovely Gift", "Epic", "Standard", "Knockback Force", 0.05, "Earn 700 medals Valentine event", 0);
