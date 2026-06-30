@@ -223,4 +223,10 @@ public class RunRepository {
         jdbc.update("UPDATE runs SET tournament_id = NULL WHERE id = ?", runId);
     }
 
+    /** Override the tower version (game era) recorded for a run. */
+    public void setTowerEra(String runId, TowerEra towerEra) {
+        jdbc.update("UPDATE runs SET tower_era = ? WHERE id = ?",
+                towerEra != null ? towerEra.toString() : null, runId);
+    }
+
 }

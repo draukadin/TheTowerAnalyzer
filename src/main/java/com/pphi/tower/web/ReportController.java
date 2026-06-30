@@ -1,5 +1,6 @@
 package com.pphi.tower.web;
 
+import com.pphi.tower.model.TowerEra;
 import com.pphi.tower.model.battlehistory.BattleHistory;
 import com.pphi.tower.model.battlediagnostics.DiagnosisResult;
 import com.pphi.tower.config.AwsProperties;
@@ -135,6 +136,18 @@ public class ReportController {
         if (!repository.existsById(id)) throw new ReportNotFoundException(id);
         repository.clearTournamentId(id);
         return ResponseEntity.ok(Map.of("runId", id, "unlinked", true));
+    }
+
+    record VersionRequest(String version) {}
+
+    @PutMapping("/{id}/version")
+    public ResponseEntity<Map<String, Object>> setVersion(
+            @PathVariable String id,
+            @RequestBody VersionRequest req) {
+        if (!repository.existsById(id)) throw new ReportNotFoundException(id);
+        TowerEra era = TowerEra.parse(req.version());
+        repository.setTowerEra(id, era);
+        return ResponseEntity.ok(Map.of("runId", id, "version", era.toString()));
     }
 
     @GetMapping("/compare")

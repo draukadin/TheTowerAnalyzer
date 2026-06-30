@@ -246,7 +246,7 @@ function renderReportView(summary,payload){
       <div class="report-subtitle">
         <span>📅 ${summary.battleDate}</span>
         <span>${fmtDuration(summary.realTimeSeconds)} real · ${fmtDuration(summary.gameTimeSeconds)} game</span>
-        ${summary.towerEra?`<span>🏗️ ${summary.towerEra}</span>`:''}
+        <span id="reportVersionWrap" class="report-version" title="Tower version">🏗️ ${summary.towerEra||'—'}</span>
         <span><span class="killed-by">💀 ${summary.killedBy||'Unknown'}</span></span>
       </div>
       ${isTournament?`<div id="tournamentLink" style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px">
@@ -260,7 +260,45 @@ function renderReportView(summary,payload){
     </div>
     <div id="tabPanel"></div>`;
   renderStatsPanel(summary,payload);
+  hydrateReportVersion(summary);
   if(isTournament)renderTournamentConditionsRow(summary);
+}
+
+// Replace the static tower-version label with a filterable input so the user can re-tag a
+// report's version (stored in runs.tower_era). A <datalist> gives a scrollable, type-to-filter
+// suggestion list (a long <select> popup would overflow the screen). Options come from the
+// Version Tracker; a version not in the tracker is still allowed.
+async function hydrateReportVersion(summary){
+  const el=document.getElementById('reportVersionWrap');
+  if(!el)return;
+  let versions=[];
+  try{ versions=await fetch(`${API}/versions`).then(r=>r.json()); }catch(e){ return; }
+  const current=summary.towerEra?String(summary.towerEra):'';
+  const opts=versions.map(v=>`<option value="${v.version}"></option>`).join('');
+  el.innerHTML=`🏗️ <input class="report-version-select" list="reportVersionOptions"
+      value="${current}" placeholder="0.0.0" spellcheck="false"
+      title="Type to filter, or pick a tracked version (format x.y.z)"
+      onchange="saveReportVersion('${summary.id}',this.value,'${current}')">
+    <datalist id="reportVersionOptions">${opts}</datalist>`;
+}
+
+async function saveReportVersion(runId,version,prev){
+  version=(version||'').trim();
+  // Only accept a full x.y.z version; otherwise revert so we never silently mis-tag a report.
+  if(!/^\d+\.\d+\.\d+$/.test(version)){
+    const inp=document.querySelector('#reportVersionWrap input');
+    if(inp)inp.value=prev||'';
+    return;
+  }
+  if(version===prev)return;
+  await fetch(`${API}/reports/${encodeURIComponent(runId)}/version`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({version})});
+  // Refresh the cached list so the new version sticks if the report is reopened.
+  try{
+    const res=await fetch(`${API}/reports`);
+    allReports=await res.json();
+    renderSidebar(visibleReports());
+  }catch(e){}
 }
 
 async function renderTournamentConditionsRow(summary){
