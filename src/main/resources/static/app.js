@@ -1259,6 +1259,16 @@ function modRarityLabel(mod){
   return mod.rarity;
 }
 
+// Max upgrade level a module can reach, gated by its rarity (Ancestral adds 20/star).
+const MOD_RARITY_MAX_LEVEL={
+  'Epic':60,'Epic+':80,'Legendary':100,'Legendary+':120,
+  'Mythic':140,'Mythic+':160,'Ancestral':200,
+};
+function modMaxLevel(mod){
+  if(mod.rarity==='Ancestral') return 200+(mod.stars||0)*20; // 0★=200 … 5★=300
+  return MOD_RARITY_MAX_LEVEL[mod.rarity]||200;
+}
+
 let _modFilters={owned:null,rarity:null,type:null};
 
 function modHiddenKey(id){return `mod-hidden-${id}`;}
@@ -1362,10 +1372,20 @@ async function renderModulesView(){
         const h=isModHidden(m.id);
         return `<span class="mod-pill${h?' mod-pill-hidden':''}" data-mod-id="${m.id}" onclick="toggleModHidden(${m.id})" title="${m.name}">${m.code}</span>`;
       }).join('');
+      const bulkMain=localStorage.getItem(`modBulkMain-${type}`)||'161';
+      const bulkAssist=localStorage.getItem(`modBulkAssist-${type}`)||'141';
       html+=`<div class="mod-type-section">
         <div class="mod-type-header">
           <span class="mod-type-badge ${type}">${type}</span>
           <div class="mod-pills">${pills}</div>
+          <div class="mod-bulk-level" title="Set the level of every owned ${type} module assigned to a Primary (main) or Assist preset slot. Each module is clamped to its rarity's max level.">
+            <span class="mod-bulk-label">Set level →</span>
+            <label class="mod-label">Main</label>
+            <input class="mod-input" type="number" id="bulkMain-${type}" min="0" max="300" value="${bulkMain}">
+            <label class="mod-label">Assist</label>
+            <input class="mod-input" type="number" id="bulkAssist-${type}" min="0" max="300" value="${bulkAssist}">
+            <button class="mod-bulk-apply" onclick="modBulkSetLevel('${type}')">Apply</button>
+          </div>
         </div>
         <div class="mod-grid">${allOfType.filter(m=>modMatchesFilters(m)).map(m=>renderModCard(m,mods)).join('')}</div>
       </div>`;
@@ -1470,8 +1490,9 @@ function renderModCard(mod, allMods){
           ${starsOpts}
         </select>`:''}
         <span class="mod-label">Lvl</span>
-        <input class="mod-input" type="number" min="0" max="200" value="${mod.level}"
-          onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',${mod.stars},parseInt(this.value))">
+        <input class="mod-input" type="number" min="0" max="${modMaxLevel(mod)}" value="${mod.level}"
+          title="Max level for ${modRarityLabel(mod)} is ${modMaxLevel(mod)}"
+          onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',${mod.stars},Math.min(Math.max(parseInt(this.value)||0,0),${modMaxLevel(mod)}))">
       </div>
       <div class="mod-substats">
         <div class="mod-substats-title">Sub-stats</div>
@@ -1695,6 +1716,33 @@ async function modTogglePreset(id,preset,slot,active){
 async function modSetShattered(id,count){
   await fetch(`${API}/modules/${id}/shattered`,{method:'PUT',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({count})});
+}
+
+// Bulk-set the level of every owned module of a type that's assigned to a Primary (main)
+// or Assist preset slot. Each module is clamped to its rarity's max level.
+async function modBulkSetLevel(type){
+  const mainLvl=Math.max(parseInt(document.getElementById(`bulkMain-${type}`).value)||0,0);
+  const assistLvl=Math.max(parseInt(document.getElementById(`bulkAssist-${type}`).value)||0,0);
+  localStorage.setItem(`modBulkMain-${type}`,mainLvl);
+  localStorage.setItem(`modBulkAssist-${type}`,assistLvl);
+  saveModScroll();
+  const mods=await(await fetch(`${API}/modules`)).json();
+  const updates=[];
+  for(const m of mods){
+    if(m.type!==type||!m.owned) continue;
+    const slots=new Set((m.presets||[]).map(p=>p.slot));
+    let target=null;
+    if(slots.has('primary')) target=mainLvl;        // Primary slot wins if assigned to both
+    else if(slots.has('assist')) target=assistLvl;
+    if(target===null) continue;
+    const lvl=Math.min(target,modMaxLevel(m));
+    if(lvl===m.level) continue;
+    updates.push(fetch(`${API}/modules/${m.id}/state`,{method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({owned:m.owned,rarity:m.rarity,stars:m.stars,level:lvl})}));
+  }
+  await Promise.all(updates);
+  refreshModulesView();
 }
 
 // ── Relics ─────────────────────────────────────────────────────────────────

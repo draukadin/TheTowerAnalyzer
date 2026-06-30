@@ -235,12 +235,18 @@
   /* ── Module Tracker ──────────────────────────────── */
   .mod-type-section{margin-bottom:2rem;}
   .mod-type-header{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
-    margin-bottom:0.75rem;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    margin-bottom:0.75rem;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .mod-type-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;}
   .mod-type-badge.Cannon{background:rgba(245,158,66,0.15);color:var(--orange);}
   .mod-type-badge.Generator{background:rgba(61,214,140,0.15);color:var(--green);}
   .mod-type-badge.Armor{background:rgba(79,142,247,0.15);color:var(--accent);}
   .mod-type-badge.Core{background:rgba(124,92,252,0.15);color:var(--accent2);}
+  .mod-bulk-level{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .mod-bulk-label{color:var(--muted);}
+  .mod-bulk-level .mod-input{width:52px;}
+  .mod-bulk-apply{font-size:11px;padding:3px 11px;border-radius:5px;border:1px solid var(--border2);
+    background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.6px;}
+  .mod-bulk-apply:hover{border-color:var(--accent);color:var(--accent);}
   .mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;}
   .mod-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
   .mod-card.owned{border-color:rgba(255,255,255,0.18);}
