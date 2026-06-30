@@ -1155,6 +1155,7 @@ function renderUwCard(uw){
         </label>
         ${uwStonesToTarget>0?`<span style="font-size:10px;color:var(--orange);white-space:nowrap;margin-left:4px">→ ${uwStonesToTarget.toLocaleString()} stones</span>`:''}
       </div>
+      <div class="uw-table-wrap">
       <table class="uw-stats-table">
         <thead><tr>
           <th>Stat</th><th>Value</th>
@@ -1169,6 +1170,7 @@ function renderUwCard(uw){
           ${uwPlus?renderUwStatRow(uwPlus,uw.unlocked,!uw.uwPlusUnlocked,true):''}
         </tbody>
       </table>
+      </div>
     </div>`;
 }
 
