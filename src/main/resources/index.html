@@ -112,11 +112,11 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div class="form-group" style="margin:0">
         <label class="form-label">Version</label>
-        <input class="form-input" id="newVerVersion" type="text" placeholder="e.g. 3.2.0">
+        <input class="form-input" id="newVerVersion" type="text" placeholder="e.g. 3.2.0" oninput="onVerVersionInput()">
       </div>
       <div class="form-group" style="margin:0">
         <label class="form-label">Type</label>
-        <select class="form-input" id="newVerType">
+        <select class="form-input" id="newVerType" onchange="onVerTypeChange()">
           <option>Patch</option><option>Minor</option><option>Major</option>
         </select>
       </div>

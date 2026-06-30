@@ -2891,6 +2891,40 @@ async function addTierPbRow() {
 let verChangeRows = [];
 let verModalMode = 'add'; // 'add' | 'edit'
 let verEditingVersion = null;
+let verVersionAuto = false; // true while the version field holds an unedited auto-suggestion
+
+// Suggest the next version number from the latest existing version and the bump type.
+// verData is sorted newest-first by semver, so verData[0] is the latest.
+function suggestNextVersion(type) {
+  const versions = window.verData || [];
+  if (!versions.length) return '1.0.0';
+  const m = /(\d+)\.(\d+)\.(\d+)/.exec(versions[0].version || '');
+  if (!m) return '1.0.0';
+  let maj = +m[1], min = +m[2], pat = +m[3];
+  switch ((type || '').toLowerCase()) {
+    case 'major': maj++; min = 0; pat = 0; break;
+    case 'minor': min++; pat = 0; break;
+    default:      pat++; break; // Patch
+  }
+  return `${maj}.${min}.${pat}`;
+}
+
+// Fill the version field with a suggestion based on the current type, in add mode only.
+function applyVersionSuggestion() {
+  const verEl = document.getElementById('newVerVersion');
+  verEl.value = suggestNextVersion(document.getElementById('newVerType').value);
+  verVersionAuto = true;
+}
+
+// Wired to the Type dropdown: re-suggest only while adding and the field is untouched.
+function onVerTypeChange() {
+  if (verModalMode === 'add' && verVersionAuto) applyVersionSuggestion();
+}
+
+// Wired to the Version input: once the user types, stop overriding their value.
+function onVerVersionInput() {
+  verVersionAuto = false;
+}
 
 async function openPendingVersionModal() {
   const pending = window.verPending ?? [];
@@ -2898,9 +2932,9 @@ async function openPendingVersionModal() {
   verModalMode = 'add';
   verEditingVersion = null;
   verChangeRows = [];
-  document.getElementById('newVerVersion').value = '';
   document.getElementById('newVerVersion').readOnly = false;
   document.getElementById('newVerType').value = 'Patch';
+  applyVersionSuggestion();
   document.getElementById('verChangeRowsEl').innerHTML = '';
   document.getElementById('verModalTitle').textContent = 'Process Pending Changes';
   document.getElementById('verModalSaveBtn').textContent = 'Add Version';
@@ -2918,9 +2952,9 @@ function openAddVersionModal() {
   verModalMode = 'add';
   verEditingVersion = null;
   verChangeRows = [];
-  document.getElementById('newVerVersion').value = '';
   document.getElementById('newVerVersion').readOnly = false;
   document.getElementById('newVerType').value = 'Patch';
+  applyVersionSuggestion();
   document.getElementById('verChangeRowsEl').innerHTML = '';
   document.getElementById('verModalTitle').textContent = 'Add New Version';
   document.getElementById('verModalSaveBtn').textContent = 'Add Version';

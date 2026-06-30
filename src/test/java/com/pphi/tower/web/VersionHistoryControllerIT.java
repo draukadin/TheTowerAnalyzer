@@ -25,4 +25,16 @@ class VersionHistoryControllerIT extends BaseIntegrationTest {
         mvc.perform(get("/api/versions"))
                 .andExpect(jsonPath("$[?(@.version=='9.9.9')]").isNotEmpty());
     }
+
+    @Test
+    void create_duplicateVersion_returns409() throws Exception {
+        String body = "{\"version\": \"9.9.8\", \"type\": \"minor\", \"changes\": []}";
+        mvc.perform(post("/api/versions")
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/versions")
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("already exists")));
+    }
 }
