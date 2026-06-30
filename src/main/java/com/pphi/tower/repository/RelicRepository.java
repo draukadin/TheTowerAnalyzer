@@ -69,4 +69,42 @@ public class RelicRepository {
         jdbc.update("INSERT INTO relic_player_state (relic_id, owned) VALUES (?, 0)", id);
         return id;
     }
+
+    @Caching(evict = {
+        @CacheEvict(value = "relics", allEntries = true),
+        @CacheEvict(value = "lab-multipliers", allEntries = true),
+        @CacheEvict(value = "lab-slots", allEntries = true)
+    })
+    public void update(long id, String name, String rarity, String type, String bonusStat,
+                       double bonusValue, String obtainCondition) {
+        jdbc.update("""
+                UPDATE relic SET name = ?, rarity = ?, type = ?, bonus_stat = ?,
+                       bonus_value = ?, obtain_condition = ?
+                WHERE id = ?
+                """, name, rarity, type, bonusStat, bonusValue, obtainCondition, id);
+    }
+
+    @Caching(evict = {
+        @CacheEvict(value = "relics", allEntries = true),
+        @CacheEvict(value = "lab-multipliers", allEntries = true),
+        @CacheEvict(value = "lab-slots", allEntries = true)
+    })
+    public void delete(long id) {
+        jdbc.update("DELETE FROM relic_player_state WHERE relic_id = ?", id);
+        jdbc.update("DELETE FROM relic WHERE id = ?", id);
+    }
+
+    /** True when another relic (id != excludeId) already uses this name. Pass excludeId &lt; 0 for create. */
+    public boolean nameExists(String name, long excludeId) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM relic WHERE name = ? AND id <> ?", Integer.class, name, excludeId);
+        return n != null && n > 0;
+    }
+
+    /** True when the relic is referenced by the Gem Store rotation (built-in reference data). */
+    public boolean isInGemStoreRotation(long id) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM gem_store_relic_rotation WHERE relic_id = ?", Integer.class, id);
+        return n != null && n > 0;
+    }
 }

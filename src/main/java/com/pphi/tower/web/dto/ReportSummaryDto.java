@@ -22,4 +22,5 @@ public record ReportSummaryDto(
         double coinsPerHour,
         long realTimeSeconds,
         long gameTimeSeconds,
-        long battleEpochSeconds) {}
+        long battleEpochSeconds,
+        Long tournamentId) {}

@@ -5,9 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.pphi.tower.model.TowerNumber;
 
 public record HealthRegenerated(
-        @JsonProperty("lifeSteal")       TowerNumber lifeSteal,
+        @JsonProperty("lifeSteal")        TowerNumber lifeSteal,
         @JsonProperty("towerHealthRegen") TowerNumber towerHealthRegen,
-        @JsonProperty("wallHealthRegen")  TowerNumber wallHealthRegen) implements Section {
+        @JsonProperty("wallHealthRegen")  TowerNumber wallHealthRegen,
+        @JsonProperty("recoveryPackages") TowerNumber recoveryPackages) implements Section {
 
     @JsonCreator
     public HealthRegenerated { }

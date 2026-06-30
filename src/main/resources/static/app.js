@@ -239,15 +239,19 @@ function switchTab(tab){
 }
 
 function renderReportView(summary,payload){
+  const isTournament=summary.runType&&summary.runType.toLowerCase()==='tournament';
   document.getElementById('mainContent').innerHTML=`
     <div class="report-header">
       <div class="report-title">${summary.runType} — T${summary.tier} Wave ${summary.wave.toLocaleString()}</div>
       <div class="report-subtitle">
         <span>📅 ${summary.battleDate}</span>
         <span>${fmtDuration(summary.realTimeSeconds)} real · ${fmtDuration(summary.gameTimeSeconds)} game</span>
-        ${summary.towerEra?`<span>🏗️ ${summary.towerEra}</span>`:''}
+        <span id="reportVersionWrap" class="report-version" title="Tower version">🏗️ ${summary.towerEra||'—'}</span>
         <span><span class="killed-by">💀 ${summary.killedBy||'Unknown'}</span></span>
       </div>
+      ${isTournament?`<div id="tournamentLink" style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px">
+        <span style="color:var(--muted)">Loading conditions…</span>
+      </div>`:''}
     </div>
     <div class="tab-bar">
       <div class="tab active" data-tab="stats" onclick="switchTab('stats')">Stats</div>
@@ -256,6 +260,104 @@ function renderReportView(summary,payload){
     </div>
     <div id="tabPanel"></div>`;
   renderStatsPanel(summary,payload);
+  hydrateReportVersion(summary);
+  if(isTournament)renderTournamentConditionsRow(summary);
+}
+
+// Replace the static tower-version label with a filterable input so the user can re-tag a
+// report's version (stored in runs.tower_era). A <datalist> gives a scrollable, type-to-filter
+// suggestion list (a long <select> popup would overflow the screen). Options come from the
+// Version Tracker; a version not in the tracker is still allowed.
+async function hydrateReportVersion(summary){
+  const el=document.getElementById('reportVersionWrap');
+  if(!el)return;
+  let versions=[];
+  try{ versions=await fetch(`${API}/versions`).then(r=>r.json()); }catch(e){ return; }
+  const current=summary.towerEra?String(summary.towerEra):'';
+  const opts=versions.map(v=>`<option value="${v.version}"></option>`).join('');
+  el.innerHTML=`🏗️ <input class="report-version-select" list="reportVersionOptions"
+      value="${current}" placeholder="0.0.0" spellcheck="false"
+      title="Type to filter, or pick a tracked version (format x.y.z)"
+      onchange="saveReportVersion('${summary.id}',this.value,'${current}')">
+    <datalist id="reportVersionOptions">${opts}</datalist>`;
+}
+
+async function saveReportVersion(runId,version,prev){
+  version=(version||'').trim();
+  // Only accept a full x.y.z version; otherwise revert so we never silently mis-tag a report.
+  if(!/^\d+\.\d+\.\d+$/.test(version)){
+    const inp=document.querySelector('#reportVersionWrap input');
+    if(inp)inp.value=prev||'';
+    return;
+  }
+  if(version===prev)return;
+  await fetch(`${API}/reports/${encodeURIComponent(runId)}/version`,{method:'PUT',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({version})});
+  // Refresh the cached list so the new version sticks if the report is reopened.
+  try{
+    const res=await fetch(`${API}/reports`);
+    allReports=await res.json();
+    renderSidebar(visibleReports());
+  }catch(e){}
+}
+
+async function renderTournamentConditionsRow(summary){
+  const el=document.getElementById('tournamentLink');
+  if(!el)return;
+  try{
+    const [tournamentsRes,condRes]=await Promise.all([
+      fetch(`${API}/tournaments`),
+      summary.tournamentId?fetch(`${API}/reports/${encodeURIComponent(summary.id)}/tournament-conditions`):Promise.resolve(null)
+    ]);
+    const allTournaments=await tournamentsRes.json();
+    const runDate=new Date(summary.battleDate+'T12:00:00');
+    // Candidate tournaments: date within 1 day of the run's battle_date
+    const nearby=allTournaments.filter(t=>{
+      const td=new Date(t.date+'T12:00:00');
+      return Math.abs((td-runDate)/86400000)<=1;
+    }).sort((a,b)=>a.date.localeCompare(b.date));
+
+    if(summary.tournamentId){
+      const conds=condRes?await condRes.json():[];
+      const linked=allTournaments.find(t=>t.id===summary.tournamentId);
+      const pills=conds.map(c=>`<span class="tourn-cond-pill ${c.category}" title="${c.name}">${c.acronym}</span>`).join('');
+      el.innerHTML=`<span style="color:var(--muted)">🏆 ${linked?linked.date+' '+linked.league:'Linked'}</span>${pills}
+        <button class="btn" style="font-size:10px;padding:2px 8px;margin-left:2px" onclick="unlinkTournamentRun('${summary.id}')">Unlink</button>`;
+    }else{
+      if(nearby.length===0){
+        el.innerHTML=`<span style="color:var(--muted)">No tournaments near this date</span>`;
+        return;
+      }
+      const opts=nearby.map(t=>{
+        const acros=(t.conditions||[]).map(c=>c.acronym).join(', ');
+        return `<option value="${t.id}">${t.date} ${t.league}${acros?' — '+acros:''}</option>`;
+      }).join('');
+      el.innerHTML=`<select id="tournLinkSel" style="font-size:11px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:4px">
+          <option value="">— link tournament —</option>${opts}</select>
+        <button class="btn btn-primary" style="font-size:10px;padding:2px 8px" onclick="linkTournamentRun('${summary.id}')">Link</button>`;
+    }
+  }catch(e){
+    el.innerHTML=`<span style="color:var(--muted);font-size:11px">Could not load tournament data</span>`;
+  }
+}
+
+async function linkTournamentRun(runId){
+  const sel=document.getElementById('tournLinkSel');
+  const tid=sel&&sel.value;
+  if(!tid)return;
+  await fetch(`${API}/reports/${encodeURIComponent(runId)}/tournament/${tid}`,{method:'PUT'});
+  const res=await fetch(`${API}/reports`);
+  allReports=await res.json();
+  const summary=allReports.find(r=>r.id===runId);
+  if(summary&&activePayload)renderReportView(summary,activePayload);
+}
+
+async function unlinkTournamentRun(runId){
+  await fetch(`${API}/reports/${encodeURIComponent(runId)}/tournament`,{method:'DELETE'});
+  const res=await fetch(`${API}/reports`);
+  allReports=await res.json();
+  const summary=allReports.find(r=>r.id===runId);
+  if(summary&&activePayload)renderReportView(summary,activePayload);
 }
 
 function renderStatsPanel(summary,p){
@@ -1091,6 +1193,7 @@ function renderUwCard(uw){
         </label>
         ${uwStonesToTarget>0?`<span style="font-size:10px;color:var(--orange);white-space:nowrap;margin-left:4px">→ ${uwStonesToTarget.toLocaleString()} stones</span>`:''}
       </div>
+      <div class="uw-table-wrap">
       <table class="uw-stats-table">
         <thead><tr>
           <th>Stat</th><th>Value</th>
@@ -1105,6 +1208,7 @@ function renderUwCard(uw){
           ${uwPlus?renderUwStatRow(uwPlus,uw.unlocked,!uw.uwPlusUnlocked,true):''}
         </tbody>
       </table>
+      </div>
     </div>`;
 }
 
@@ -1191,6 +1295,16 @@ function modRarityLabel(mod){
     return mod.stars>0?`Ancestral ${'★'.repeat(mod.stars)}`:'Ancestral';
   }
   return mod.rarity;
+}
+
+// Max upgrade level a module can reach, gated by its rarity (Ancestral adds 20/star).
+const MOD_RARITY_MAX_LEVEL={
+  'Epic':60,'Epic+':80,'Legendary':100,'Legendary+':120,
+  'Mythic':140,'Mythic+':160,'Ancestral':200,
+};
+function modMaxLevel(mod){
+  if(mod.rarity==='Ancestral') return 200+(mod.stars||0)*20; // 0★=200 … 5★=300
+  return MOD_RARITY_MAX_LEVEL[mod.rarity]||200;
 }
 
 let _modFilters={owned:null,rarity:null,type:null};
@@ -1296,10 +1410,20 @@ async function renderModulesView(){
         const h=isModHidden(m.id);
         return `<span class="mod-pill${h?' mod-pill-hidden':''}" data-mod-id="${m.id}" onclick="toggleModHidden(${m.id})" title="${m.name}">${m.code}</span>`;
       }).join('');
+      const bulkMain=localStorage.getItem(`modBulkMain-${type}`)||'161';
+      const bulkAssist=localStorage.getItem(`modBulkAssist-${type}`)||'141';
       html+=`<div class="mod-type-section">
         <div class="mod-type-header">
           <span class="mod-type-badge ${type}">${type}</span>
           <div class="mod-pills">${pills}</div>
+          <div class="mod-bulk-level" title="Set the level of every owned ${type} module assigned to a Primary (main) or Assist preset slot. Each module is clamped to its rarity's max level.">
+            <span class="mod-bulk-label">Set level →</span>
+            <label class="mod-label">Main</label>
+            <input class="mod-input" type="number" id="bulkMain-${type}" min="0" max="300" value="${bulkMain}">
+            <label class="mod-label">Assist</label>
+            <input class="mod-input" type="number" id="bulkAssist-${type}" min="0" max="300" value="${bulkAssist}">
+            <button class="mod-bulk-apply" onclick="modBulkSetLevel('${type}')">Apply</button>
+          </div>
         </div>
         <div class="mod-grid">${allOfType.filter(m=>modMatchesFilters(m)).map(m=>renderModCard(m,mods)).join('')}</div>
       </div>`;
@@ -1404,8 +1528,9 @@ function renderModCard(mod, allMods){
           ${starsOpts}
         </select>`:''}
         <span class="mod-label">Lvl</span>
-        <input class="mod-input" type="number" min="0" max="200" value="${mod.level}"
-          onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',${mod.stars},parseInt(this.value))">
+        <input class="mod-input" type="number" min="0" max="${modMaxLevel(mod)}" value="${mod.level}"
+          title="Max level for ${modRarityLabel(mod)} is ${modMaxLevel(mod)}"
+          onchange="modSaveState(${mod.id},${mod.owned},'${mod.rarity}',${mod.stars},Math.min(Math.max(parseInt(this.value)||0,0),${modMaxLevel(mod)}))">
       </div>
       <div class="mod-substats">
         <div class="mod-substats-title">Sub-stats</div>
@@ -1631,6 +1756,33 @@ async function modSetShattered(id,count){
     headers:{'Content-Type':'application/json'},body:JSON.stringify({count})});
 }
 
+// Bulk-set the level of every owned module of a type that's assigned to a Primary (main)
+// or Assist preset slot. Each module is clamped to its rarity's max level.
+async function modBulkSetLevel(type){
+  const mainLvl=Math.max(parseInt(document.getElementById(`bulkMain-${type}`).value)||0,0);
+  const assistLvl=Math.max(parseInt(document.getElementById(`bulkAssist-${type}`).value)||0,0);
+  localStorage.setItem(`modBulkMain-${type}`,mainLvl);
+  localStorage.setItem(`modBulkAssist-${type}`,assistLvl);
+  saveModScroll();
+  const mods=await(await fetch(`${API}/modules`)).json();
+  const updates=[];
+  for(const m of mods){
+    if(m.type!==type||!m.owned) continue;
+    const slots=new Set((m.presets||[]).map(p=>p.slot));
+    let target=null;
+    if(slots.has('primary')) target=mainLvl;        // Primary slot wins if assigned to both
+    else if(slots.has('assist')) target=assistLvl;
+    if(target===null) continue;
+    const lvl=Math.min(target,modMaxLevel(m));
+    if(lvl===m.level) continue;
+    updates.push(fetch(`${API}/modules/${m.id}/state`,{method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({owned:m.owned,rarity:m.rarity,stars:m.stars,level:lvl})}));
+  }
+  await Promise.all(updates);
+  refreshModulesView();
+}
+
 // ── Relics ─────────────────────────────────────────────────────────────────
 
 const RELIC_STAT_CATEGORIES = {
@@ -1799,6 +1951,7 @@ function renderRelicTable(){
         <th ${thSort('bonusValue')} style="text-align:right">Value</th>
         <th>How to Obtain</th>
         <th style="text-align:center">Owned</th>
+        <th style="text-align:center">Actions</th>
       </tr></thead>
       <tbody>${rows.map(r=>`
         <tr class="${r.owned?'owned-row':'not-owned-row'}">
@@ -1812,6 +1965,10 @@ function renderRelicTable(){
             <label class="owned-toggle" title="${r.owned?'Mark not owned':'Mark owned'}">
               <input type="checkbox" ${r.owned?'checked':''} onchange="relicSetOwned(${r.id},this.checked)">
             </label>
+          </td>
+          <td style="text-align:center;white-space:nowrap">
+            <button class="relic-action-btn" title="Edit" onclick="openEditRelicModal(${r.id})">✎</button>
+            <button class="relic-action-btn relic-action-del" title="Delete" onclick="deleteRelic(${r.id})">🗑</button>
           </td>
         </tr>`).join('')}
       </tbody>
@@ -1838,11 +1995,53 @@ const RELIC_STATS = [
   'Free Utility Upgrade','Recovery Amount','Enemy Attack Level Skip','Enemy Health Level Skip'
 ];
 
+let editingRelicId = null;
+
 function openAddRelicModal(){
+  editingRelicId = null;
+  document.getElementById('relicModalTitle').textContent = 'Add New Relic';
+  document.getElementById('relicModalSaveBtn').textContent = 'Add Relic';
+  document.getElementById('newRelicName').value = '';
+  document.getElementById('newRelicRarity').value = 'Rare';
+  document.getElementById('newRelicType').value = 'Standard';
+  document.getElementById('newRelicStat').value = '';
+  document.getElementById('newRelicValue').value = '';
+  document.getElementById('newRelicCondition').value = '';
+  document.getElementById('addRelicModal').style.display='flex';
+}
+function openEditRelicModal(id){
+  const r = relicData.find(x=>x.id===id);
+  if(!r) return;
+  editingRelicId = id;
+  document.getElementById('relicModalTitle').textContent = 'Edit Relic';
+  document.getElementById('relicModalSaveBtn').textContent = 'Save Changes';
+  document.getElementById('newRelicName').value = r.name;
+  document.getElementById('newRelicRarity').value = r.rarity;
+  document.getElementById('newRelicType').value = r.type;
+  document.getElementById('newRelicStat').value = r.bonusStat;
+  document.getElementById('newRelicValue').value = r.bonusValue;
+  document.getElementById('newRelicCondition').value = r.obtainCondition;
   document.getElementById('addRelicModal').style.display='flex';
 }
 function closeAddRelicModal(){
+  editingRelicId = null;
   document.getElementById('addRelicModal').style.display='none';
+}
+async function deleteRelic(id){
+  const r = relicData.find(x=>x.id===id);
+  if(!r) return;
+  if(!confirm(`Delete relic "${r.name}"? This cannot be undone.`)) return;
+  try{
+    const res = await fetch(`${API}/relics/${id}`,{method:'DELETE'});
+    if(!res.ok){
+      const msg = await res.text();
+      alert(msg || 'Failed to delete relic.');
+      return;
+    }
+    const list = await fetch(`${API}/relics`);
+    relicData = await list.json();
+    buildRelicsPage();
+  }catch(e){alert('Failed to delete: '+e.message);}
 }
 
 function showRelicsTab(tab){
@@ -2268,9 +2467,16 @@ async function saveNewRelic(){
   const obtainCondition = document.getElementById('newRelicCondition').value.trim();
   if(!name||!bonusStat||isNaN(bonusValue)){alert('Name, stat and value are required.');return;}
   try{
-    await fetch(`${API}/relics`,{method:'POST',
+    const editing = editingRelicId != null;
+    const resp = await fetch(editing ? `${API}/relics/${editingRelicId}` : `${API}/relics`,{
+      method: editing ? 'PUT' : 'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name,rarity,type,bonusStat,bonusValue,obtainCondition})});
+    if(!resp.ok){
+      const msg = await resp.text();
+      alert(msg || 'Failed to save relic.');
+      return;
+    }
     closeAddRelicModal();
     const res=await fetch(`${API}/relics`);
     relicData=await res.json();
@@ -2773,6 +2979,40 @@ async function addTierPbRow() {
 let verChangeRows = [];
 let verModalMode = 'add'; // 'add' | 'edit'
 let verEditingVersion = null;
+let verVersionAuto = false; // true while the version field holds an unedited auto-suggestion
+
+// Suggest the next version number from the latest existing version and the bump type.
+// verData is sorted newest-first by semver, so verData[0] is the latest.
+function suggestNextVersion(type) {
+  const versions = window.verData || [];
+  if (!versions.length) return '1.0.0';
+  const m = /(\d+)\.(\d+)\.(\d+)/.exec(versions[0].version || '');
+  if (!m) return '1.0.0';
+  let maj = +m[1], min = +m[2], pat = +m[3];
+  switch ((type || '').toLowerCase()) {
+    case 'major': maj++; min = 0; pat = 0; break;
+    case 'minor': min++; pat = 0; break;
+    default:      pat++; break; // Patch
+  }
+  return `${maj}.${min}.${pat}`;
+}
+
+// Fill the version field with a suggestion based on the current type, in add mode only.
+function applyVersionSuggestion() {
+  const verEl = document.getElementById('newVerVersion');
+  verEl.value = suggestNextVersion(document.getElementById('newVerType').value);
+  verVersionAuto = true;
+}
+
+// Wired to the Type dropdown: re-suggest only while adding and the field is untouched.
+function onVerTypeChange() {
+  if (verModalMode === 'add' && verVersionAuto) applyVersionSuggestion();
+}
+
+// Wired to the Version input: once the user types, stop overriding their value.
+function onVerVersionInput() {
+  verVersionAuto = false;
+}
 
 async function openPendingVersionModal() {
   const pending = window.verPending ?? [];
@@ -2780,9 +3020,9 @@ async function openPendingVersionModal() {
   verModalMode = 'add';
   verEditingVersion = null;
   verChangeRows = [];
-  document.getElementById('newVerVersion').value = '';
   document.getElementById('newVerVersion').readOnly = false;
   document.getElementById('newVerType').value = 'Patch';
+  applyVersionSuggestion();
   document.getElementById('verChangeRowsEl').innerHTML = '';
   document.getElementById('verModalTitle').textContent = 'Process Pending Changes';
   document.getElementById('verModalSaveBtn').textContent = 'Add Version';
@@ -2800,9 +3040,9 @@ function openAddVersionModal() {
   verModalMode = 'add';
   verEditingVersion = null;
   verChangeRows = [];
-  document.getElementById('newVerVersion').value = '';
   document.getElementById('newVerVersion').readOnly = false;
   document.getElementById('newVerType').value = 'Patch';
+  applyVersionSuggestion();
   document.getElementById('verChangeRowsEl').innerHTML = '';
   document.getElementById('verModalTitle').textContent = 'Add New Version';
   document.getElementById('verModalSaveBtn').textContent = 'Add Version';
@@ -5597,7 +5837,7 @@ function lpSlotCard(sl) {
       <tr class="${idx === 0 ? 'lp-current-row' : ''}">
         <td>${escHtml(p.labName)}${upNextCpd}</td>
         <td>${p.startLevel}</td>
-        <td>${p.targetLevel}</td>
+        <td>${mkSpin(p.targetLevel, p.startLevel+1, lpLabList.find(l=>l.id===p.labId)?.maxLevel??p.targetLevel, false, `lpUpdateTarget(${sl.slotNumber},${p.id},${p.labId},${p.startLevel},__V__)`)}</td>
         <td>${fmtRaw(p.coinsAtStartLevel)}</td>
         <td>${fmtRaw(p.coinsTotalResearch)}</td>
         <td>${fmtDuration(p.durationSeconds)}</td>
@@ -5619,6 +5859,7 @@ function lpSlotCard(sl) {
   const firstLab = lpLabList[0];
   const initMax = firstLab ? firstLab.maxLevel : '';
   const initCur = firstLab ? firstLab.currentLevel : 0;
+  const initEnd = firstLab ? Math.min(initCur + 2, initMax) : '';
 
   return `<div class="lp-card">
     <div class="lp-card-header">
@@ -5644,11 +5885,38 @@ function lpSlotCard(sl) {
           style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 7px;font-family:var(--font)">
         <select id="lp-lab-${sl.slotNumber}" onchange="lpLabSelected(${sl.slotNumber})">${labOptions}</select>
       </div>
-      <input type="number" id="lp-start-${sl.slotNumber}" min="0" max="${initCur}" value="${initCur}" placeholder="From" style="width:60px">
-      <input type="number" id="lp-end-${sl.slotNumber}" min="1" max="${initMax}" placeholder="To" style="width:60px">
+      <div class="spin-wrap">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinDec('lp-start-${sl.slotNumber}')">−</button>
+        <input type="text" inputmode="numeric" class="spin-val" id="lp-start-${sl.slotNumber}"
+          data-min="0" data-max="${initMax ? initMax - 1 : 0}" value="${initCur}"
+          onblur="lpSpinClamp(this)" onkeydown="if(event.key==='Enter')this.blur()">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinInc('lp-start-${sl.slotNumber}')">+</button>
+      </div>
+      <div class="spin-wrap">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinDec('lp-end-${sl.slotNumber}')">−</button>
+        <input type="text" inputmode="numeric" class="spin-val" id="lp-end-${sl.slotNumber}"
+          data-min="${initCur + 1}" data-max="${initMax}" value="${initEnd}"
+          onblur="lpSpinClamp(this)" onkeydown="if(event.key==='Enter')this.blur()">
+        <button class="spin-btn" tabindex="-1" onclick="lpSpinInc('lp-end-${sl.slotNumber}')">+</button>
+      </div>
       <button class="lp-btn primary" onclick="lpAdd(${sl.slotNumber})">+ Add</button>
     </div>
   </div>`;
+}
+
+function lpSpinDec(id) {
+  const el = document.getElementById(id);
+  const min = +el.dataset.min, max = +el.dataset.max;
+  el.value = Math.max(min, (parseInt(el.value) || 0) - 1);
+}
+function lpSpinInc(id) {
+  const el = document.getElementById(id);
+  const min = +el.dataset.min, max = +el.dataset.max;
+  el.value = Math.min(max, (parseInt(el.value) || 0) + 1);
+}
+function lpSpinClamp(el) {
+  const min = +el.dataset.min, max = +el.dataset.max;
+  el.value = Math.min(Math.max(parseInt(el.value) || 0, min), max);
 }
 
 function lpFilterLabs(slotNumber) {
@@ -5672,10 +5940,11 @@ function lpLabSelected(slotNumber) {
   const curLevel = +opt.dataset.cur;
   const startEl = document.getElementById(`lp-start-${slotNumber}`);
   const endEl   = document.getElementById(`lp-end-${slotNumber}`);
-  startEl.max = curLevel;
+  startEl.dataset.max = maxLevel - 1;
   startEl.value = curLevel;
-  endEl.max = maxLevel;
-  if (+endEl.value > maxLevel) endEl.value = maxLevel;
+  endEl.dataset.min = curLevel + 1;
+  endEl.dataset.max = maxLevel;
+  endEl.value = Math.min(curLevel + 2, maxLevel);
 }
 
 async function lpSetSpeed(slotNumber, mult) {
@@ -5699,6 +5968,15 @@ async function lpAdd(slotNumber) {
   }
   await fetch(`${API}/lab-slots/${slotNumber}/plans`, {
     method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({labId, startLevel, targetLevel})
+  });
+  await lpRefresh();
+}
+
+async function lpUpdateTarget(slotNumber, planId, labId, startLevel, targetLevel) {
+  if (!targetLevel || targetLevel <= startLevel) return;
+  await fetch(`${API}/lab-slots/${slotNumber}/plans/${planId}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({labId, startLevel, targetLevel})
   });
   await lpRefresh();
@@ -5744,6 +6022,10 @@ function renderAdminView() {
             <button class="btn btn-primary" onclick="showMcpSetupModal()">Setup Claude MCP Server</button>
             <span id="mcpAdminStatus" style="font-size:13px;color:var(--muted)"></span>
           </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <button class="btn btn-primary" onclick="showSkillExportModal()">Export Skills for Claude Desktop</button>
+            <span id="skillExportStatus" style="font-size:13px;color:var(--muted)"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -5773,6 +6055,26 @@ function renderAdminView() {
         <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
           <button class="btn" onclick="closeMcpModal()">Close</button>
           <button id="mcpModalBtn" class="btn btn-primary" onclick="runMcpSetup('mcpModalBtn','mcpModalResult','mcpAdminStatus')">Register</button>
+        </div>
+      </div>
+    </div>
+    <!-- Export Skills for Claude Desktop Modal -->
+    <div id="skillExportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;
+         align-items:center;justify-content:center;" onclick="if(event.target===this)closeSkillExportModal()">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+           padding:2rem;max-width:460px;width:90%;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:0.5rem">Export Skills for Claude Desktop</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:1.25rem">
+          The Claude Code MCP setup already installs these skills automatically. The Claude
+          <strong>Desktop app</strong> and <strong>claude.ai</strong> don't read that folder — they
+          load skills uploaded through their own UI. This saves one <span style="font-family:var(--mono);
+          color:var(--accent)">.zip</span> per skill that you upload manually in Claude under
+          <strong>Customize → Skills → Create skill</strong> (requires code execution enabled).
+        </div>
+        <div id="skillExportResult" style="display:none;font-size:13px;margin-bottom:1rem;border-radius:8px;padding:10px 14px;line-height:1.6;"></div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+          <button class="btn" onclick="closeSkillExportModal()">Close</button>
+          <button id="skillExportBtn" class="btn btn-primary" onclick="runSkillExport()">Export</button>
         </div>
       </div>
     </div>`;
@@ -5961,6 +6263,55 @@ function showMcpSetupModal() {
 
 function closeMcpModal() {
   document.getElementById('mcpModal').style.display = 'none';
+}
+
+function showSkillExportModal() {
+  document.getElementById('skillExportResult').style.display = 'none';
+  const btn = document.getElementById('skillExportBtn');
+  btn.disabled = false;
+  btn.textContent = 'Export';
+  document.getElementById('skillExportModal').style.display = 'flex';
+}
+
+function closeSkillExportModal() {
+  document.getElementById('skillExportModal').style.display = 'none';
+}
+
+async function runSkillExport() {
+  const btn    = document.getElementById('skillExportBtn');
+  const result = document.getElementById('skillExportResult');
+
+  btn.disabled = true;
+  btn.textContent = 'Exporting…';
+  result.style.display = 'none';
+
+  try {
+    const res  = await fetch(`${API}/setup/skill-packages`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      const list = (data.packages || []).map(p => `<li style="font-family:var(--mono)">${p}</li>`).join('');
+      result.style.cssText += ';display:block;color:var(--green);background:rgba(80,200,120,0.1);border:1px solid rgba(80,200,120,0.25);';
+      result.innerHTML =
+        `✓ Exported ${(data.packages || []).length} skill package(s) to:` +
+        `<div style="font-family:var(--mono);color:var(--accent);word-break:break-all;margin:6px 0">${data.directory}</div>` +
+        `<ul style="margin:6px 0 6px 18px;padding:0">${list}</ul>` +
+        `Upload each in Claude under <strong>Customize → Skills → Create skill</strong>. ` +
+        `You can delete these zips once they're uploaded.`;
+      btn.textContent = 'Done';
+      document.getElementById('skillExportStatus').textContent = '✓ Exported';
+    } else {
+      result.style.cssText += ';display:block;color:var(--red);background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);';
+      result.textContent = data.message || 'An error occurred.';
+      btn.disabled = false;
+      btn.textContent = 'Retry';
+    }
+  } catch (e) {
+    result.style.cssText += ';display:block;color:var(--red);background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);';
+    result.textContent = 'Could not reach the server.';
+    btn.disabled = false;
+    btn.textContent = 'Retry';
+  }
 }
 
 async function runMcpSetup(btnId, resultId, statusId) {

@@ -22,10 +22,20 @@ public class BattleConditionSeeder {
         jdbc.update("DELETE FROM battle_condition WHERE name = 'Overheat'");
 
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM battle_condition", Integer.class);
-        if (count != null && count > 0) return;
-        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
-        seedConditions();
-        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        if (count == null || count == 0) {
+            log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
+            seedConditions();
+            log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        }
+        // v28.3 added fleet-oriented Ultimate conditions for tiers 22-24. condition() is
+        // INSERT OR IGNORE, so running these unconditionally reaches already-seeded databases.
+        seedV283Conditions();
+    }
+
+    private void seedV283Conditions() {
+        condition("Commander's Ultimate",  "CU", "HEAT");
+        condition("Overcharge's Ultimate", "OU", "HEAT");
+        condition("Saboteur's Ultimate",   "SU", "HEAT");
     }
 
     private void seedConditions() {
@@ -58,6 +68,11 @@ public class BattleConditionSeeder {
         condition("Ultimate Weapon Durations", "UWD",  "HEAT");
         condition("Mass Enforcement",          "MAE",  "HEAT");
         condition("Enemy Attack Speed",        "EAS",  "HEAT");
+
+        // v28.3 — fleet Ultimate conditions (tiers 22-24)
+        condition("Commander's Ultimate",      "CU",   "HEAT");
+        condition("Overcharge's Ultimate",     "OU",   "HEAT");
+        condition("Saboteur's Ultimate",       "SU",   "HEAT");
     }
 
     private void condition(String name, String acronym, String category) {

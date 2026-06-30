@@ -1,4 +1,4 @@
-﻿  :root {
+  :root {
     --bg:#0d0f14; --surface:#141720; --surface2:#1c2030;
     --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
     --text:#e8eaf0; --muted:#7a8099;
@@ -86,6 +86,10 @@
   .report-header{margin-bottom:1.5rem;}
   .report-title{font-size:1.4rem;font-weight:700;margin-bottom:6px;}
   .report-subtitle{color:var(--muted);font-size:13px;display:flex;gap:16px;flex-wrap:wrap;}
+  .report-version{display:inline-flex;align-items:center;gap:4px;}
+  .report-version-select{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;
+    color:var(--text);font-size:12px;padding:2px 6px;font-family:var(--mono);cursor:pointer;width:84px;}
+  .report-version-select:focus{outline:none;border-color:var(--accent);}
   .killed-by{display:inline-flex;align-items:center;background:rgba(242,107,107,0.12);
     color:var(--red);border:1px solid rgba(242,107,107,0.25);border-radius:6px;
     padding:3px 9px;font-size:12px;font-weight:600;}
@@ -188,7 +192,7 @@
   .btn-fetch.loading{color:var(--muted);}
 
   /* ── UW Tracker ──────────────────────────────── */
-  .uw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .uw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(520px,100%),1fr));gap:16px;}
   .uw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
     overflow:hidden;}
   .uw-card-header{display:flex;align-items:center;gap:10px;padding:9px 13px;
@@ -198,6 +202,7 @@
     cursor:pointer;user-select:none;white-space:nowrap;}
   .uw-toggle input{accent-color:var(--green);cursor:pointer;}
   .uw-toggle input:disabled{cursor:not-allowed;}
+  .uw-table-wrap{overflow-x:auto;}
   .uw-stats-table{width:100%;border-collapse:collapse;font-size:12px;}
   .uw-stats-table th{background:var(--surface2);padding:5px 10px;text-align:left;
     font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);font-weight:600;}
@@ -234,12 +239,18 @@
   /* ── Module Tracker ──────────────────────────────── */
   .mod-type-section{margin-bottom:2rem;}
   .mod-type-header{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
-    margin-bottom:0.75rem;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    margin-bottom:0.75rem;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .mod-type-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;}
   .mod-type-badge.Cannon{background:rgba(245,158,66,0.15);color:var(--orange);}
   .mod-type-badge.Generator{background:rgba(61,214,140,0.15);color:var(--green);}
   .mod-type-badge.Armor{background:rgba(79,142,247,0.15);color:var(--accent);}
   .mod-type-badge.Core{background:rgba(124,92,252,0.15);color:var(--accent2);}
+  .mod-bulk-level{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .mod-bulk-label{color:var(--muted);}
+  .mod-bulk-level .mod-input{width:52px;}
+  .mod-bulk-apply{font-size:11px;padding:3px 11px;border-radius:5px;border:1px solid var(--border2);
+    background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.6px;}
+  .mod-bulk-apply:hover{border-color:var(--accent);color:var(--accent);}
   .mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;}
   .mod-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
   .mod-card.owned{border-color:rgba(255,255,255,0.18);}
@@ -383,6 +394,11 @@
   .type-badge.Guild{background:rgba(79,142,247,.12);color:var(--accent);}
   .owned-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;}
   .owned-toggle input{accent-color:var(--green);cursor:pointer;}
+  .relic-action-btn{border:1px solid var(--border2);background:transparent;color:var(--muted);
+    font-size:13px;line-height:1;padding:4px 7px;border-radius:6px;cursor:pointer;transition:all .15s;}
+  .relic-action-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.08);}
+  .relic-action-btn.relic-action-del:hover{border-color:var(--red);color:var(--red);background:rgba(242,107,107,.1);}
+  .relic-action-btn+.relic-action-btn{margin-left:4px;}
 
   /* ── Gem Store ──────────────────────────────── */
   .gs-current-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
@@ -850,6 +866,7 @@
   .lp-add-row select,.lp-add-row input{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:4px 7px;font-family:var(--font);}
   .lp-add-row select{flex:1;max-width:180px;}
   .lp-add-row input{width:65px;}
+  .lp-add-row .spin-val{width:36px;background:transparent;border:none;border-radius:0;padding:2px 0;}
   .lp-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--font);transition:all 0.12s;}
   .lp-btn:hover{border-color:var(--accent);color:var(--accent);}
   .lp-btn.danger:hover{border-color:var(--red);color:var(--red);}

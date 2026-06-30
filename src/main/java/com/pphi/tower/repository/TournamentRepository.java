@@ -114,6 +114,25 @@ public class TournamentRepository {
         jdbc.update("DELETE FROM tournament WHERE id = ?", id);
     }
 
+    public List<BattleConditionData> findConditionsByRunId(String runId) {
+        return jdbc.query("""
+                SELECT bc.id, bc.name, bc.acronym, bc.category
+                FROM runs r
+                JOIN tournament t ON t.id = r.tournament_id
+                JOIN tournament_condition tc ON tc.tournament_id = t.id
+                JOIN battle_condition bc ON bc.id = tc.condition_id
+                WHERE r.id = ?
+                ORDER BY bc.category, bc.name
+                """,
+                (rs, i) -> new BattleConditionData(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getString("acronym"),
+                        rs.getString("category")
+                ),
+                runId);
+    }
+
     public List<TournamentData> findByConditions(List<Long> conditionIds) {
         if (conditionIds.isEmpty()) return List.of();
 

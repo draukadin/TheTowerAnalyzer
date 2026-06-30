@@ -14,6 +14,9 @@ import java.util.Comparator;
 @JsonDeserialize(using = TowerNumberDeserializer.class)
 public record TowerNumber(BigDecimal amount, ScaleSuffix scaleSuffix) {
 
+    /** Canonical zero — used as the default for stat fields absent from a report. */
+    public static final TowerNumber ZERO = new TowerNumber(BigDecimal.ZERO, null);
+
     public TowerNumber minus(final TowerNumber subtrahend) {
         // 1. Convert both to raw flat doubles
         BigDecimal minuend = this.amount.multiply(this.scaleSuffix != null ? this.scaleSuffix.getScientificNotation() : BigDecimal.ONE);

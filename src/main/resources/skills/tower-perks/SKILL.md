@@ -1,14 +1,6 @@
 ---
 name: tower-perks
-description: >
-  Expert knowledge on the Perk system in The Tower: Idle Tower Defense. Use this skill
-  whenever the user asks about perks — which perks to pick, which to ban, how many Ban
-  Perk bans to get, the perk wave requirement formula, standard vs. trade-off vs. UW
-  perks, or perk strategy for farming vs. milestone/dissonance runs. Also use for
-  questions about auto-pick ranking order, Standard Perk Bonus lab value, or Improve
-  Trade-off Perks lab. Do NOT use for full UW mechanic detail beyond the perk bonus value
-  (see tta-uw.md and UW reference files). Perks are only available during farming runs —
-  they are NOT available in tournament mode.
+description: "Perks in The Tower (farming runs only): which to pick or ban, ban count, the wave-requirement formula, standard vs trade-off vs UW perks, auto-pick order, and farming vs milestone strategy."
 ---
 
 # Perks

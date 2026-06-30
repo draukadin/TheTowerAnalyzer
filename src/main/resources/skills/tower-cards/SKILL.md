@@ -1,14 +1,6 @@
 ---
 name: tower-cards
-description: >
-  Expert knowledge on the Cards system in The Tower: Idle Tower Defense. Use this skill
-  whenever the user asks anything about cards — including which cards to equip, when to swap
-  cards mid-run, farming vs. tournament loadouts, card mastery priorities, card slot unlocks,
-  gem spending on cards, locked card rules, preset management, or how specific cards interact
-  with builds. Also trigger for questions about specific card names (e.g. "Death Ray", "Wave
-  Skip", "Demon Mode", "Berserker", "Free Upgrades", "Energy Shield", "Intro Sprint"), or
-  indirect questions like "what cards should I run for farming", "should I use Death Ray",
-  or "when do I swap my preset mid-tournament".
+description: "Cards in The Tower: which to equip, mid-run swaps, farming vs tournament loadouts, masteries, slot unlocks, presets, and specific cards (Death Ray, Wave Skip, Demon Mode, Berserker, Free Upgrades)."
 ---
 
 # Cards

@@ -64,7 +64,7 @@ public final class BattleHistoryFixtures {
                         KILLS_DEATH_RAY, KILLS_POISON_SWAMP, KILLS_BLACK_HOLE,
                         KILLS_FLAME_BOT, KILLS_OTHER),
                 hitBy(),
-                new HealthRegenerated(zero(), zero(), HEALTHY_WALL_REGEN),
+                new HealthRegenerated(zero(), zero(), HEALTHY_WALL_REGEN, zero()),
                 kwea(zero()),
                 totals(50_000L, 0L, 0L, 500L, 0L, 1_000L),   // vampires=1000 → spawned
                 damage(of(500.0, ScaleSuffix.TRILLION),
@@ -99,7 +99,8 @@ public final class BattleHistoryFixtures {
                 new HealthRegenerated(
                         of(10.0, ScaleSuffix.TRILLION),
                         HEALTHY_TOWER_REGEN,
-                        HEALTHY_WALL_REGEN),
+                        HEALTHY_WALL_REGEN,
+                        zero()),
                 kwea(zero()),
                 totals(50_000L, 0L, 0L, 500L, 0L, 1_500L),   // vampires=1500 → density=3 % → HIGH
                 damage(of(500.0, ScaleSuffix.TRILLION),
@@ -483,11 +484,11 @@ public final class BattleHistoryFixtures {
     }
 
     private static HealthRegenerated healthRegenDefault() {
-        return new HealthRegenerated(HEALTHY_LIFESTEAL, HEALTHY_TOWER_REGEN, HEALTHY_WALL_REGEN);
+        return new HealthRegenerated(HEALTHY_LIFESTEAL, HEALTHY_TOWER_REGEN, HEALTHY_WALL_REGEN, zero());
     }
 
     private static KilledWithEffectActive kwea(TowerNumber deathWaveKills) {
-        return new KilledWithEffectActive(500L, deathWaveKills, 200L, 100L, 50L, 30L);
+        return new KilledWithEffectActive(500L, deathWaveKills, 200L, 100L, 50L, 30L, 0L, 0L);
     }
 
     /**

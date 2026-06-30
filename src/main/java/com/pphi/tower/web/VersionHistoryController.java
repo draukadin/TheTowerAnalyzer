@@ -10,6 +10,8 @@ import com.pphi.tower.repository.VersionHistoryRepository.VersionEntry;
 import com.pphi.tower.service.DdbVersionSyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -61,14 +63,19 @@ public class VersionHistoryController {
     }
 
     @PostMapping
-    public VersionWithChanges create(@RequestBody CreateRequest req) {
+    public ResponseEntity<?> create(@RequestBody CreateRequest req) {
+        if (repo.versionExists(req.version())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                    "Version \"" + req.version() + "\" already exists. "
+                    + "Please choose a different version number.");
+        }
         repo.create(req.version(), req.type(), req.changes());
         String summary = repo.getAllVersions().stream()
                 .filter(v -> v.version().equals(req.version()))
                 .map(VersionEntry::summary).findFirst().orElse("");
         boolean synced = syncVersionCell(req.version());
-        return new VersionWithChanges(req.version(), req.type(), summary,
-                repo.getChangesForVersion(req.version()), synced, syncTarget());
+        return ResponseEntity.ok(new VersionWithChanges(req.version(), req.type(), summary,
+                repo.getChangesForVersion(req.version()), synced, syncTarget()));
     }
 
     @PutMapping("/{version}")

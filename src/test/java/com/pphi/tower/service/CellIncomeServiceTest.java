@@ -194,7 +194,7 @@ class CellIncomeServiceTest {
                 LocalDate.now().toString(),
                 10, 3000, null, "Natural",
                 cellsEarned, cellsPerHour, 0.0,
-                3600L, 3600L, 0L);
+                3600L, 3600L, 0L, null);
     }
 
     private ReportSummaryDto runWithEpoch(String id, double cellsEarned, double cellsPerHour,
@@ -204,6 +204,6 @@ class CellIncomeServiceTest {
                 LocalDate.now().toString(),
                 10, 3000, null, "Natural",
                 cellsEarned, cellsPerHour, 0.0,
-                realTimeSec, realTimeSec, epochSec);
+                realTimeSec, realTimeSec, epochSec, null);
     }
 }

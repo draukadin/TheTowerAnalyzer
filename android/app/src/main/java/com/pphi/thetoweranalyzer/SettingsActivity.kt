@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.pphi.thetoweranalyzer.databinding.ActivitySettingsBinding
 
 class SettingsActivity : AppCompatActivity() {
@@ -17,6 +20,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        applyContentInsets()
 
         prefs = Prefs(this)
 
@@ -28,6 +32,16 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.radioGroupMode.setOnCheckedChangeListener { _, _ -> updateSectionVisibility() }
         binding.btnSave.setOnClickListener { savePrefs() }
+    }
+
+    /** Pad the scroll content above the gesture/navigation bar in edge-to-edge mode. */
+    private fun applyContentInsets() {
+        val basePadding = binding.content.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.content) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(bottom = basePadding + bars.bottom)
+            insets
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

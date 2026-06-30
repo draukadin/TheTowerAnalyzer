@@ -56,6 +56,13 @@ public class VersionHistoryRepository {
     public record NewChange(String category, String entityName,
                             String oldValue, String newValue, String notes) {}
 
+    /** True when a version with this exact number already exists (version is the primary key). */
+    public boolean versionExists(String version) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM tower_version WHERE version = ?", Integer.class, version);
+        return n != null && n > 0;
+    }
+
     public void create(String version, String type, List<NewChange> changes) {
         jdbc.update("INSERT INTO tower_version (version, type, summary) VALUES (?,?,?)",
                 version, type, buildSummary(changes));
