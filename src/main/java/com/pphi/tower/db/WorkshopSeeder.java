@@ -19,11 +19,40 @@ public class WorkshopSeeder {
 
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM workshop_item", Integer.class);
-        if (count != null && count > 0) return;
-        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
-        seedWorkshop();
-        seedWorkshopPlus();
-        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        if (count == null || count == 0) {
+            log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
+            seedWorkshop();
+            seedWorkshopPlus();
+            log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        }
+        migrateV28_3();
+    }
+
+    /**
+     * v28.3 raised the level caps on most workshop enhancements. These UPDATEs are idempotent
+     * (guarded by {@code max_level < target}) and run on every startup so they reach existing
+     * player databases. The added level-cost/value rows are handled by {@link WorkshopCostSeeder}
+     * and {@link WorkshopValueSeeder}.
+     */
+    private void migrateV28_3() {
+        raisePlusCap(600, "Damage +", "Rend Armor Mult +", "Critical Factor +", "Damage / Meter +",
+                "Super Crit Multi +", "Health +", "Health Regen +", "Defense Absolute +",
+                "Land Mine Damage +", "Wall Health +", "Cash Bonus +", "Recovery Package +");
+        raisePlusCap(300, "Coin Bonus +", "Cells / Kill Bonus +");
+        raisePlusCap(250, "Orb Size +");
+        raisePlusCap(150, "Free Upgrades +");
+        raisePlusCap(100, "Attack Speed +");
+    }
+
+    private void raisePlusCap(int maxLevel, String... names) {
+        String placeholders = String.join(",", java.util.Collections.nCopies(names.length, "?"));
+        Object[] args = new Object[names.length + 2];
+        args[0] = maxLevel; // SET max_level = ?
+        args[1] = maxLevel; // AND max_level < ?
+        System.arraycopy(names, 0, args, 2, names.length);
+        jdbc.update(
+                "UPDATE workshop_item SET max_level = ? WHERE is_plus = 1 AND max_level < ? AND name IN (" + placeholders + ")",
+                args);
     }
 
     // ── Workshop (non-plus) ───────────────────────────────────────────────────
@@ -121,27 +150,27 @@ public class WorkshopSeeder {
         String lab = "Workshop Enhancements";
 
         // Attack+
-        item("Damage +",          1, 1, 1, 400, null, lab,   null);
-        item("Rend Armor Mult +",  1, 1, 2, 400, null, null,  50_000_000_000.0);
-        item("Critical Factor +",  1, 1, 3, 400, null, null,  500_000_000_000.0);
-        item("Damage / Meter +",   1, 1, 4, 400, null, null,  5_000_000_000_000.0);
-        item("Super Crit Multi +", 1, 1, 5, 400, null, null,  50_000_000_000_000.0);
-        item("Attack Speed +",     1, 1, 6,  75, null, null,  500_000_000_000_000.0);
+        item("Damage +",          1, 1, 1, 600, null, lab,   null);
+        item("Rend Armor Mult +",  1, 1, 2, 600, null, null,  50_000_000_000.0);
+        item("Critical Factor +",  1, 1, 3, 600, null, null,  500_000_000_000.0);
+        item("Damage / Meter +",   1, 1, 4, 600, null, null,  5_000_000_000_000.0);
+        item("Super Crit Multi +", 1, 1, 5, 600, null, null,  50_000_000_000_000.0);
+        item("Attack Speed +",     1, 1, 6, 100, null, null,  500_000_000_000_000.0);
 
         // Defense+
-        item("Health +",           2, 1, 1, 400, null, lab,   null);
-        item("Health Regen +",     2, 1, 2, 400, null, null,  50_000_000_000.0);
-        item("Defense Absolute +", 2, 1, 3, 400, null, null,  500_000_000_000.0);
-        item("Land Mine Damage +", 2, 1, 4, 400, null, null,  5_000_000_000_000.0);
-        item("Wall Health +",      2, 1, 5, 400, null, null,  50_000_000_000_000.0);
-        item("Orb Size +",         2, 1, 6, 200, null, null,  500_000_000_000_000.0);
+        item("Health +",           2, 1, 1, 600, null, lab,   null);
+        item("Health Regen +",     2, 1, 2, 600, null, null,  50_000_000_000.0);
+        item("Defense Absolute +", 2, 1, 3, 600, null, null,  500_000_000_000.0);
+        item("Land Mine Damage +", 2, 1, 4, 600, null, null,  5_000_000_000_000.0);
+        item("Wall Health +",      2, 1, 5, 600, null, null,  50_000_000_000_000.0);
+        item("Orb Size +",         2, 1, 6, 250, null, null,  500_000_000_000_000.0);
 
         // Utility+
-        item("Cash Bonus +",        3, 1, 1, 400, null, lab,   null);
-        item("Coin Bonus +",        3, 1, 2, 200, null, null,  50_000_000_000.0);
-        item("Cells / Kill Bonus +",3, 1, 3, 200, null, null,  500_000_000_000.0);
-        item("Free Upgrades +",     3, 1, 4, 100, null, null,  5_000_000_000_000.0);
-        item("Recovery Package +",  3, 1, 5, 300, null, null,  50_000_000_000_000.0);
+        item("Cash Bonus +",        3, 1, 1, 600, null, lab,   null);
+        item("Coin Bonus +",        3, 1, 2, 300, null, null,  50_000_000_000.0);
+        item("Cells / Kill Bonus +",3, 1, 3, 300, null, null,  500_000_000_000.0);
+        item("Free Upgrades +",     3, 1, 4, 150, null, null,  5_000_000_000_000.0);
+        item("Recovery Package +",  3, 1, 5, 600, null, null,  50_000_000_000_000.0);
         item("Enemy Level Skips +", 3, 1, 6,  60, null, null,  500_000_000_000_000.0);
     }
 

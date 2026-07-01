@@ -31,7 +31,13 @@ public class LabCostSeeder {
                 "SELECT COUNT(*) FROM lab_level_cost lc JOIN lab l ON l.id = lc.lab_id WHERE l.name IN ('Shatter Shards','Super Crit Chance','Damage Mastery','Flame Bot - Cooldown','Ban Perks','Swamp Rend','Swamp Rend - Additional Enemies') AND lc.duration_seconds IS NULL",
                 Integer.class);
         boolean hasCorrupt = (negCount != null && negCount > 0) || (nullDurCount != null && nullDurCount > 0);
-        if (count != null && count > 0 && !hasCorrupt) return;
+        // v28.3 added fleet labs and expanded two caps; re-run the idempotent INSERT OR IGNORE batch
+        // when those new rows are missing so existing databases pick them up (see LabSeeder#migrateV28_3).
+        Integer missingNew = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM lab l WHERE l.name IN ('Advanced Saboteur Lab','Advanced Commander Lab','Advanced Overcharge Lab','Saboteur Enemy Attack') AND NOT EXISTS (SELECT 1 FROM lab_level_cost lc WHERE lc.lab_id = l.id)",
+                Integer.class);
+        boolean needsMigration = missingNew != null && missingNew > 0;
+        if (count != null && count > 0 && !hasCorrupt && !needsMigration) return;
         log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
         if (hasCorrupt) jdbc.execute("DELETE FROM lab_level_cost");
 

@@ -39,7 +39,14 @@ public class WorkshopCostSeeder {
                 "SELECT COUNT(*) FROM workshop_item_level_cost wlc" +
                 " JOIN workshop_item wi ON wi.id = wlc.workshop_item_id WHERE wi.is_plus = 1",
                 Integer.class);
-        if (plusCount == null || plusCount == 0) {
+        // v28.3 raised enhancement caps. Re-run the idempotent INSERT OR IGNORE batch when a raised-cap
+        // sentinel row is missing so existing databases pick up the new levels (see WorkshopSeeder#migrateV28_3).
+        Integer plusMissing = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM workshop_item wi WHERE wi.is_plus = 1 AND wi.name = 'Damage +'" +
+                " AND NOT EXISTS (SELECT 1 FROM workshop_item_level_cost wlc WHERE wlc.workshop_item_id = wi.id AND wlc.level = 600)",
+                Integer.class);
+        boolean plusNeedsMigration = plusMissing != null && plusMissing > 0;
+        if (plusCount == null || plusCount == 0 || plusNeedsMigration) {
             log.info("Seeding {}#plusCosts...", this.getClass().getSimpleName().replace("Seeder", ""));
             seedPlusCosts();
             log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));

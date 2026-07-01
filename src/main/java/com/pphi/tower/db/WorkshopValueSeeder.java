@@ -24,12 +24,25 @@ public class WorkshopValueSeeder {
 
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM workshop_item_level_value", Integer.class);
-        if (count != null && count > 0) return;
+        if (count == null || count == 0) {
+            log.info("Seeding WorkshopItemLevelValue...");
+            seedFile("workshop_values.json", false);
+            seedFile("enhancement_values.json", true);
+            log.info("Finished seeding WorkshopItemLevelValue");
+            return;
+        }
 
-        log.info("Seeding WorkshopItemLevelValue...");
-        seedFile("workshop_values.json", false);
-        seedFile("enhancement_values.json", true);
-        log.info("Finished seeding WorkshopItemLevelValue");
+        // v28.3 raised enhancement caps. Re-run the idempotent INSERT OR IGNORE for enhancement values
+        // when a raised-cap sentinel row is missing so existing databases pick up the new levels.
+        Integer enhMissing = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM workshop_item wi WHERE wi.is_plus = 1 AND wi.name = 'Damage +'" +
+                " AND NOT EXISTS (SELECT 1 FROM workshop_item_level_value wlv WHERE wlv.workshop_item_id = wi.id AND wlv.level = 600)",
+                Integer.class);
+        if (enhMissing != null && enhMissing > 0) {
+            log.info("Migrating WorkshopItemLevelValue (v28.3 enhancement caps)...");
+            seedFile("enhancement_values.json", true);
+            log.info("Finished migrating WorkshopItemLevelValue");
+        }
     }
 
     private void seedFile(String resourceName, boolean isPlus) {

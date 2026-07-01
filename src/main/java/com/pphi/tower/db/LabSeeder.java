@@ -19,10 +19,39 @@ public class LabSeeder {
 
     private void seed() {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM lab", Integer.class);
-        if (count != null && count > 0) return;
-        log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
-        seedLabs();
-        log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        if (count == null || count == 0) {
+            log.info("Seeding {}...", this.getClass().getSimpleName().replace("Seeder", ""));
+            seedLabs();
+            log.info("Finished seeding {}", this.getClass().getSimpleName().replace("Seeder", ""));
+        }
+        migrateV28_3();
+    }
+
+    /**
+     * v28.3 (Tiers 22-24) added six fleet enemy labs, three Advanced fleet labs, and raised two
+     * level caps. These statements are idempotent and run on every startup so they reach existing
+     * player databases (which skip {@link #seedLabs()} because their lab table is already populated).
+     * The added level-cost rows are handled by {@link LabCostSeeder}.
+     */
+    private void migrateV28_3() {
+        labIfAbsent("Saboteur Enemy Attack",    "Enemies", 30);
+        labIfAbsent("Saboteur Enemy Health",    "Enemies", 30);
+        labIfAbsent("Commander Enemy Attack",   "Enemies", 30);
+        labIfAbsent("Commander Enemy Health",   "Enemies", 30);
+        labIfAbsent("Overcharge Enemy Attack",  "Enemies", 30);
+        labIfAbsent("Overcharge Enemy Health",  "Enemies", 30);
+        labIfAbsent("Advanced Saboteur Lab",    "Battle Condition", 30);
+        labIfAbsent("Advanced Commander Lab",   "Battle Condition", 30);
+        labIfAbsent("Advanced Overcharge Lab",  "Battle Condition", 30);
+
+        jdbc.update("UPDATE lab SET max_level = 11 WHERE name = 'Swamp Rend - Additional Enemies' AND max_level < 11");
+        jdbc.update("UPDATE lab SET max_level = 7  WHERE name = 'Core Effect Bans' AND max_level < 7");
+    }
+
+    private void labIfAbsent(String name, String category, int maxLevel) {
+        Integer existing = jdbc.queryForObject("SELECT COUNT(*) FROM lab WHERE name = ?", Integer.class, name);
+        if (existing != null && existing > 0) return;
+        lab(name, category, 0, null, maxLevel);
     }
 
     private void seedLabs() {
@@ -125,7 +154,7 @@ public class LabSeeder {
         lab("Black Hole Disable Ranged Enemies",    "Ultimate Weapons", 0, null,   1);
         lab("Recharge Missile Barrage",             "Ultimate Weapons", 0, null,   7);
         lab("Swamp Rend",                           "Ultimate Weapons", 0, null,  30);
-        lab("Swamp Rend - Additional Enemies",      "Ultimate Weapons", 0, null,   6);
+        lab("Swamp Rend - Additional Enemies",      "Ultimate Weapons", 0, null,  11);
         lab("Chain Thunder",                        "Ultimate Weapons", 0, null,  30);
         lab("Lightning Amplifier - Scatter",        "Ultimate Weapons", 0, null,  30);
         lab("Death Wave Cells Bonus",               "Ultimate Weapons", 0, null,  20);
@@ -220,6 +249,12 @@ public class LabSeeder {
         lab("Scatter Enemy Attack",                 "Enemies",          0, null, 30);
         lab("Scatter Enemy Health",                 "Enemies",          0, null, 30);
         lab("Ranged Enemy Range",                   "Enemies",          0, null, 30);
+        lab("Saboteur Enemy Attack",                "Enemies",          0, null, 30);
+        lab("Saboteur Enemy Health",                "Enemies",          0, null, 30);
+        lab("Commander Enemy Attack",               "Enemies",          0, null, 30);
+        lab("Commander Enemy Health",               "Enemies",          0, null, 30);
+        lab("Overcharge Enemy Attack",              "Enemies",          0, null, 30);
+        lab("Overcharge Enemy Health",              "Enemies",          0, null, 30);
 
         // MODULES
         lab("Common Drop Chance",                   "Modules",          0, null,  10);
@@ -264,6 +299,9 @@ public class LabSeeder {
         lab("Death Defy Down",                      "Battle Condition", 0, null, 10);
         lab("Energy Shields Down",                  "Battle Condition", 0, null, 10);
         lab("Enemy Level Skip Reduction",           "Battle Condition", 0, null, 10);
+        lab("Advanced Saboteur Lab",                "Battle Condition", 0, null, 30);
+        lab("Advanced Commander Lab",               "Battle Condition", 0, null, 30);
+        lab("Advanced Overcharge Lab",              "Battle Condition", 0, null, 30);
     }
 
     private void lab(String name, String category, int currentLevel, Integer targetLevel, int maxLevel) {
