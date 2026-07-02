@@ -67,7 +67,10 @@ if (-not $playerIds -or $playerIds.Count -eq 0) {
 Write-Host "Found $($playerIds.Count) player(s)."
 
 $manifestPath = Join-Path $env:TEMP "content-manifest-$ContentVersion.json"
-Set-Content $manifestPath -Value "{`"contentVersion`":$ContentVersion}" -Encoding utf8 -NoNewline
+# Windows PowerShell 5.1's -Encoding utf8 writes a BOM, which Jackson rejects when parsing
+# the manifest on the client. Write plain UTF-8 without a BOM instead.
+$manifestJson = "{`"contentVersion`":$ContentVersion}"
+[System.IO.File]::WriteAllText($manifestPath, $manifestJson, (New-Object System.Text.UTF8Encoding($false)))
 
 $count = 0
 foreach ($playerId in $playerIds) {
