@@ -2,6 +2,8 @@ package com.pphi.tower.web;
 
 import com.pphi.tower.config.AwsProperties;
 import com.pphi.tower.service.ContentPatchService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/content")
 public class ContentController {
+
+    private static final Logger log = LoggerFactory.getLogger(ContentController.class);
 
     private final AwsProperties aws;
     private final ObjectProvider<ContentPatchService> contentPatchService;
@@ -37,8 +41,9 @@ public class ContentController {
         try {
             return ResponseEntity.ok(requireService().checkAndApply());
         } catch (Exception e) {
+            log.warn("Failed to check for content updates", e);
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
-                    "Failed to check for content updates: " + e.getMessage());
+                    "Failed to check for content updates. See server logs for details.");
         }
     }
 

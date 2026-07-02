@@ -6216,7 +6216,14 @@ async function checkContentUpdates() {
   status.textContent = 'Checking…';
   try {
     const res = await fetch(`${API}/content/check-updates`, {method: 'POST'});
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      let message = 'Failed to check for content updates.';
+      try {
+        const body = await res.json();
+        if (body && body.message) message = body.message;
+      } catch (parseErr) { /* non-JSON error body, use the generic fallback */ }
+      throw new Error(message);
+    }
     const data = await res.json();
     status.style.color = 'var(--green,#4ade80)';
     if (data.upToDate) {
