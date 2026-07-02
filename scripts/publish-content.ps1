@@ -9,12 +9,12 @@
 #      <player_id>/content/ folder.
 #
 # Each client's ContentPatchService downloads and applies the patch, then deletes the
-# objects from its own folder — this is a one-shot mailbox, not a standing feed, so
+# objects from its own folder - this is a one-shot mailbox, not a standing feed, so
 # re-running this script is how you "push again" (it just re-delivers to everyone).
 #
 # Prerequisites:
 #   - AWS CLI installed and on PATH, with credentials that can scan the DynamoDB table
-#     and write to the S3 bucket (your own account credentials — NOT the per-player
+#     and write to the S3 bucket (your own account credentials - NOT the per-player
 #     vended role, which has no access outside its own player_id prefix).
 #
 # Usage:
@@ -61,7 +61,7 @@ $scan = $scanJson | ConvertFrom-Json
 $playerIds = $scan.Items | ForEach-Object { $_.player_id.S } | Where-Object { $_ }
 
 if (-not $playerIds -or $playerIds.Count -eq 0) {
-    Write-Host "No known players found — nothing to publish."
+    Write-Host "No known players found - nothing to publish."
     exit 0
 }
 Write-Host "Found $($playerIds.Count) player(s)."
